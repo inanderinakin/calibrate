@@ -50,7 +50,7 @@ def get_learning_resources(skill: str):
 
     return output
 
-def get_recommendations(gaps: dict):
+def get_recommendations(gaps: GapResult):
     # callback handler none is to block the agent code to print the message to console.
     agent = Agent(tools=[calculator, current_time, get_role_demand, get_learning_resources], callback_handler = None,
                 system_prompt = ("Only use data returned by the tools. Never invent demand figures or resources."
@@ -59,7 +59,7 @@ def get_recommendations(gaps: dict):
                                 "Never show raw numeric scores to the user."
                                 ))
 
-    result = agent(json.dumps(gaps) + "Here are the student's skill gaps. For each one, produce a recommendation.")
+    result = agent(gaps.model_dump_json() + "Here are the student's skill gaps. For each one, produce a recommendation.")
     return result.message["content"][0]["text"]
 
 if __name__ == "__main__":
@@ -67,6 +67,10 @@ if __name__ == "__main__":
         "target_roles": ["Data Scientist"],
         "gaps": [
         { "skill": "Docker", "esco_category": "containerization", "closest_cv_skill": "Kubernetes" },
+        { "skill": "SQL", "esco_category": "database" }
         ]
     }
-    print(get_recommendations(gaps))
+
+    parsedData = GapResult(**gaps)
+
+    print(get_recommendations(parsedData))

@@ -1,6 +1,7 @@
 import os
 import uuid
 from pathlib import Path
+from agent import get_recommendations, GapResult
 
 from fastapi import FastAPI, HTTPException, UploadFile, status
 from fastapi.params import File
@@ -38,3 +39,9 @@ async def upload_cv(file: UploadFile = File(...)):
         await file.close()
 
     return {"message": "Got the CV!", "filename": safe_name}
+
+@app.post("/recommendations")
+async def recommendWithAgent(report: GapResult):
+    result = get_recommendations(report)
+    return {"recommendations": result}
+    

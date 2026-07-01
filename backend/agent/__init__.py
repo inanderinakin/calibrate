@@ -1,1 +1,1 @@
-from . import agent
+from .agent import get_recommendations, GapResult
