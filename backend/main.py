@@ -1,6 +1,8 @@
 import os
 import uuid
 from pathlib import Path
+
+from fastapi.concurrency import run_in_threadpool
 from agent import get_recommendations, GapResult
 
 from fastapi import FastAPI, HTTPException, UploadFile, status
@@ -41,7 +43,9 @@ async def upload_cv(file: UploadFile = File(...)):
     return {"message": "Got the CV!", "filename": safe_name}
 
 @app.post("/recommendations")
-async def recommendWithAgent(report: GapResult):
-    result = get_recommendations(report)
+async def recommend_with_agent(report: GapResult):
+    # we use run_in_threadpool because bedrock takes couple of seconds to output 
+    # and we do not want our app to freeze while waiting for it
+    result = await run_in_threadpool(get_recommendations, report)
     return {"recommendations": result}
     
