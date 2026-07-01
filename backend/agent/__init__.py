@@ -1,1 +1,1 @@
-from . import strands
+from . import agent
