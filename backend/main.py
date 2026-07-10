@@ -2,11 +2,15 @@ import os
 import uuid
 from pathlib import Path
 
+from aiohttp import ClientError
 from fastapi.concurrency import run_in_threadpool
 from agent import get_recommendations, GapResult
 
 from fastapi import FastAPI, HTTPException, UploadFile, status
 from fastapi.params import File
+
+import boto3
+from handlecv import extract_skill_candidates, extract_cv_text
 
 app = FastAPI()
 
@@ -26,6 +30,8 @@ async def upload_cv(file: UploadFile = File(...)):
     safe_name = f"{uuid.uuid4()}{ext}"
     cv_dest = path / safe_name
 
+    bucket = "calibrate-teamthrow"
+
     try:
         size = 0
         with cv_dest.open("wb") as buffer:
@@ -39,8 +45,21 @@ async def upload_cv(file: UploadFile = File(...)):
                 buffer.write(chunk)
     finally:
         await file.close()
+    
+    s3_client = boto3.client('s3')
+    if (file.content_type == "application/pdf"):
+        try:
+            await run_in_threadpool(s3_client.upload_file, str(cv_dest), bucket, f"uploads/{safe_name}")
+            os.remove(cv_dest)
+        except ClientError as e:
+            print("Error")
+    else:
+        return {"error": "We only accept PDF at the moment. Please check back later."}
 
-    return {"message": "Got the CV!", "filename": safe_name}
+    lines = await run_in_threadpool(extract_cv_text, "calibrate-teamthrow", f"uploads/{safe_name}")
+    candidates = extract_skill_candidates(lines)
+
+    return {"filename": safe_name, "candidates": candidates}
 
 @app.post("/recommendations")
 async def recommend_with_agent(report: GapResult):
