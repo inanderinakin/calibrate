@@ -1,7 +1,6 @@
 import boto3
 from dotenv import load_dotenv
 import time
-from collections import Counter
 
 load_dotenv()
 
@@ -31,14 +30,19 @@ def extract_cv_text(bucket: str, key: str) -> list[str]:
                 break
 
             elif isSuccess == "FAILED":
-                raise RuntimeError("Please try again later...") 
+                raise RuntimeError(f"Request failed: {result.get("StatusMessage")}") 
 
             time.sleep(5)
         else:
             raise RuntimeError("Max attempt reached. Please try again later...")
-    
-    line_list = [b["Text"] for b in result["Blocks"] if b["BlockType"] == "LINE"]
-    return line_list
+
+    # this helps us extract sidebar but breaks some texts on single column cvs.
+    sidebar_lines = [block["Text"] for block in result["Blocks"] if block["BlockType"] == "LINE" and block["Geometry"]["BoundingBox"]["Left"] < 0.2]
+    main_lines = [block["Text"] for block in result["Blocks"] if block["BlockType"] == "LINE" and block["Geometry"]["BoundingBox"]["Left"] >= 0.2]
+    return main_lines + sidebar_lines
+
 
 if __name__ == "__main__":
+    print(extract_cv_text("calibrate-teamthrow", "dev/test-cv-tr.pdf"))
     print(extract_cv_text("calibrate-teamthrow", "dev/test-cv.pdf"))
+    
