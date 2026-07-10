@@ -1,5 +1,6 @@
 import boto3
 from dotenv import load_dotenv
+import re
 import time
 
 load_dotenv()
@@ -41,8 +42,20 @@ def extract_cv_text(bucket: str, key: str) -> list[str]:
     main_lines = [block["Text"] for block in result["Blocks"] if block["BlockType"] == "LINE" and block["Geometry"]["BoundingBox"]["Left"] >= 0.2]
     return main_lines + sidebar_lines
 
+def extract_skill_candidates(lines: list[str]) -> list[str]:
+# TODO: multiword skills gets split up because we evaluate texts line by line.
+    potential_candidates = []
+    for line in lines:
+        for fragment in re.split(r"[:,/()]", line):
+            fragment = fragment.strip()
+            # TODO: skills that are inside long separator-less lines get skipped out.
+            if (len(fragment) > 2 and len(fragment) < 40):
+                    potential_candidates.append(fragment)
+    
+    return list(dict.fromkeys(potential_candidates)) 
+
 
 if __name__ == "__main__":
-    print(extract_cv_text("calibrate-teamthrow", "dev/test-cv-tr.pdf"))
-    print(extract_cv_text("calibrate-teamthrow", "dev/test-cv.pdf"))
+    print(extract_skill_candidates(extract_cv_text("calibrate-teamthrow", "dev/test-cv-tr.pdf")))
+    print(extract_skill_candidates(extract_cv_text("calibrate-teamthrow", "dev/test-cv.pdf")))
     
