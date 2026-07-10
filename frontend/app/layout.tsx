@@ -6,6 +6,9 @@ import { Inter } from "next/font/google";
 //import des styles globaux de l'appication 
 import "./globals.css";
 
+//provider de thème partagé (dark/light) pour toutes les pages
+import { ThemeProvider } from "@/contexts/ThemeContext";
+
 const inter = Inter({
   //inter configs
   subsets: ["latin"], //lattin chars 
@@ -29,7 +32,7 @@ export default function RootLayout({
       className={`${inter.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        {children}
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

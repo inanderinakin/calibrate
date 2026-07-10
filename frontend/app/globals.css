@@ -49,3 +49,33 @@
 body {
   font-family: var(--font-inter), sans-serif;
 }
+
+/* --- Textures de fond Calibrate --- */
+/* Une seule classe par usage : le changement light/dark est géré ici en CSS pur,
+   pas via le préfixe dark: de Tailwind (qui ne fonctionne pas sur des classes
+   custom non reconnues comme utilitaires). */
+
+.bg-texture-page {
+  background-color: #F8F1E7;
+  background-image: url("/textures/white-bg.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+[data-theme="dark"] .bg-texture-page ,
+.bg-texture-page[data-theme="dark"] {
+  background-image: url("/textures/blue-bg.jpg");
+}
+
+.bg-texture-sidebar {
+  background-color: #5B0F18;
+  background-image: url("/textures/burgundy-bg.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+[data-theme="dark"] .bg-texture-sidebar,
+.bg-texture-sidebar[data-theme="dark"] {
+  background-image: none;
+  background-color: #1B314C;
+}
