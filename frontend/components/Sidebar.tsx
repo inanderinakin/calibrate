@@ -19,7 +19,7 @@ export default function Sidebar() {
   const [activeItem, setActiveItem] = useState("upload-cv");
 
   return (
-    <aside className="w-[16.2vw] min-w-[180px] min-h-screen flex flex-col justify-between bg-primary-light dark:bg-sidebar-dark p-[1.5vw] relative overflow-hidden">
+    <aside className="w-[16.2vw] min-w-[180px] min-h-screen flex flex-col justify-between bg-texture-sidebar p-[1.5vw] relative overflow-hidden">
       <div className="relative z-10">
         <h2 className="font-black text-[clamp(28px,3.3vw,48px)] text-cream mb-[2.5vw] leading-none">
           Calibrate
