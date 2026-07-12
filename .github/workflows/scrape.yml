@@ -1,0 +1,50 @@
+name: Scrape Kariyer.net Postings
+
+on:
+  workflow_dispatch:
+    inputs:
+      full_run:
+        description: "Run the full scrape (all sources). Leave unchecked for a small validation run first."
+        type: boolean
+        default: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    defaults:
+      run:
+        working-directory: backend/scraper
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: pip install playwright beautifulsoup4
+
+      - name: Install Playwright browsers
+        run: playwright install --with-deps chromium
+
+      - name: Install Xvfb
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+
+      - name: Run scraper
+        run: |
+          if [ "${{ inputs.full_run }}" = "true" ]; then
+            xvfb-run -a python scraper.py
+          else
+            xvfb-run -a python -c "import scraper; scraper.SOURCES = scraper.SOURCES[:2]; scraper.MAX_PAGES_PER_SOURCE = 1; scraper.main()"
+          fi
+
+      - name: Upload postings as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: postings-data
+          path: |
+            backend/scraper/postings.jsonl
+            backend/scraper/failed_pages.log
+          retention-days: 14

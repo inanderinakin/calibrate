@@ -18,7 +18,9 @@ from bs4 import BeautifulSoup
 from scraper import (
     SOURCES,
     OUTPUT_FILE,
-    _handle_press_and_hold,
+    MAX_PAGES_PER_SOURCE,
+    build_page_url,
+    wait_for_selector_with_challenge,
     scrape_posting,
     load_seen_ids,
     save_posting,
@@ -35,28 +37,8 @@ def collect_new_cards(base_url: str, page, seen_ids: set) -> list[dict]:
     print(f"  Loading: {base_url}")
     page.goto(base_url, timeout=60000)
 
-    try:
-        page.wait_for_selector('[data-test="ad-card"]', timeout=20000)
-    except Exception:
-        if _handle_press_and_hold(page):
-            try:
-                page.wait_for_selector('[data-test="ad-card"]', timeout=20000)
-            except Exception:
-                print("  No cards after challenge. Solve captcha manually if shown...")
-                time.sleep(30)
-                try:
-                    page.wait_for_selector('[data-test="ad-card"]', timeout=10000)
-                except Exception:
-                    print("  Still no cards, skipping source.")
-                    return []
-        else:
-            print("  No cards loaded. Solve captcha manually if shown...")
-            time.sleep(30)
-            try:
-                page.wait_for_selector('[data-test="ad-card"]', timeout=10000)
-            except Exception:
-                print("  Still no cards, skipping source.")
-                return []
+    if not wait_for_selector_with_challenge(page, '[data-test="ad-card"]', base_url):
+        return []
 
     def extract_cards():
         html = page.content()
@@ -138,26 +120,55 @@ def main():
 
         total_saved = 0
 
-        for label, base_url in SOURCES:
-            print(f"\n=== Source: '{label}' ===")
+        # Round-robin across sources: all sources' page 1 first, then all
+        # sources' page 2, etc. A source drops out of rotation once a page
+        # returns no cards or no new cards; the others keep going.
+        active_sources = list(SOURCES)
 
-            cards = collect_new_cards(base_url, page, seen_ids)
-            new_cards = [c for c in cards if c["id"] not in seen_ids]
+        for page_num in range(1, MAX_PAGES_PER_SOURCE + 1):
+            if not active_sources:
+                print("\nAll sources exhausted.")
+                break
 
-            for i, card in enumerate(new_cards, 1):
-                if card["id"] in seen_ids:
+            print(f"\n########## Page {page_num} — {len(active_sources)} active sources ##########")
+            still_active = []
+
+            for label, base_url in active_sources:
+                page_url = build_page_url(base_url, page_num)
+                print(f"\n=== Source: '{label}' — page {page_num} ===")
+                cards = collect_new_cards(page_url, page, seen_ids)
+
+                if not cards:
+                    print("  No cards on this page — dropping source from rotation.")
                     continue
-                try:
-                    posting = scrape_posting(card["url"], page)
-                    posting.update({k: v for k, v in card.items() if k not in posting})
-                    save_posting(posting)
-                    seen_ids.add(card["id"])
-                    total_saved += 1
-                    print(f"  [{i}/{len(new_cards)}] Saved: {posting['title']} — Total new: {total_saved}")
-                except Exception as e:
-                    print(f"  [{i}/{len(new_cards)}] FAILED {card['url']}: {e}")
 
-                time.sleep(random.uniform(2.0, 4.0))
+                new_cards = [c for c in cards if c["id"] not in seen_ids]
+
+                if not new_cards:
+                    print("  No new cards on this page — dropping source from rotation.")
+                    continue
+
+                for i, card in enumerate(new_cards, 1):
+                    if card["id"] in seen_ids:
+                        continue
+                    try:
+                        posting = scrape_posting(card["url"], page, referer=page_url)
+                        if posting is None:
+                            print(f"  [{i}/{len(new_cards)}] SKIPPED (blocked/captcha): {card['url']}")
+                            continue
+                        posting.update({k: v for k, v in card.items() if k not in posting})
+                        save_posting(posting)
+                        seen_ids.add(card["id"])
+                        total_saved += 1
+                        print(f"  [{i}/{len(new_cards)}] Saved: {posting['title']} — Total new: {total_saved}")
+                    except Exception as e:
+                        print(f"  [{i}/{len(new_cards)}] FAILED {card['url']}: {e}")
+
+                    time.sleep(random.uniform(2.0, 4.0))
+
+                still_active.append((label, base_url))
+
+            active_sources = still_active
 
         browser.close()
 

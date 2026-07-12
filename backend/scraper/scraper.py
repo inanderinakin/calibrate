@@ -1,12 +1,21 @@
 import json
+import re
+import sys
 import time
 import random
 from urllib.parse import quote
 from playwright.sync_api import sync_playwright
 from bs4 import BeautifulSoup
 
+# Windows consoles default to a codepage (e.g. cp1254) that can't encode
+# the arrow/emoji characters used in our print statements — force UTF-8
+# so this doesn't crash on non-UTF-8 terminals or when output is redirected.
+sys.stdout.reconfigure(encoding="utf-8", line_buffering=True)
+sys.stderr.reconfigure(encoding="utf-8", line_buffering=True)
+
 # ── Search sources ────────────────────────────────────────────────────────────
-# Each entry is (label, base_url). Pagination appends &page=N automatically.
+# Each entry is (label, base_url). main() walks &page=2, &page=3... for each
+# source (see build_page_url) until a page returns no new cards.
 # Category URLs cover the bulk; keyword URLs supplement for specific roles.
 SOURCES = [
     # Category browsing — primary sources
@@ -53,33 +62,224 @@ SOURCES = [
 ]
 
 OUTPUT_FILE = "postings.jsonl"
+FAILED_LOG_FILE = "failed_pages.log"
+MAX_PAGES_PER_SOURCE = 50
+
+
+def build_page_url(base_url: str, page_num: int) -> str:
+    """Append &page=N (or ?page=N if base_url has no query yet) to a search URL."""
+    if page_num <= 1:
+        return base_url
+    sep = "&" if "?" in base_url else "?"
+    return f"{base_url}{sep}page={page_num}"
+
+
+def log_failed_page(url: str, reason: str):
+    """Record a page we couldn't load so it can be manually retried later —
+    a page returning 0 cards might be a real end-of-results, or it might be
+    a captcha we failed to solve. We can't always tell the two apart, so we
+    log every empty page rather than risk silently dropping real postings."""
+    with open(FAILED_LOG_FILE, "a", encoding="utf-8") as f:
+        f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')}\t{reason}\t{url}\n")
+
+
+def wait_for_selector_with_challenge(page, selector: str, url: str, timeout: int = 20000) -> bool:
+    """Wait for `selector`, handling the PerimeterX press-and-hold challenge if
+    it shows up (it can appear on listing pages AND individual posting pages).
+    Returns True once the selector appears. On failure, logs `url` to
+    FAILED_LOG_FILE so it can be retried later instead of silently dropped."""
+    try:
+        page.wait_for_selector(selector, timeout=timeout)
+        return True
+    except Exception:
+        pass
+
+    if _handle_press_and_hold(page):
+        print("  Bot challenge solved, waiting for content...")
+        try:
+            page.wait_for_selector(selector, timeout=timeout)
+            return True
+        except Exception:
+            pass
+    else:
+        print("  No known challenge detected — might be a different captcha type.")
+
+    # Unattended run — no human to solve a second/unknown challenge. Give the
+    # page a bit longer in case it's still settling, then give up.
+    print(f"  ⚠ '{selector}' still not found. Waiting 30s, then giving up on this page.")
+    time.sleep(30)
+    try:
+        page.wait_for_selector(selector, timeout=10000)
+        return True
+    except Exception:
+        print("  Still not found, moving on.")
+        log_failed_page(url, f"selector '{selector}' never appeared (captcha or blocked)")
+        return False
+
+
+def _read_progress_bar_width(cdp) -> float | None:
+    """Read the press-and-hold progress bar's fill width (0 -> 253px) via
+    CDP, piercing the closed shadow root + iframe the button lives in —
+    Playwright's normal locator/evaluate APIs can't reach closed shadow
+    content, but CDP's DOM domain can (same as DevTools' Elements panel).
+
+    The bar div isn't a fixed child index (nesting shifts between builds),
+    so we scan every descendant of the role="button" node for the first
+    one carrying an inline `width:Npx` style, wherever it sits."""
+    try:
+        doc = cdp.send("DOM.getDocument", {"pierce": True, "depth": -1})
+    except Exception:
+        return None
+
+    def attrs_to_dict(node):
+        flat = node.get("attributes") or []
+        return dict(zip(flat[0::2], flat[1::2]))
+
+    def find_width_style(node):
+        attrs = attrs_to_dict(node)
+        style = attrs.get("style", "")
+        m = re.search(r"width:\s*([\d.]+)px", style)
+        if m:
+            return float(m.group(1))
+        for child in node.get("children") or []:
+            result = find_width_style(child)
+            if result is not None:
+                return result
+        return None
+
+    def walk(node):
+        attrs = attrs_to_dict(node)
+        if attrs.get("role") == "button":
+            result = find_width_style(node)
+            if result is not None:
+                return result
+        for key in ("children", "shadowRoots", "contentDocument"):
+            val = node.get(key)
+            if isinstance(val, list):
+                for child in val:
+                    result = walk(child)
+                    if result is not None:
+                        return result
+            elif isinstance(val, dict):
+                result = walk(val)
+                if result is not None:
+                    return result
+        return None
+
+    return walk(doc.get("root", {}))
 
 
 # ── Listing scraper: collects posting URLs from search results ────────────────
 
-def _handle_press_and_hold(page) -> bool:
-    """Detect and solve the kariyer.net press-and-hold bot challenge.
-    Returns True if challenge was found and attempted."""
+def _handle_press_and_hold(page, max_attempts: int = 3) -> bool:
+    """Detect and solve the kariyer.net (PerimeterX) press-and-hold bot
+    challenge. Returns True once a press-and-hold is verifiably accepted,
+    False if no challenge appeared at all or every attempt was rejected.
+
+    The real button lives inside a CLOSED shadow root, inside an iframe,
+    inside div#px-captcha: div#px-captcha > #shadow-root (closed) > iframe
+    > (button). Closed shadow roots can't be queried by Playwright or any
+    external JS, so we can't select the button directly. Instead we click
+    the center of the shadow HOST (div#px-captcha) itself — shadow DOM
+    blocks querying, not layout, so the button always renders within it.
+
+    A single press can be rejected ("Lütfen tekrar deneyin") — retry a few
+    times before giving up rather than failing the whole page on one miss."""
     try:
-        button = page.locator("text=Basılı Tut").first
-        button.wait_for(timeout=3000)
+        container = page.locator("div#px-captcha").first
+        container.wait_for(timeout=3000)
     except Exception:
         return False  # No challenge on this page
 
     print("  Bot challenge detected — attempting press and hold...")
+    page.wait_for_timeout(2000)  # let the shadow-rendered button settle in
+
+    for attempt in range(1, max_attempts + 1):
+        if attempt > 1:
+            print(f"  Retrying press and hold (attempt {attempt}/{max_attempts})...")
+        if _attempt_press_and_hold_once(page, container):
+            return True
+        try:
+            container.wait_for(timeout=1000)  # still on the challenge?
+        except Exception:
+            return False  # challenge gone but we didn't detect it as solved — treat as done
+    return False
+
+
+def _attempt_press_and_hold_once(page, container) -> bool:
+    """One press-and-hold attempt. Returns True only if the challenge box
+    verifiably disappeared afterward — a rejected press ("Lütfen tekrar
+    deneyin") doesn't raise, so we can't just trust the absence of errors."""
     try:
-        box = button.bounding_box()
+        box = container.bounding_box()
         if not box:
             return False
+        # The container is taller than the button itself (extra room below
+        # is reserved for a "Lütfen tekrar deneyin" retry message), and the
+        # button sits at the top, not centered — so target that, not the
+        # container's vertical center.
         cx = box["x"] + box["width"] / 2
-        cy = box["y"] + box["height"] / 2
-        page.mouse.move(cx, cy)
+        cy = box["y"] + 26
+
+        # Approach in a few steps rather than jumping straight to target.
+        # Jittering *while held down* risks drifting off the button and
+        # cancelling the press, so keep it still once pressed.
+        start_x, start_y = cx - random.uniform(30, 60), cy - random.uniform(20, 40)
+        page.mouse.move(start_x, start_y)
+        steps = random.randint(4, 7)
+        for i in range(1, steps + 1):
+            page.mouse.move(
+                start_x + (cx - start_x) * i / steps + random.uniform(-2, 2),
+                start_y + (cy - start_y) * i / steps + random.uniform(-2, 2),
+            )
+            time.sleep(random.uniform(0.02, 0.06))
+
+        # Snapping exactly onto the pixel center and then pressing looks
+        # just as robotic as not moving at all — start the same small
+        # jitter (more horizontal than vertical, like a real hand) a
+        # moment *before* pressing, and keep it going uninterrupted through
+        # the down event and the hold, instead of a jitter-free press.
+        def _jitter():
+            page.mouse.move(cx + random.uniform(-1.2, 1.2), cy + random.uniform(-0.4, 0.4))
+
+        _jitter()
+        for _ in range(random.randint(2, 4)):
+            time.sleep(random.uniform(0.08, 0.15))
+            _jitter()
+
         page.mouse.down()
-        time.sleep(4)  # Hold for 4 seconds
+        # The fill bar's width goes from 0 to a fixed 253px — poll the real
+        # value via CDP and release right when it's full, instead of
+        # guessing a duration or waiting for a redirect.
+        cdp = page.context.new_cdp_session(page)
+        cdp.send("DOM.enable")
+        held = 0.0
+        max_hold = 20.0  # observed fill time varies (~5.7s-7.8s across runs)
+        while held < max_hold:
+            step = 0.15
+            time.sleep(step)
+            held += step
+            _jitter()
+            width = _read_progress_bar_width(cdp)
+            # Releasing before the bar is actually full reads as an
+            # incomplete/cancelled press and gets rejected — wait for it to
+            # be (essentially) done, not just close.
+            if width is not None and width >= 252:
+                break
+        time.sleep(random.uniform(0.2, 0.4))  # the "three dots" beat before release
         page.mouse.up()
         time.sleep(2)  # Wait for redirect
-        print("  Press and hold completed.")
-        return True
+
+        # The press can be rejected ("Lütfen tekrar deneyin") without ever
+        # raising — verify the challenge box actually went away instead of
+        # assuming success just because we didn't hit an exception.
+        try:
+            page.locator("div#px-captcha").first.wait_for(state="hidden", timeout=3000)
+            print("  Press and hold completed — challenge cleared.")
+            return True
+        except Exception:
+            print("  Press and hold was rejected (challenge still showing).")
+            return False
     except Exception as e:
         print(f"  Challenge attempt failed: {e}")
         return False
@@ -93,34 +293,8 @@ def collect_cards(base_url: str, page: "playwright Page") -> list[dict]:
     print(f"  Loading: {base_url}")
     page.goto(base_url, timeout=60000)
 
-    # Wait for cards or handle bot challenge
-    try:
-        page.wait_for_selector('[data-test="ad-card"]', timeout=20000)
-    except Exception:
-        if _handle_press_and_hold(page):
-            print("  Bot challenge solved, waiting for cards...")
-            try:
-                page.wait_for_selector('[data-test="ad-card"]', timeout=20000)
-            except Exception:
-                # If still no cards, pause and let user solve captcha manually
-                print("  ⚠ No cards loaded. If you see a captcha, solve it manually.")
-                print("    Waiting 30 seconds for you to solve it...")
-                time.sleep(30)
-                try:
-                    page.wait_for_selector('[data-test="ad-card"]', timeout=10000)
-                except Exception:
-                    print("  Still no cards, moving on.")
-                    return []
-        else:
-            # No press-and-hold either — might be geetest captcha, let user solve
-            print("  ⚠ No cards loaded. If you see a captcha, solve it manually.")
-            print("    Waiting 30 seconds for you to solve it...")
-            time.sleep(30)
-            try:
-                page.wait_for_selector('[data-test="ad-card"]', timeout=10000)
-            except Exception:
-                print("  Still no cards, moving on.")
-                return []
+    if not wait_for_selector_with_challenge(page, '[data-test="ad-card"]', base_url):
+        return []
 
     # Scroll down gradually to trigger any lazy-loaded content
     prev_count = 0
@@ -169,14 +343,25 @@ def collect_cards(base_url: str, page: "playwright Page") -> list[dict]:
 
 # ── Single posting scraper ────────────────────────────────────────────────────
 
-def scrape_posting(url: str, page: "playwright Page") -> dict:
+def scrape_posting(url: str, page: "playwright Page", referer: str | None = None) -> dict | None:
+    """Returns the parsed posting, or None if the page never loaded (e.g. a
+    captcha we couldn't solve) — the caller should skip it. The failed URL is
+    already logged to FAILED_LOG_FILE by wait_for_selector_with_challenge.
+
+    `referer` should be the listing page URL this posting was found on — it
+    makes the request look like a real click-through instead of a cold direct
+    hit, which bot detection tends to treat more suspiciously."""
     posting = {}
 
     posting["id"]  = url.split("-")[-1]
     posting["url"] = url
 
-    page.goto(url, timeout=60000)
-    page.wait_for_selector('[data-test="job-title"]', timeout=60000)
+    if referer:
+        page.goto(url, timeout=60000, referer=referer)
+    else:
+        page.goto(url, timeout=60000)
+    if not wait_for_selector_with_challenge(page, '[data-test="job-title"]', url):
+        return None
     html = page.content()
     soup = BeautifulSoup(html, "html.parser")
 
@@ -299,30 +484,58 @@ def main():
 
         total_saved = 0
 
-        for label, base_url in SOURCES:
-            print(f"\n=== Source: '{label}' ===")
+        # Round-robin across sources: all sources' page 1 first, then all
+        # sources' page 2, etc. A source drops out of rotation once a page
+        # returns no cards or no new cards; the others keep going.
+        active_sources = list(SOURCES)
 
-            cards = collect_cards(base_url, page)
-            print(f"  Found {len(cards)} cards")
+        for page_num in range(1, MAX_PAGES_PER_SOURCE + 1):
+            if not active_sources:
+                print("\nAll sources exhausted.")
+                break
 
-            new_cards = [c for c in cards if c["id"] not in seen_ids]
-            print(f"  New (not yet scraped): {len(new_cards)}")
+            print(f"\n########## Page {page_num} — {len(active_sources)} active sources ##########")
+            still_active = []
 
-            for i, card in enumerate(new_cards, 1):
-                if card["id"] in seen_ids:  # re-check inside loop to catch within-batch dupes
+            for label, base_url in active_sources:
+                page_url = build_page_url(base_url, page_num)
+                print(f"\n=== Source: '{label}' — page {page_num} ===")
+                cards = collect_cards(page_url, page)
+                print(f"  Found {len(cards)} cards")
+
+                if not cards:
+                    print("  No cards on this page — dropping source from rotation.")
                     continue
-                try:
-                    # Scrape full posting and merge card-level metadata into it
-                    posting = scrape_posting(card["url"], page)
-                    posting.update({k: v for k, v in card.items() if k not in posting})
-                    save_posting(posting)
-                    seen_ids.add(card["id"])
-                    total_saved += 1
-                    print(f"  [{i}/{len(new_cards)}] Saved: {posting['title']} — Total: {total_saved}")
-                except Exception as e:
-                    print(f"  [{i}/{len(new_cards)}] FAILED {card['url']}: {e}")
 
-                time.sleep(random.uniform(2.0, 4.0))
+                new_cards = [c for c in cards if c["id"] not in seen_ids]
+                print(f"  New (not yet scraped): {len(new_cards)}")
+
+                if not new_cards:
+                    print("  No new cards on this page — dropping source from rotation.")
+                    continue
+
+                for i, card in enumerate(new_cards, 1):
+                    if card["id"] in seen_ids:  # re-check inside loop to catch within-batch dupes
+                        continue
+                    try:
+                        # Scrape full posting and merge card-level metadata into it
+                        posting = scrape_posting(card["url"], page, referer=page_url)
+                        if posting is None:
+                            print(f"  [{i}/{len(new_cards)}] SKIPPED (blocked/captcha): {card['url']}")
+                            continue
+                        posting.update({k: v for k, v in card.items() if k not in posting})
+                        save_posting(posting)
+                        seen_ids.add(card["id"])
+                        total_saved += 1
+                        print(f"  [{i}/{len(new_cards)}] Saved: {posting['title']} — Total: {total_saved}")
+                    except Exception as e:
+                        print(f"  [{i}/{len(new_cards)}] FAILED {card['url']}: {e}")
+
+                    time.sleep(random.uniform(2.0, 4.0))
+
+                still_active.append((label, base_url))
+
+            active_sources = still_active
 
         browser.close()
 
