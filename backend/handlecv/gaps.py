@@ -1,9 +1,4 @@
-from pydantic import BaseModel
-from agent import GapResult, Gap;
-
-class NormalizedSkill(BaseModel):
-    skill: str
-    esco_category: str
+from models import NormalizedSkill, GapResult, Gap
 
 def compute_gaps(cv_skills: list[NormalizedSkill], target_roles: list[str], demand_profile: dict[str, list[NormalizedSkill]]) -> GapResult:
     gaps_list = []

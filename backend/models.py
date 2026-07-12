@@ -1,0 +1,15 @@
+from pydantic import BaseModel
+
+class Gap(BaseModel): 
+    skill: str
+    esco_category: str
+    # the none = none makes this field optional (both buing null or not given at all)
+    closest_cv_skill: str | None = None
+
+class GapResult(BaseModel): 
+    target_roles: list[str]
+    gaps: list[Gap]
+
+class NormalizedSkill(BaseModel):
+    skill: str
+    esco_category: str

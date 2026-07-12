@@ -4,17 +4,7 @@ from strands import Agent, tool
 from strands_tools import calculator, current_time
 from dotenv import load_dotenv
 from pydantic import BaseModel
-import json
-
-class Gap(BaseModel): 
-    skill: str
-    esco_category: str
-    # the none = none makes this field optional (both buing null or not given at all)
-    closest_cv_skill: str | None = None
-
-class GapResult(BaseModel): 
-    target_roles: list[str]
-    gaps: list[Gap]
+from models import GapResult
 
 class Resource(BaseModel):
     title: str
