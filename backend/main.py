@@ -4,7 +4,8 @@ from pathlib import Path
 
 from aiohttp import ClientError
 from fastapi.concurrency import run_in_threadpool
-from agent import get_recommendations, GapResult
+from agent import get_recommendations
+from models import GapResult
 
 from fastapi import FastAPI, HTTPException, UploadFile, status
 from fastapi.params import File

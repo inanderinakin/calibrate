@@ -54,7 +54,6 @@ def extract_skill_candidates(lines: list[str]) -> list[str]:
     
     return list(dict.fromkeys(potential_candidates)) 
 
-
 if __name__ == "__main__":
     print(extract_skill_candidates(extract_cv_text("calibrate-teamthrow", "dev/test-cv-tr.pdf")))
     print(extract_skill_candidates(extract_cv_text("calibrate-teamthrow", "dev/test-cv.pdf")))
