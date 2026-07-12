@@ -2,10 +2,13 @@ import boto3
 from dotenv import load_dotenv
 import re
 import time
+from pydantic import BaseModel
 
 load_dotenv()
 
 client = boto3.client("textract")
+
+
 
 def extract_cv_text(bucket: str, key: str) -> list[str]:
     response = client.start_document_text_detection(
@@ -53,7 +56,6 @@ def extract_skill_candidates(lines: list[str]) -> list[str]:
                     potential_candidates.append(fragment)
     
     return list(dict.fromkeys(potential_candidates)) 
-
 
 if __name__ == "__main__":
     print(extract_skill_candidates(extract_cv_text("calibrate-teamthrow", "dev/test-cv-tr.pdf")))
