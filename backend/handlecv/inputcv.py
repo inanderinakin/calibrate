@@ -43,18 +43,33 @@ def extract_cv_text(bucket: str, key: str) -> list[str]:
     return main_lines + sidebar_lines
 
 def extract_skill_candidates(lines: list[str]) -> list[str]:
-# TODO: multiword skills gets split up because we evaluate texts line by line.
     potential_candidates = []
+
+    for i in range (len(lines) - 1):
+        zippedLine = lines[i] + " " + lines[i+1]
+        potential_candidates.append(zippedLine)
+
     for line in lines:
         for fragment in re.split(r"[:,/()]", line):
             fragment = fragment.strip()
-            # TODO: skills that are inside long separator-less lines get skipped out.
             if (len(fragment) > 2 and len(fragment) < 40):
-                    potential_candidates.append(fragment)
+                potential_candidates.append(fragment)
+            
+        for fragment in line.split():
+            fragment = fragment.strip(".,;:!?()\"'")
+            potential_candidates.append(fragment)
     
     return list(dict.fromkeys(potential_candidates)) 
 
 if __name__ == "__main__":
-    print(extract_skill_candidates(extract_cv_text("calibrate-teamthrow", "dev/test-cv-tr.pdf")))
-    print(extract_skill_candidates(extract_cv_text("calibrate-teamthrow", "dev/test-cv.pdf")))
-    
+    # print(extract_skill_candidates(extract_cv_text("calibrate-teamthrow", "dev/test-cv-tr.pdf")))
+    # print(extract_skill_candidates(extract_cv_text("calibrate-teamthrow", "dev/test-cv.pdf")))
+    test_lines = [
+        "Beceriler: Python, Java",
+        "Ders projelerimde SQL kullanarak veri tabanları tasarladım",
+        "C ve Python bilgisi",
+        "Veritabanı",
+        "Yönetimi",
+    ]
+    print(extract_skill_candidates(test_lines))
+    print(len(test_lines))

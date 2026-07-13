@@ -78,8 +78,6 @@ def get_recommendations(gaps: GapResult):
     result = agent(gaps.model_dump_json() + "Here are the student's skill gaps. For each one, produce a recommendation.")
     report = result.structured_output
 
-    # The deterministic stage owns ranking — rebuild it from real demand numbers,
-    # discarding whatever order the model chose.
     demand: dict[str, float] = {}
     for role in gaps.target_roles:
         for item in load_role_demand(role) or []:

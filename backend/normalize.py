@@ -22,8 +22,8 @@ def normalize_skill(candidate: str) -> NormalizedSkill | None:
     }
 
     candidate = candidate.lower().strip()
-    if candidate in esco_roles:
-        return NormalizedSkill(skill = candidate, esco_category = esco_roles[candidate])
+    if candidate in esco_skills:
+        return NormalizedSkill(skill = candidate, esco_category = esco_skills[candidate])
     else:
         return None
     
