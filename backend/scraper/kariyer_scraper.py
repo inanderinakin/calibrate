@@ -79,10 +79,13 @@ SOURCES = [
     ("kw:machine learning",   "https://www.kariyer.net/is-ilanlari?kw=machine%20learning"),
 ]
 
-# Write outputs next to THIS script, not the current working directory, so they
-# always land in backend/scraper/ regardless of where the scraper is launched.
+# All three scrapers (kariyer, secretcv, yenibiris) now write into the SAME
+# postings.jsonl — a "source" field on each posting tells them apart, and
+# lets the (still-to-come) cross-source dedup pass match the same real-world
+# posting scraped from different sites.
 _HERE = os.path.dirname(os.path.abspath(__file__))
-OUTPUT_FILE = os.path.join(_HERE, "postings_kariyer.jsonl")
+SOURCE_NAME = "kariyer"
+OUTPUT_FILE = os.path.join(_HERE, "postings.jsonl")
 FAILED_LOG_FILE = os.path.join(_HERE, "failed_pages_kariyer.log")
 MAX_PAGES_PER_SOURCE = 50
 
@@ -145,7 +148,7 @@ def map_to_role(title: str, description: str | None = None) -> str:
     return "Full Stack or Product Engineer"
 
 S3_BUCKET = "calibrate-teamthrow"
-S3_POSTINGS_KEY = "scraper-data/postings_kariyer.jsonl"
+S3_POSTINGS_KEY = "scraper-data/postings.jsonl"
 S3_FAILED_LOG_KEY = "scraper-data/failed_pages_kariyer.log"
 
 
@@ -560,19 +563,24 @@ def _text(tag) -> str | None:
 
 
 def load_seen_ids(output_file: str) -> set:
-    """Load already-scraped posting IDs to avoid duplicates."""
+    """Load this scraper's already-scraped posting IDs, to avoid re-scraping
+    them. The file is shared across all three scrapers, so only count rows
+    tagged with our own source — another source's IDs aren't comparable."""
     seen = set()
     try:
         with open(output_file, "r", encoding="utf-8") as f:
             for line in f:
                 data = json.loads(line)
-                seen.add(data["id"])
+                if data.get("source") == SOURCE_NAME:
+                    seen.add(data["id"])
     except FileNotFoundError:
         pass
     return seen
 
 
 def save_posting(posting: dict):
+    posting["source"] = SOURCE_NAME
+    posting["scrape_date"] = time.strftime("%Y-%m-%d")
     with open(OUTPUT_FILE, "a", encoding="utf-8") as f:
         f.write(json.dumps(posting, ensure_ascii=False) + "\n")
 

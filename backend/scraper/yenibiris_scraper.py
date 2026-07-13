@@ -81,15 +81,18 @@ SOURCES = [
     # below is the real safety net, but specific keywords keep noise low.
 ]
 
-# Write outputs next to THIS script, not the current working directory — so it
-# lands in backend/scraper/ no matter where the scraper is launched from.
+# All three scrapers (kariyer, secretcv, yenibiris) now write into the SAME
+# postings.jsonl — a "source" field on each posting tells them apart, and
+# lets the (still-to-come) cross-source dedup pass match the same real-world
+# posting scraped from different sites.
 _HERE = os.path.dirname(os.path.abspath(__file__))
-OUTPUT_FILE = os.path.join(_HERE, "postings_yenibiris.jsonl")
+SOURCE_NAME = "yenibiris"
+OUTPUT_FILE = os.path.join(_HERE, "postings.jsonl")
 FAILED_LOG_FILE = os.path.join(_HERE, "failed_pages_yenibiris.log")
 MAX_PAGES_PER_SOURCE = 40
 
 S3_BUCKET = "calibrate-teamthrow"
-S3_POSTINGS_KEY = "scraper-data/postings_yenibiris.jsonl"
+S3_POSTINGS_KEY = "scraper-data/postings.jsonl"
 S3_FAILED_LOG_KEY = "scraper-data/failed_pages_yenibiris.log"
 
 
@@ -328,12 +331,17 @@ def scrape_posting(url: str, session: requests.Session) -> dict | None:
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def load_seen_ids(output_file: str) -> set:
+    """Load this scraper's already-scraped posting IDs. The file is shared
+    across all three scrapers, so only count rows tagged with our own
+    source — another source's IDs aren't comparable."""
     seen = set()
     try:
         with open(output_file, "r", encoding="utf-8") as f:
             for line in f:
                 try:
-                    seen.add(json.loads(line)["id"])
+                    data = json.loads(line)
+                    if data.get("source") == SOURCE_NAME:
+                        seen.add(data["id"])
                 except Exception:
                     continue
     except FileNotFoundError:
@@ -342,6 +350,8 @@ def load_seen_ids(output_file: str) -> set:
 
 
 def save_posting(posting: dict):
+    posting["source"] = SOURCE_NAME
+    posting["scrape_date"] = time.strftime("%Y-%m-%d")
     with open(OUTPUT_FILE, "a", encoding="utf-8") as f:
         f.write(json.dumps(posting, ensure_ascii=False) + "\n")
 
