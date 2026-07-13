@@ -1,4 +1,5 @@
 import json
+import os
 import re
 import sys
 import time
@@ -6,6 +7,7 @@ import random
 from urllib.parse import quote
 from playwright.sync_api import sync_playwright
 from bs4 import BeautifulSoup
+import boto3
 
 # Windows consoles default to a codepage (e.g. cp1254) that can't encode
 # the arrow/emoji characters used in our print statements — force UTF-8
@@ -64,6 +66,35 @@ SOURCES = [
 OUTPUT_FILE = "postings.jsonl"
 FAILED_LOG_FILE = "failed_pages.log"
 MAX_PAGES_PER_SOURCE = 50
+
+S3_BUCKET = "calibrate-teamthrow"
+S3_POSTINGS_KEY = "scraper-data/postings.jsonl"
+S3_FAILED_LOG_KEY = "scraper-data/failed_pages.log"
+
+
+def sync_from_s3():
+    """Pull down last run's postings before scraping, so seen_ids reflects
+    everything collected so far instead of starting from zero each time."""
+    try:
+        boto3.client("s3").download_file(S3_BUCKET, S3_POSTINGS_KEY, OUTPUT_FILE)
+        print(f"Downloaded existing postings from s3://{S3_BUCKET}/{S3_POSTINGS_KEY}")
+    except Exception as e:
+        print(f"No existing postings in S3 (or download failed): {e}")
+
+
+def sync_to_s3():
+    """Upload postings + failed-page log after a run."""
+    s3 = boto3.client("s3")
+    try:
+        s3.upload_file(OUTPUT_FILE, S3_BUCKET, S3_POSTINGS_KEY)
+        print(f"Uploaded postings to s3://{S3_BUCKET}/{S3_POSTINGS_KEY}")
+    except Exception as e:
+        print(f"Failed to upload postings to S3: {e}")
+    if os.path.exists(FAILED_LOG_FILE):
+        try:
+            s3.upload_file(FAILED_LOG_FILE, S3_BUCKET, S3_FAILED_LOG_KEY)
+        except Exception as e:
+            print(f"Failed to upload failed_pages.log to S3: {e}")
 
 
 def build_page_url(base_url: str, page_num: int) -> str:
@@ -464,6 +495,7 @@ def save_posting(posting: dict):
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
+    sync_from_s3()
     seen_ids = load_seen_ids(OUTPUT_FILE)
     print(f"Already scraped: {len(seen_ids)} postings")
 
@@ -539,6 +571,7 @@ def main():
 
         browser.close()
 
+    sync_to_s3()
     print(f"\nDone. Total new postings saved: {total_saved}")
 
 

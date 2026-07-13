@@ -7,6 +7,8 @@ on:
         description: "Run the full scrape (all sources). Leave unchecked for a small validation run first."
         type: boolean
         default: false
+  schedule:
+    - cron: "0 3 * * 1" # every Monday 03:00 UTC — always a full run
 
 jobs:
   scrape:
@@ -15,6 +17,11 @@ jobs:
     defaults:
       run:
         working-directory: backend/scraper
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
     steps:
       - uses: actions/checkout@v4
 
@@ -23,7 +30,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install Python dependencies
-        run: pip install playwright beautifulsoup4
+        run: pip install playwright beautifulsoup4 boto3
 
       - name: Install Playwright browsers
         run: playwright install --with-deps chromium
@@ -33,7 +40,7 @@ jobs:
 
       - name: Run scraper
         run: |
-          if [ "${{ inputs.full_run }}" = "true" ]; then
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.full_run }}" = "true" ]; then
             xvfb-run -a python scraper.py
           else
             xvfb-run -a python -c "import scraper; scraper.SOURCES = scraper.SOURCES[:2]; scraper.MAX_PAGES_PER_SOURCE = 1; scraper.main()"
