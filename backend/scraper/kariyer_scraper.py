@@ -1,3 +1,18 @@
+"""
+kariyer.net job scraper.
+
+The original, most involved scraper of the three: kariyer.net is a JS-heavy SPA
+behind a PerimeterX press-and-hold bot challenge, so this uses Playwright (not
+plain requests) and solves the challenge, then syncs its raw feed to S3 for the
+deployed 24/7 run.
+
+Outputs (in backend/scraper/):
+  * postings_kariyer_raw.jsonl  — everything scraped, unfiltered
+  * postings_kariyer.jsonl      — the curated CS/IT set used by the pipeline
+
+Sibling scrapers with the identical output schema: yenibiris_scraper.py,
+secretcv_scraper.py (both plain requests + the shared relevance.py gate).
+"""
 import json
 import os
 import re
@@ -63,10 +78,19 @@ SOURCES = [
     ("kw:machine learning",   "https://www.kariyer.net/is-ilanlari?kw=machine%20learning"),
 ]
 
-OUTPUT_FILE = "postings.jsonl"
-FAILED_LOG_FILE = "failed_pages.log"
+# Write outputs next to THIS script, not the current working directory, so they
+# always land in backend/scraper/ regardless of where the scraper is launched.
+# This is the RAW kariyer feed (unfiltered); the curated CS/IT set lives in
+# postings_kariyer.jsonl.
+_HERE = os.path.dirname(os.path.abspath(__file__))
+OUTPUT_FILE = os.path.join(_HERE, "postings_kariyer_raw.jsonl")
+FAILED_LOG_FILE = os.path.join(_HERE, "failed_pages_kariyer.log")
 MAX_PAGES_PER_SOURCE = 50
 
+# NOTE: the S3 object keys are left unchanged so the deployed 24/7 scraper keeps
+# syncing to the same remote objects it always has (renaming them would orphan
+# the existing S3 data and reset incremental dedup). They hold the same raw
+# kariyer feed as OUTPUT_FILE above.
 S3_BUCKET = "calibrate-teamthrow"
 S3_POSTINGS_KEY = "scraper-data/postings.jsonl"
 S3_FAILED_LOG_KEY = "scraper-data/failed_pages.log"
