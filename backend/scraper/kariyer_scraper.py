@@ -24,6 +24,8 @@ from playwright.sync_api import sync_playwright
 from bs4 import BeautifulSoup
 import boto3
 
+from relevance import is_cs_relevant
+
 # Windows consoles default to a codepage (e.g. cp1254) that can't encode
 # the arrow/emoji characters used in our print statements — force UTF-8
 # so this doesn't crash on non-UTF-8 terminals or when output is redirected.
@@ -84,39 +86,118 @@ SOURCES = [
 # postings_kariyer.jsonl.
 _HERE = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_FILE = os.path.join(_HERE, "postings_kariyer_raw.jsonl")
+CURATED_OUTPUT_FILE = os.path.join(_HERE, "postings_kariyer.jsonl")
 FAILED_LOG_FILE = os.path.join(_HERE, "failed_pages_kariyer.log")
 MAX_PAGES_PER_SOURCE = 50
 
-# NOTE: the S3 object keys are left unchanged so the deployed 24/7 scraper keeps
-# syncing to the same remote objects it always has (renaming them would orphan
-# the existing S3 data and reset incremental dedup). They hold the same raw
-# kariyer feed as OUTPUT_FILE above.
+# Sub-classifies a posting that already passed the shared is_cs_relevant()
+# gate into one of the 6 target roles — relevance.py only answers "CS or
+# not", it doesn't say which kind. Kept local to this scraper for now since
+# it's the only one anything downstream (T1.1 role breakdown) needs yet.
+ROLE_PATTERNS = {
+    "DevOps": [
+        "devops", "site reliability", "cloud engineer", "bulut mühend",
+        "platform engineer", "infrastructure engineer", "system administrator",
+        "system administration", "sistem yönetici", "network engineer",
+        "systems engineer", "sistem uzman", "network uzman", "sistem destek",
+        "network destek", "siber güvenlik", "bilgi güvenliği", "cyber security",
+        "information security", "network mühend", "ağ ve güvenlik",
+        "network güvenlik", "ağ güvenliği",
+    ],
+    "ML Engineer": [
+        "makine öğrenme", "machine learning", "yapay zeka mühend", "ai engineer",
+        "computer vision", " nlp ", "derin öğrenme", "deep learning", " ai ",
+        "ai specialist", "yapay zeka uzman",
+    ],
+    "Data Scientist": [
+        "veri bilim", "data scien", "veri mühend", "data engineer",
+        "veri analist", "veri analiz", "data analyst", "data analytics",
+        "veri analitik", "iş zekası", "business intelligence",
+    ],
+    "Backend Engineer": ["backend", "back-end", "back end"],
+    "Frontend Engineer": [
+        "frontend", "front-end", "front end", "react", "angular", "vue",
+        "ux/ui", "ux tasarım", "ui tasarım", "ui/ux",
+        "web geliştir", "web tasarım", "web arayüz",
+    ],
+}
+
+
+def map_to_role(title: str, description: str | None = None) -> str:
+    """Sub-classify an already-CS-relevant posting into one of the 5
+    specific roles, or "Full Stack or Product Engineer" as the catch-all
+    when nothing more specific matches the title. Also checks the
+    description, since Turkish postings very often title everything
+    "Yazılım Geliştirici" and only name the actual stack (React,
+    Kubernetes, ML...) in the body."""
+    def _has(text, *words):
+        return any(w in text for w in words)
+
+    # Plain ASCII "I" is left alone (titles use it for English acronyms
+    # like "UI"/"IT"/"AI"); only Turkish capital İ needs the fix, since
+    # Python's default .lower() otherwise mangles it into "i" + a
+    # combining dot instead of plain "i".
+    t = (title or "").replace("İ", "i").lower()
+    for role, patterns in ROLE_PATTERNS.items():
+        if _has(t, *patterns):
+            return role
+    if description:
+        d = description.replace("İ", "i").lower()
+        for role, patterns in ROLE_PATTERNS.items():
+            if _has(d, *patterns):
+                return role
+    return "Full Stack or Product Engineer"
+
+# NOTE: the raw feed's S3 key is left unchanged so the deployed 24/7 scraper
+# keeps syncing to the same remote object it always has (renaming it would
+# orphan the existing S3 data and reset incremental dedup). The curated set
+# gets its own key alongside it.
 S3_BUCKET = "calibrate-teamthrow"
 S3_POSTINGS_KEY = "scraper-data/postings.jsonl"
+S3_CURATED_POSTINGS_KEY = "scraper-data/postings_kariyer_curated.jsonl"
 S3_FAILED_LOG_KEY = "scraper-data/failed_pages.log"
 
 
 def sync_from_s3():
-    """Pull down last run's postings before scraping, so seen_ids reflects
-    everything collected so far instead of starting from zero each time."""
+    """Pull down last run's postings (raw + curated) before scraping, so
+    seen_ids reflects everything collected so far instead of starting from
+    zero, and the curated set keeps accumulating rather than resetting."""
+    s3 = boto3.client("s3")
     try:
-        boto3.client("s3").download_file(S3_BUCKET, S3_POSTINGS_KEY, OUTPUT_FILE)
+        s3.download_file(S3_BUCKET, S3_POSTINGS_KEY, OUTPUT_FILE)
         print(f"Downloaded existing postings from s3://{S3_BUCKET}/{S3_POSTINGS_KEY}")
     except Exception as e:
         print(f"No existing postings in S3 (or download failed): {e}")
+    try:
+        s3.download_file(S3_BUCKET, S3_CURATED_POSTINGS_KEY, CURATED_OUTPUT_FILE)
+        print(f"Downloaded existing curated postings from s3://{S3_BUCKET}/{S3_CURATED_POSTINGS_KEY}")
+    except Exception as e:
+        print(f"No existing curated postings in S3 (or download failed): {e}")
 
 
 def sync_to_s3():
-    """Upload postings + failed-page log after a run."""
+    """Upload raw postings, curated postings, and the failed-page log after a
+    run, then delete the local copies — S3 is the source of truth, the local
+    files are just a working scratch area for this run (dedup/resume) and
+    shouldn't linger in the repo folder afterward."""
     s3 = boto3.client("s3")
     try:
         s3.upload_file(OUTPUT_FILE, S3_BUCKET, S3_POSTINGS_KEY)
         print(f"Uploaded postings to s3://{S3_BUCKET}/{S3_POSTINGS_KEY}")
+        os.remove(OUTPUT_FILE)
     except Exception as e:
         print(f"Failed to upload postings to S3: {e}")
+    if os.path.exists(CURATED_OUTPUT_FILE):
+        try:
+            s3.upload_file(CURATED_OUTPUT_FILE, S3_BUCKET, S3_CURATED_POSTINGS_KEY)
+            print(f"Uploaded curated postings to s3://{S3_BUCKET}/{S3_CURATED_POSTINGS_KEY}")
+            os.remove(CURATED_OUTPUT_FILE)
+        except Exception as e:
+            print(f"Failed to upload curated postings to S3: {e}")
     if os.path.exists(FAILED_LOG_FILE):
         try:
             s3.upload_file(FAILED_LOG_FILE, S3_BUCKET, S3_FAILED_LOG_KEY)
+            os.remove(FAILED_LOG_FILE)
         except Exception as e:
             print(f"Failed to upload failed_pages.log to S3: {e}")
 
@@ -516,6 +597,11 @@ def save_posting(posting: dict):
         f.write(json.dumps(posting, ensure_ascii=False) + "\n")
 
 
+def save_curated_posting(posting: dict):
+    with open(CURATED_OUTPUT_FILE, "a", encoding="utf-8") as f:
+        f.write(json.dumps(posting, ensure_ascii=False) + "\n")
+
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
@@ -573,6 +659,19 @@ def main():
                 for i, card in enumerate(new_cards, 1):
                     if card["id"] in seen_ids:  # re-check inside loop to catch within-batch dupes
                         continue
+
+                    # Coarse pre-filter on the listing card (title + sector
+                    # only — department isn't known until the detail page)
+                    # before ever opening the detail page: kariyer.net's
+                    # captcha makes every detail-page load expensive, so
+                    # skip the obvious junk (sales, tourism, HR...) our
+                    # broad search terms pull in. Postings this rejects
+                    # never make it into the raw feed either — that's the
+                    # tradeoff for not paying the captcha cost on them.
+                    if not is_cs_relevant({"title": card.get("position_name"), "sector": card.get("sector")}):
+                        seen_ids.add(card["id"])
+                        continue
+
                     try:
                         # Scrape full posting and merge card-level metadata into it
                         posting = scrape_posting(card["url"], page, referer=page_url)
@@ -580,10 +679,19 @@ def main():
                             print(f"  [{i}/{len(new_cards)}] SKIPPED (blocked/captcha): {card['url']}")
                             continue
                         posting.update({k: v for k, v in card.items() if k not in posting})
-                        save_posting(posting)
+                        save_posting(posting)  # raw feed: everything we actually fetched
                         seen_ids.add(card["id"])
                         total_saved += 1
-                        print(f"  [{i}/{len(new_cards)}] Saved: {posting['title']} — Total: {total_saved}")
+
+                        # Re-check relevance now that department + full
+                        # description are known, and file into the curated
+                        # CS/IT set with a specific role tag if it still holds.
+                        if is_cs_relevant(posting):
+                            posting["role"] = map_to_role(posting.get("title"), posting.get("description_text"))
+                            save_curated_posting(posting)
+                            print(f"  [{i}/{len(new_cards)}] Saved: {posting['title']} ({posting['role']}) — Total: {total_saved}")
+                        else:
+                            print(f"  [{i}/{len(new_cards)}] Saved to raw only (not CS): {posting['title']} — Total: {total_saved}")
                     except Exception as e:
                         print(f"  [{i}/{len(new_cards)}] FAILED {card['url']}: {e}")
 

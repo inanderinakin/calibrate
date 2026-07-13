@@ -23,6 +23,7 @@ import random
 import re
 from urllib.parse import quote
 
+import boto3
 import requests
 from bs4 import BeautifulSoup
 
@@ -86,6 +87,41 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_FILE = os.path.join(_HERE, "postings_yenibiris.jsonl")
 FAILED_LOG_FILE = os.path.join(_HERE, "failed_pages_yenibiris.log")
 MAX_PAGES_PER_SOURCE = 40
+
+S3_BUCKET = "calibrate-teamthrow"
+S3_POSTINGS_KEY = "scraper-data/postings_yenibiris.jsonl"
+S3_FAILED_LOG_KEY = "scraper-data/failed_pages_yenibiris.log"
+
+
+def sync_from_s3():
+    """Pull down last run's postings before scraping, so seen_ids reflects
+    everything collected so far instead of starting from zero."""
+    s3 = boto3.client("s3")
+    try:
+        s3.download_file(S3_BUCKET, S3_POSTINGS_KEY, OUTPUT_FILE)
+        print(f"Downloaded existing postings from s3://{S3_BUCKET}/{S3_POSTINGS_KEY}")
+    except Exception as e:
+        print(f"No existing postings in S3 (or download failed): {e}")
+
+
+def sync_to_s3():
+    """Upload postings and the failed-page log after a run, then delete the
+    local copies — S3 is the source of truth, the local files are just a
+    working scratch area for this run (dedup/resume)."""
+    s3 = boto3.client("s3")
+    if os.path.exists(OUTPUT_FILE):
+        try:
+            s3.upload_file(OUTPUT_FILE, S3_BUCKET, S3_POSTINGS_KEY)
+            print(f"Uploaded postings to s3://{S3_BUCKET}/{S3_POSTINGS_KEY}")
+            os.remove(OUTPUT_FILE)
+        except Exception as e:
+            print(f"Failed to upload postings to S3: {e}")
+    if os.path.exists(FAILED_LOG_FILE):
+        try:
+            s3.upload_file(FAILED_LOG_FILE, S3_BUCKET, S3_FAILED_LOG_KEY)
+            os.remove(FAILED_LOG_FILE)
+        except Exception as e:
+            print(f"Failed to upload failed_pages_yenibiris.log to S3: {e}")
 
 HEADERS = {
     "User-Agent": ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -313,6 +349,7 @@ def save_posting(posting: dict):
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
+    sync_from_s3()
     seen_ids = load_seen_ids(OUTPUT_FILE)
     print(f"Already scraped: {len(seen_ids)} postings")
 
@@ -368,6 +405,7 @@ def main():
 
             time.sleep(random.uniform(1.0, 2.0))
 
+    sync_to_s3()
     print(f"\nDone. Saved {total_saved} CS/IT postings, skipped {total_skipped} irrelevant.")
 
 

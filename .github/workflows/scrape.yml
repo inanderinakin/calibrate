@@ -1,4 +1,4 @@
-name: Scrape Kariyer.net Postings
+name: Scrape Job Postings
 
 on:
   workflow_dispatch:
@@ -30,7 +30,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install Python dependencies
-        run: pip install playwright beautifulsoup4 boto3
+        run: pip install playwright beautifulsoup4 boto3 requests
 
       - name: Install Playwright browsers
         run: playwright install --with-deps chromium
@@ -38,20 +38,26 @@ jobs:
       - name: Install Xvfb
         run: sudo apt-get update && sudo apt-get install -y xvfb
 
-      - name: Run scraper
+      - name: Run kariyer.net scraper
         run: |
           if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.full_run }}" = "true" ]; then
-            xvfb-run -a python scraper.py
+            xvfb-run -a python kariyer_scraper.py
           else
-            xvfb-run -a python -c "import scraper; scraper.SOURCES = scraper.SOURCES[:2]; scraper.MAX_PAGES_PER_SOURCE = 1; scraper.main()"
+            xvfb-run -a python -c "import kariyer_scraper as s; s.SOURCES = s.SOURCES[:2]; s.MAX_PAGES_PER_SOURCE = 1; s.main()"
           fi
 
-      - name: Upload postings as artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: postings-data
-          path: |
-            backend/scraper/postings.jsonl
-            backend/scraper/failed_pages.log
-          retention-days: 14
+      - name: Run secretcv.com scraper
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.full_run }}" = "true" ]; then
+            python secretcv_scraper.py
+          else
+            python -c "import secretcv_scraper as s; s.SOURCES = s.SOURCES[:2]; s.MAX_PAGES_PER_SOURCE = 1; s.main()"
+          fi
+
+      - name: Run yenibiris.com scraper
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.full_run }}" = "true" ]; then
+            python yenibiris_scraper.py
+          else
+            python -c "import yenibiris_scraper as s; s.SOURCES = s.SOURCES[:2]; s.MAX_PAGES_PER_SOURCE = 1; s.main()"
+          fi
