@@ -412,7 +412,6 @@ def load_seen_ids(output_file: str) -> set:
 
 def save_posting(posting: dict):
     posting["source"] = SOURCE_NAME
-    posting["scrape_date"] = time.strftime("%Y-%m-%d")
     with open(OUTPUT_FILE, "a", encoding="utf-8") as f:
         f.write(json.dumps(posting, ensure_ascii=False) + "\n")
 
