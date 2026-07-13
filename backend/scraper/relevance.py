@@ -6,10 +6,12 @@ Turkish job boards do substring keyword matching, so a search for "it" matches
 hospitality / sales / construction roles. Every scraper runs each posting
 through is_cs_relevant() before saving so only genuine CS/IT postings are kept.
 
-Logic (mirrors the validated kariyer clean.py):
+Logic:
   * a clearly non-CS title with no CS signal  → reject
   * a CS keyword in the title                  → accept
-  * a CS sector or department                  → accept
+  * a CS department, unless the department name itself reads non-tech
+    (company-wide sector is deliberately NOT used — see is_cs_relevant)
+                                                → accept
   * otherwise                                  → reject
 """
 import re
@@ -18,6 +20,13 @@ CS_SECTORS = (
     "bilgi teknolojileri", "bilişim", "yazılım", "teknoloji",
     "telekomünikasyon", "internet", "bilgisayar",
 )
+
+# Department-only signals (never checked against the company-wide sector
+# field, which is a different, less reliable field — see is_cs_relevant).
+# Short/English forms like "it" only appear here, not in CS_SECTORS, because
+# department is a controlled categorical value (safe to substring-match)
+# while sector free text could contain "it" inside an unrelated word.
+CS_DEPARTMENTS_ONLY = ("it", "information technology")
 
 CS_TITLE_KW = re.compile(
     r"yazılım|software|developer|geliştirici|programcı|programmer|"
@@ -44,7 +53,9 @@ CS_TITLE_KW = re.compile(
     r"\bsql\b|nosql|mongodb|postgres|oracle|"
     r"power\s?bi|tableau|etl|"
     r"help\s?desk|teknik\s?destek|technical\s?support|"
-    r"network\s?(admin|engineer|uzman|müh|destek)|ağ\s?(uzman|müh|güvenlik)|"
+    r"network\s?(admin|engineer|uzman|müh|destek|teknisyen|support|specialist|operat)|"
+    r"ağ\s?(uzman|müh|güvenlik)|noc\s?(specialist|uzman|operat)|"
+    r"system\s?integration|data\s?(services|center)|"
     r"otomasyon\s?müh|rpa|bilgisayar\s?müh|bilgisayar\s?bilim",
     re.IGNORECASE,
 )
@@ -74,7 +85,14 @@ NON_CS_TITLE_KW = re.compile(
     r"bakım\s?onar|arıza\s?bakım|onarım\s?(eleman|teknisyen|sorumlu|uzman)|anakart\s?onar|"
     r"genel\s?başvuru|kariyer\.net.?le|"
     r"kalite\s?(kontrol|güvence|yönetici|sistem)|"
-    r"montaj\s?eleman|\boperatör",
+    r"montaj\s?eleman|\boperatör|"
+    r"fotoğraf|teknik\s?servis\s?eleman|teknisyenlik|"
+    r"satın\s?alma|satınalma|dış\s?ticaret|"
+    r"hizmet\s?eleman|genel\s?hizmet|"
+    r"e.ticaret\s?uzman|"
+    r"üretim\s?destek|operasyon\s?şef|"
+    r"pos\s?destek|"
+    r"iş\s?sağlığı|i̇sg\s?uzman",
     re.IGNORECASE,
 )
 
@@ -82,12 +100,12 @@ NON_CS_TITLE_KW = re.compile(
 def is_cs_relevant(posting: dict) -> bool:
     """True if a scraped posting is a genuine CS/IT role, based on its title,
     department and sector."""
-    title  = (posting.get("title") or posting.get("position_name") or "").replace("İ", "i").lower()
-    sector = (posting.get("sector") or "").replace("İ", "i").lower()
-    dept   = (posting.get("department") or "").replace("İ", "i").lower()
+    title = (posting.get("title") or posting.get("position_name") or "").replace("İ", "i").lower()
+    dept  = (posting.get("department") or "").replace("İ", "i").lower()
 
-    has_cs     = bool(CS_TITLE_KW.search(title))
-    has_non_cs = bool(NON_CS_TITLE_KW.search(title))
+    has_cs         = bool(CS_TITLE_KW.search(title))
+    has_non_cs     = bool(NON_CS_TITLE_KW.search(title))
+    has_non_cs_dept = bool(NON_CS_TITLE_KW.search(dept))
 
     # Clear non-CS title with no CS signal → reject.
     if has_non_cs and not has_cs:
@@ -95,13 +113,17 @@ def is_cs_relevant(posting: dict) -> bool:
     # CS keyword in the title → accept.
     if has_cs:
         return True
-    # CS department → accept (department is job-level and reliable).
-    if any(s in dept for s in CS_SECTORS):
-        return True
-    # CS sector → accept, but ONLY when it's a clean single/few-value sector.
-    # secretcv lists a company's FULL sector set (a long comma-separated dump),
-    # so a promoter/sales role at a company that happens to be tagged "BT" would
-    # otherwise leak in. A short sector value is a genuine per-job signal.
-    if sector.count(",") <= 2 and any(s in sector for s in CS_SECTORS):
+    # CS department → accept (department is job-level and reliable) — unless
+    # the department name itself reads as a non-tech function (e.g. company
+    # sector is "Bilişim" but department is "Satınalma"/"Teknik Servis").
+    #
+    # NOTE: sector (company-wide, e.g. "Bilişim") is deliberately NOT used as
+    # an accept signal on its own — a company's overall sector tag says
+    # nothing about a specific posting's function (its purchasing/service/HR
+    # postings get the same sector tag as its engineering ones), and one
+    # sector-only accept path is where the whole class of false positives
+    # (satın alma, teknik servis, fotoğrafçı, ...) came from.
+    cs_signal_in_dept = any(s in dept for s in CS_SECTORS) or any(s in dept for s in CS_DEPARTMENTS_ONLY)
+    if cs_signal_in_dept and not has_non_cs_dept:
         return True
     return False
