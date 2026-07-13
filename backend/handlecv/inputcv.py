@@ -49,7 +49,6 @@ def extract_skill_candidates(lines: list[str]) -> list[str]:
     for line in lines:
         for fragment in re.split(r"[:,/()]", line):
             fragment = fragment.strip()
-            # TODO: skills that are inside long separator-less lines get skipped out.
             if (len(fragment) > 2 and len(fragment) < 40):
                 potential_candidates.append(fragment)
             
