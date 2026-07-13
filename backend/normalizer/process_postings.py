@@ -16,10 +16,13 @@ class PostingSkillExtractor:
         
         with jsonlines.open(jsonl_path) as reader:
             for idx, obj in enumerate(reader):
-                # mergeing the opportunity with 
-                description = obj.get("description", "")
-                criteria = obj.get("criteria", "")
-                full_text = f" {description} {criteria} ".lower()
+                # The scrapers emit "description_text" and a "candidate_criteria"
+                # dict; keep the old "description"/"criteria" keys as fallbacks.
+                description = obj.get("description_text") or obj.get("description", "")
+                crit = obj.get("candidate_criteria") or obj.get("criteria", "")
+                if isinstance(crit, dict):
+                    crit = " ".join(str(v) for v in crit.values())
+                full_text = f" {description} {crit} ".lower()
                 
                 matched_skills = {}
                 
