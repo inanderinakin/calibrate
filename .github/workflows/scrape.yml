@@ -7,17 +7,24 @@ on:
         description: "Run the full scrape (all sources). Leave unchecked for a small validation run first."
         type: boolean
         default: false
-      targets:
-        description: "Which scraper(s) to run — pick a single source to test it in isolation without paying the cost of the others (esp. kariyer's Playwright/Xvfb setup)."
-        type: choice
-        options:
-          - all
-          - kariyer
-          - secretcv
-          - yenibiris
-        default: all
+      run_kariyer:
+        description: "Run kariyer.net scraper"
+        type: boolean
+        default: true
+      run_secretcv:
+        description: "Run secretcv.com scraper"
+        type: boolean
+        default: true
+      run_yenibiris:
+        description: "Run yenibiris.com scraper (currently 403s from GitHub Actions' IP — see relevance.py / team notes)"
+        type: boolean
+        default: true
   schedule:
-    - cron: "0 3 * * 1" # every Monday 03:00 UTC — always a full run, all sources
+    # Every Monday 03:00 UTC, full run — yenibiris is skipped automatically
+    # (see the yenibiris step's `if:` below): yenibiris.com blocks GitHub
+    # Actions' IP with a 403, so the scheduled run only covers kariyer +
+    # secretcv until that's resolved (proxy, or running it elsewhere).
+    - cron: "0 3 * * 1"
 
 jobs:
   scrape:
@@ -42,15 +49,15 @@ jobs:
         run: pip install playwright beautifulsoup4 boto3 requests
 
       - name: Install Playwright browsers
-        if: github.event_name == 'schedule' || inputs.targets == 'all' || inputs.targets == 'kariyer'
+        if: github.event_name == 'schedule' || inputs.run_kariyer == true
         run: playwright install --with-deps chromium
 
       - name: Install Xvfb
-        if: github.event_name == 'schedule' || inputs.targets == 'all' || inputs.targets == 'kariyer'
+        if: github.event_name == 'schedule' || inputs.run_kariyer == true
         run: sudo apt-get update && sudo apt-get install -y xvfb
 
       - name: Run kariyer.net scraper
-        if: github.event_name == 'schedule' || inputs.targets == 'all' || inputs.targets == 'kariyer'
+        if: github.event_name == 'schedule' || inputs.run_kariyer == true
         run: |
           if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.full_run }}" = "true" ]; then
             xvfb-run -a python kariyer_scraper.py
@@ -59,7 +66,7 @@ jobs:
           fi
 
       - name: Run secretcv.com scraper
-        if: github.event_name == 'schedule' || inputs.targets == 'all' || inputs.targets == 'secretcv'
+        if: github.event_name == 'schedule' || inputs.run_secretcv == true
         run: |
           if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.full_run }}" = "true" ]; then
             python secretcv_scraper.py
@@ -67,10 +74,13 @@ jobs:
             python -c "import secretcv_scraper as s; s.SOURCES = s.SOURCES[:2]; s.MAX_PAGES_PER_SOURCE = 1; s.main()"
           fi
 
+      # NOT included on the `schedule` trigger — yenibiris.com 403s GitHub
+      # Actions' IP, so the automatic weekly run skips it until that's
+      # resolved. Still runnable manually (e.g. from a different runner/IP).
       - name: Run yenibiris.com scraper
-        if: github.event_name == 'schedule' || inputs.targets == 'all' || inputs.targets == 'yenibiris'
+        if: github.event_name == 'workflow_dispatch' && inputs.run_yenibiris == true
         run: |
-          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.full_run }}" = "true" ]; then
+          if [ "${{ inputs.full_run }}" = "true" ]; then
             python yenibiris_scraper.py
           else
             python -c "import yenibiris_scraper as s; s.SOURCES = s.SOURCES[:2]; s.MAX_PAGES_PER_SOURCE = 1; s.main()"
