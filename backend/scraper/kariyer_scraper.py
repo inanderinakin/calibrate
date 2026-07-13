@@ -23,7 +23,7 @@ from playwright.sync_api import sync_playwright
 from bs4 import BeautifulSoup
 import boto3
 
-from relevance import is_cs_relevant
+from relevance import is_cs_relevant, is_duplicate_posting, load_dedup_index, register_posting
 
 # Windows consoles default to a codepage (e.g. cp1254) that can't encode
 # the arrow/emoji characters used in our print statements — force UTF-8
@@ -590,7 +590,8 @@ def save_posting(posting: dict):
 def main():
     sync_from_s3()
     seen_ids = load_seen_ids(OUTPUT_FILE)
-    print(f"Already scraped: {len(seen_ids)} postings")
+    dedup_index = load_dedup_index(OUTPUT_FILE)
+    print(f"Already scraped: {len(seen_ids)} postings ({len(dedup_index)} unique across all sources)")
 
     with sync_playwright() as p:
         browser = p.chromium.launch(
@@ -667,8 +668,12 @@ def main():
                         # holds — same filter-before-save pattern as the
                         # secretcv/yenibiris scrapers, no unfiltered feed.
                         if is_cs_relevant(posting):
+                            if is_duplicate_posting(posting, dedup_index):
+                                print(f"  [{i}/{len(new_cards)}] Skipped (duplicate of another source): {posting['title']}")
+                                continue
                             posting["role"] = map_to_role(posting.get("title"), posting.get("description_text"))
                             save_posting(posting)
+                            register_posting(posting, dedup_index)
                             total_saved += 1
                             print(f"  [{i}/{len(new_cards)}] Saved: {posting['title']} ({posting['role']}) — Total: {total_saved}")
                         else:

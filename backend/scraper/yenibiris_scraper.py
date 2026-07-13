@@ -27,7 +27,7 @@ import boto3
 import requests
 from bs4 import BeautifulSoup
 
-from relevance import is_cs_relevant
+from relevance import is_cs_relevant, is_duplicate_posting, load_dedup_index, register_posting
 
 # Windows consoles default to a codepage (e.g. cp1254) that can't encode the
 # Turkish characters / arrows in our prints — force UTF-8 so it doesn't crash.
@@ -361,7 +361,8 @@ def save_posting(posting: dict):
 def main():
     sync_from_s3()
     seen_ids = load_seen_ids(OUTPUT_FILE)
-    print(f"Already scraped: {len(seen_ids)} postings")
+    dedup_index = load_dedup_index(OUTPUT_FILE)
+    print(f"Already scraped: {len(seen_ids)} postings ({len(dedup_index)} unique across all sources)")
 
     session = requests.Session()
     total_saved = 0
@@ -404,7 +405,12 @@ def main():
                         total_skipped += 1
                         print(f"  [{i}/{len(new_cards)}] skipped (not CS): {posting['title']}")
                         continue
+                    if is_duplicate_posting(posting, dedup_index):
+                        seen_ids.add(card["id"])
+                        print(f"  [{i}/{len(new_cards)}] skipped (duplicate of another source): {posting['title']}")
+                        continue
                     save_posting(posting)
+                    register_posting(posting, dedup_index)
                     seen_ids.add(card["id"])
                     total_saved += 1
                     print(f"  [{i}/{len(new_cards)}] Saved: {posting['title']} — Total: {total_saved}")

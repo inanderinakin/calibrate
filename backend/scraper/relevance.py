@@ -14,6 +14,8 @@ Logic:
                                                 → accept
   * otherwise                                  → reject
 """
+import difflib
+import json
 import re
 
 CS_SECTORS = (
@@ -127,3 +129,87 @@ def is_cs_relevant(posting: dict) -> bool:
     if cs_signal_in_dept and not has_non_cs_dept:
         return True
     return False
+
+
+# ── Cross-source duplicate detection ───────────────────────────────────────
+# The same real-world posting often gets scraped from more than one site
+# (kariyer, secretcv, yenibiris), each with its own id/URL — so id-based dedup
+# alone doesn't catch it. Match on normalized (title, company, location) —
+# but a company CAN legitimately post the identical title more than once for
+# genuinely different roles (different teams, same job title), so a
+# title+company+location match alone isn't enough to call it a duplicate.
+# We additionally require the description text to actually be similar —
+# real cross-site duplicates carry essentially the same description, while
+# two distinct postings with a shared title do not.
+
+_PUNCT_RE = re.compile(r"[^\w\s]", re.UNICODE)
+_WS_RE = re.compile(r"\s+")
+DESCRIPTION_SIMILARITY_THRESHOLD = 0.75
+
+
+def _normalize_for_dedup(text: str) -> str:
+    t = (text or "").replace("İ", "i").lower()
+    t = _PUNCT_RE.sub(" ", t)
+    t = _WS_RE.sub(" ", t).strip()
+    return t
+
+
+def posting_dedup_key(posting: dict) -> str:
+    """Normalized "title|company|location" key for narrowing down candidate
+    matches of the same real-world posting across different sites."""
+    title = _normalize_for_dedup(posting.get("title") or posting.get("position_name") or "")
+    company = _normalize_for_dedup(posting.get("company") or "")
+    location = _normalize_for_dedup(posting.get("location") or posting.get("city") or "")
+    return f"{title}|{company}|{location}"
+
+
+def _description_similarity(a: str, b: str) -> float:
+    return difflib.SequenceMatcher(None, a, b).ratio()
+
+
+def load_dedup_index(output_file: str) -> dict:
+    """Read every row already saved to the shared postings file (any source)
+    and return {dedup_key: [normalized_description, ...]} so a new posting
+    can be checked against real candidates for its exact key, not just a
+    yes/no set membership."""
+    index: dict = {}
+    try:
+        with open(output_file, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    obj = json.loads(line)
+                except Exception:
+                    continue
+                key = posting_dedup_key(obj)
+                desc = _normalize_for_dedup(obj.get("description_text") or "")
+                index.setdefault(key, []).append(desc)
+    except FileNotFoundError:
+        pass
+    return index
+
+
+def is_duplicate_posting(posting: dict, index: dict) -> bool:
+    """True if `posting` matches an already-saved posting on title+company+
+    location AND their descriptions are similar enough to be the same real
+    listing — not just two different roles that happen to share a title."""
+    candidates = index.get(posting_dedup_key(posting))
+    if not candidates:
+        return False
+    desc = _normalize_for_dedup(posting.get("description_text") or "")
+    if not desc:
+        # No description to compare against — fall back to the key match
+        # alone, since there's nothing to rule the candidates out with.
+        return True
+    return any(_description_similarity(desc, c) >= DESCRIPTION_SIMILARITY_THRESHOLD for c in candidates)
+
+
+def register_posting(posting: dict, index: dict):
+    """Record a newly-saved posting in the in-memory dedup index (call right
+    after saving it) so later postings in the same run can be checked
+    against it too."""
+    key = posting_dedup_key(posting)
+    desc = _normalize_for_dedup(posting.get("description_text") or "")
+    index.setdefault(key, []).append(desc)
