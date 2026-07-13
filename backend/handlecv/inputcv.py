@@ -2,6 +2,7 @@ import boto3
 from dotenv import load_dotenv
 import re
 import time
+from normalize import normalize_skill
 
 load_dotenv()
 
@@ -50,11 +51,14 @@ def extract_skill_candidates(lines: list[str]) -> list[str]:
             fragment = fragment.strip()
             # TODO: skills that are inside long separator-less lines get skipped out.
             if (len(fragment) > 2 and len(fragment) < 40):
-                    potential_candidates.append(fragment)
+                potential_candidates.append(fragment)
+            
+        for fragment in line.split():
+            fragment = fragment.strip(".,;:!?()\"'")
+            potential_candidates.append(fragment)
     
     return list(dict.fromkeys(potential_candidates)) 
 
 if __name__ == "__main__":
     print(extract_skill_candidates(extract_cv_text("calibrate-teamthrow", "dev/test-cv-tr.pdf")))
     print(extract_skill_candidates(extract_cv_text("calibrate-teamthrow", "dev/test-cv.pdf")))
-    
