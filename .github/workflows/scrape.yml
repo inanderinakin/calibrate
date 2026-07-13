@@ -7,8 +7,17 @@ on:
         description: "Run the full scrape (all sources). Leave unchecked for a small validation run first."
         type: boolean
         default: false
+      targets:
+        description: "Which scraper(s) to run — pick a single source to test it in isolation without paying the cost of the others (esp. kariyer's Playwright/Xvfb setup)."
+        type: choice
+        options:
+          - all
+          - kariyer
+          - secretcv
+          - yenibiris
+        default: all
   schedule:
-    - cron: "0 3 * * 1" # every Monday 03:00 UTC — always a full run
+    - cron: "0 3 * * 1" # every Monday 03:00 UTC — always a full run, all sources
 
 jobs:
   scrape:
@@ -33,12 +42,15 @@ jobs:
         run: pip install playwright beautifulsoup4 boto3 requests
 
       - name: Install Playwright browsers
+        if: github.event_name == 'schedule' || inputs.targets == 'all' || inputs.targets == 'kariyer'
         run: playwright install --with-deps chromium
 
       - name: Install Xvfb
+        if: github.event_name == 'schedule' || inputs.targets == 'all' || inputs.targets == 'kariyer'
         run: sudo apt-get update && sudo apt-get install -y xvfb
 
       - name: Run kariyer.net scraper
+        if: github.event_name == 'schedule' || inputs.targets == 'all' || inputs.targets == 'kariyer'
         run: |
           if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.full_run }}" = "true" ]; then
             xvfb-run -a python kariyer_scraper.py
@@ -47,6 +59,7 @@ jobs:
           fi
 
       - name: Run secretcv.com scraper
+        if: github.event_name == 'schedule' || inputs.targets == 'all' || inputs.targets == 'secretcv'
         run: |
           if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.full_run }}" = "true" ]; then
             python secretcv_scraper.py
@@ -55,6 +68,7 @@ jobs:
           fi
 
       - name: Run yenibiris.com scraper
+        if: github.event_name == 'schedule' || inputs.targets == 'all' || inputs.targets == 'yenibiris'
         run: |
           if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.full_run }}" = "true" ]; then
             python yenibiris_scraper.py
