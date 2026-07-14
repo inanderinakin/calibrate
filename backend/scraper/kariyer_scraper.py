@@ -3,12 +3,11 @@ kariyer.net job scraper.
 
 The original, most involved scraper of the three: kariyer.net is a JS-heavy SPA
 behind a PerimeterX press-and-hold bot challenge, so this uses Playwright (not
-plain requests) and solves the challenge, then syncs its raw feed to S3 for the
-deployed 24/7 run.
+plain requests) and solves the challenge.
 
-Outputs (in backend/scraper/):
-  * postings_kariyer_raw.jsonl  — everything scraped, unfiltered
-  * postings_kariyer.jsonl      — the curated CS/IT set used by the pipeline
+Like its sibling scrapers, every posting is run through the shared
+is_cs_relevant() gate BEFORE being saved — postings_kariyer.jsonl only ever
+contains the curated CS/IT set, there's no separate unfiltered feed.
 
 Sibling scrapers with the identical output schema: yenibiris_scraper.py,
 secretcv_scraper.py (both plain requests + the shared relevance.py gate).
@@ -24,7 +23,7 @@ from playwright.sync_api import sync_playwright
 from bs4 import BeautifulSoup
 import boto3
 
-from relevance import is_cs_relevant
+from relevance import is_cs_relevant, is_duplicate_posting, load_dedup_index, register_posting
 
 # Windows consoles default to a codepage (e.g. cp1254) that can't encode
 # the arrow/emoji characters used in our print statements — force UTF-8
@@ -80,13 +79,13 @@ SOURCES = [
     ("kw:machine learning",   "https://www.kariyer.net/is-ilanlari?kw=machine%20learning"),
 ]
 
-# Write outputs next to THIS script, not the current working directory, so they
-# always land in backend/scraper/ regardless of where the scraper is launched.
-# This is the RAW kariyer feed (unfiltered); the curated CS/IT set lives in
-# postings_kariyer.jsonl.
+# All three scrapers (kariyer, secretcv, yenibiris) now write into the SAME
+# postings.jsonl — a "source" field on each posting tells them apart, and
+# lets the (still-to-come) cross-source dedup pass match the same real-world
+# posting scraped from different sites.
 _HERE = os.path.dirname(os.path.abspath(__file__))
-OUTPUT_FILE = os.path.join(_HERE, "postings_kariyer_raw.jsonl")
-CURATED_OUTPUT_FILE = os.path.join(_HERE, "postings_kariyer.jsonl")
+SOURCE_NAME = "kariyer"
+OUTPUT_FILE = os.path.join(_HERE, "postings.jsonl")
 FAILED_LOG_FILE = os.path.join(_HERE, "failed_pages_kariyer.log")
 MAX_PAGES_PER_SOURCE = 50
 
@@ -148,58 +147,42 @@ def map_to_role(title: str, description: str | None = None) -> str:
                 return role
     return "Full Stack or Product Engineer"
 
-# NOTE: the raw feed's S3 key is left unchanged so the deployed 24/7 scraper
-# keeps syncing to the same remote object it always has (renaming it would
-# orphan the existing S3 data and reset incremental dedup). The curated set
-# gets its own key alongside it.
 S3_BUCKET = "calibrate-teamthrow"
 S3_POSTINGS_KEY = "scraper-data/postings.jsonl"
-S3_CURATED_POSTINGS_KEY = "scraper-data/postings_kariyer_curated.jsonl"
-S3_FAILED_LOG_KEY = "scraper-data/failed_pages.log"
+S3_FAILED_LOG_KEY = "scraper-data/failed_pages_kariyer.log"
 
 
 def sync_from_s3():
-    """Pull down last run's postings (raw + curated) before scraping, so
-    seen_ids reflects everything collected so far instead of starting from
-    zero, and the curated set keeps accumulating rather than resetting."""
+    """Pull down last run's curated postings before scraping, so seen_ids
+    reflects everything collected so far instead of starting from zero, and
+    the set keeps accumulating rather than resetting."""
     s3 = boto3.client("s3")
     try:
         s3.download_file(S3_BUCKET, S3_POSTINGS_KEY, OUTPUT_FILE)
         print(f"Downloaded existing postings from s3://{S3_BUCKET}/{S3_POSTINGS_KEY}")
     except Exception as e:
         print(f"No existing postings in S3 (or download failed): {e}")
-    try:
-        s3.download_file(S3_BUCKET, S3_CURATED_POSTINGS_KEY, CURATED_OUTPUT_FILE)
-        print(f"Downloaded existing curated postings from s3://{S3_BUCKET}/{S3_CURATED_POSTINGS_KEY}")
-    except Exception as e:
-        print(f"No existing curated postings in S3 (or download failed): {e}")
 
 
 def sync_to_s3():
-    """Upload raw postings, curated postings, and the failed-page log after a
-    run, then delete the local copies — S3 is the source of truth, the local
-    files are just a working scratch area for this run (dedup/resume) and
-    shouldn't linger in the repo folder afterward."""
+    """Upload postings and the failed-page log after a run, then delete the
+    local copies — S3 is the source of truth, the local files are just a
+    working scratch area for this run (dedup/resume) and shouldn't linger in
+    the repo folder afterward."""
     s3 = boto3.client("s3")
-    try:
-        s3.upload_file(OUTPUT_FILE, S3_BUCKET, S3_POSTINGS_KEY)
-        print(f"Uploaded postings to s3://{S3_BUCKET}/{S3_POSTINGS_KEY}")
-        os.remove(OUTPUT_FILE)
-    except Exception as e:
-        print(f"Failed to upload postings to S3: {e}")
-    if os.path.exists(CURATED_OUTPUT_FILE):
+    if os.path.exists(OUTPUT_FILE):
         try:
-            s3.upload_file(CURATED_OUTPUT_FILE, S3_BUCKET, S3_CURATED_POSTINGS_KEY)
-            print(f"Uploaded curated postings to s3://{S3_BUCKET}/{S3_CURATED_POSTINGS_KEY}")
-            os.remove(CURATED_OUTPUT_FILE)
+            s3.upload_file(OUTPUT_FILE, S3_BUCKET, S3_POSTINGS_KEY)
+            print(f"Uploaded postings to s3://{S3_BUCKET}/{S3_POSTINGS_KEY}")
+            os.remove(OUTPUT_FILE)
         except Exception as e:
-            print(f"Failed to upload curated postings to S3: {e}")
+            print(f"Failed to upload postings to S3: {e}")
     if os.path.exists(FAILED_LOG_FILE):
         try:
             s3.upload_file(FAILED_LOG_FILE, S3_BUCKET, S3_FAILED_LOG_KEY)
             os.remove(FAILED_LOG_FILE)
         except Exception as e:
-            print(f"Failed to upload failed_pages.log to S3: {e}")
+            print(f"Failed to upload failed_pages_kariyer.log to S3: {e}")
 
 
 def build_page_url(base_url: str, page_num: int) -> str:
@@ -580,25 +563,24 @@ def _text(tag) -> str | None:
 
 
 def load_seen_ids(output_file: str) -> set:
-    """Load already-scraped posting IDs to avoid duplicates."""
+    """Load this scraper's already-scraped posting IDs, to avoid re-scraping
+    them. The file is shared across all three scrapers, so only count rows
+    tagged with our own source — another source's IDs aren't comparable."""
     seen = set()
     try:
         with open(output_file, "r", encoding="utf-8") as f:
             for line in f:
                 data = json.loads(line)
-                seen.add(data["id"])
+                if data.get("source") == SOURCE_NAME:
+                    seen.add(data["id"])
     except FileNotFoundError:
         pass
     return seen
 
 
 def save_posting(posting: dict):
+    posting["source"] = SOURCE_NAME
     with open(OUTPUT_FILE, "a", encoding="utf-8") as f:
-        f.write(json.dumps(posting, ensure_ascii=False) + "\n")
-
-
-def save_curated_posting(posting: dict):
-    with open(CURATED_OUTPUT_FILE, "a", encoding="utf-8") as f:
         f.write(json.dumps(posting, ensure_ascii=False) + "\n")
 
 
@@ -607,7 +589,8 @@ def save_curated_posting(posting: dict):
 def main():
     sync_from_s3()
     seen_ids = load_seen_ids(OUTPUT_FILE)
-    print(f"Already scraped: {len(seen_ids)} postings")
+    dedup_index = load_dedup_index(OUTPUT_FILE)
+    print(f"Already scraped: {len(seen_ids)} postings ({len(dedup_index)} unique across all sources)")
 
     with sync_playwright() as p:
         browser = p.chromium.launch(
@@ -665,9 +648,7 @@ def main():
                     # before ever opening the detail page: kariyer.net's
                     # captcha makes every detail-page load expensive, so
                     # skip the obvious junk (sales, tourism, HR...) our
-                    # broad search terms pull in. Postings this rejects
-                    # never make it into the raw feed either — that's the
-                    # tradeoff for not paying the captcha cost on them.
+                    # broad search terms pull in.
                     if not is_cs_relevant({"title": card.get("position_name"), "sector": card.get("sector")}):
                         seen_ids.add(card["id"])
                         continue
@@ -679,19 +660,23 @@ def main():
                             print(f"  [{i}/{len(new_cards)}] SKIPPED (blocked/captcha): {card['url']}")
                             continue
                         posting.update({k: v for k, v in card.items() if k not in posting})
-                        save_posting(posting)  # raw feed: everything we actually fetched
                         seen_ids.add(card["id"])
-                        total_saved += 1
 
                         # Re-check relevance now that department + full
-                        # description are known, and file into the curated
-                        # CS/IT set with a specific role tag if it still holds.
+                        # description are known, and only save if it still
+                        # holds — same filter-before-save pattern as the
+                        # secretcv/yenibiris scrapers, no unfiltered feed.
                         if is_cs_relevant(posting):
+                            if is_duplicate_posting(posting, dedup_index):
+                                print(f"  [{i}/{len(new_cards)}] Skipped (duplicate of another source): {posting['title']}")
+                                continue
                             posting["role"] = map_to_role(posting.get("title"), posting.get("description_text"))
-                            save_curated_posting(posting)
+                            save_posting(posting)
+                            register_posting(posting, dedup_index)
+                            total_saved += 1
                             print(f"  [{i}/{len(new_cards)}] Saved: {posting['title']} ({posting['role']}) — Total: {total_saved}")
                         else:
-                            print(f"  [{i}/{len(new_cards)}] Saved to raw only (not CS): {posting['title']} — Total: {total_saved}")
+                            print(f"  [{i}/{len(new_cards)}] Skipped (not CS): {posting['title']}")
                     except Exception as e:
                         print(f"  [{i}/{len(new_cards)}] FAILED {card['url']}: {e}")
 

@@ -27,7 +27,7 @@ import boto3
 import requests
 from bs4 import BeautifulSoup
 
-from relevance import is_cs_relevant
+from relevance import is_cs_relevant, is_duplicate_posting, load_dedup_index, register_posting
 
 # Windows consoles default to a codepage (e.g. cp1254) that can't encode the
 # Turkish characters / arrows in our prints — force UTF-8 so it doesn't crash.
@@ -81,15 +81,18 @@ SOURCES = [
     # below is the real safety net, but specific keywords keep noise low.
 ]
 
-# Write outputs next to THIS script, not the current working directory — so it
-# lands in backend/scraper/ no matter where the scraper is launched from.
+# All three scrapers (kariyer, secretcv, yenibiris) now write into the SAME
+# postings.jsonl — a "source" field on each posting tells them apart, and
+# lets the (still-to-come) cross-source dedup pass match the same real-world
+# posting scraped from different sites.
 _HERE = os.path.dirname(os.path.abspath(__file__))
-OUTPUT_FILE = os.path.join(_HERE, "postings_yenibiris.jsonl")
+SOURCE_NAME = "yenibiris"
+OUTPUT_FILE = os.path.join(_HERE, "postings.jsonl")
 FAILED_LOG_FILE = os.path.join(_HERE, "failed_pages_yenibiris.log")
 MAX_PAGES_PER_SOURCE = 40
 
 S3_BUCKET = "calibrate-teamthrow"
-S3_POSTINGS_KEY = "scraper-data/postings_yenibiris.jsonl"
+S3_POSTINGS_KEY = "scraper-data/postings.jsonl"
 S3_FAILED_LOG_KEY = "scraper-data/failed_pages_yenibiris.log"
 
 
@@ -328,12 +331,17 @@ def scrape_posting(url: str, session: requests.Session) -> dict | None:
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def load_seen_ids(output_file: str) -> set:
+    """Load this scraper's already-scraped posting IDs. The file is shared
+    across all three scrapers, so only count rows tagged with our own
+    source — another source's IDs aren't comparable."""
     seen = set()
     try:
         with open(output_file, "r", encoding="utf-8") as f:
             for line in f:
                 try:
-                    seen.add(json.loads(line)["id"])
+                    data = json.loads(line)
+                    if data.get("source") == SOURCE_NAME:
+                        seen.add(data["id"])
                 except Exception:
                     continue
     except FileNotFoundError:
@@ -342,6 +350,7 @@ def load_seen_ids(output_file: str) -> set:
 
 
 def save_posting(posting: dict):
+    posting["source"] = SOURCE_NAME
     with open(OUTPUT_FILE, "a", encoding="utf-8") as f:
         f.write(json.dumps(posting, ensure_ascii=False) + "\n")
 
@@ -351,7 +360,8 @@ def save_posting(posting: dict):
 def main():
     sync_from_s3()
     seen_ids = load_seen_ids(OUTPUT_FILE)
-    print(f"Already scraped: {len(seen_ids)} postings")
+    dedup_index = load_dedup_index(OUTPUT_FILE)
+    print(f"Already scraped: {len(seen_ids)} postings ({len(dedup_index)} unique across all sources)")
 
     session = requests.Session()
     total_saved = 0
@@ -394,7 +404,12 @@ def main():
                         total_skipped += 1
                         print(f"  [{i}/{len(new_cards)}] skipped (not CS): {posting['title']}")
                         continue
+                    if is_duplicate_posting(posting, dedup_index):
+                        seen_ids.add(card["id"])
+                        print(f"  [{i}/{len(new_cards)}] skipped (duplicate of another source): {posting['title']}")
+                        continue
                     save_posting(posting)
+                    register_posting(posting, dedup_index)
                     seen_ids.add(card["id"])
                     total_saved += 1
                     print(f"  [{i}/{len(new_cards)}] Saved: {posting['title']} — Total: {total_saved}")
