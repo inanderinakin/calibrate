@@ -26,6 +26,7 @@ async def upload_cv(target_roles_raw: str = Form(...), file: UploadFile = File(.
     java_normalized = NormalizedSkill(skill = "java", esco_category="programming languages")
     c_normalized = NormalizedSkill(skill = "c", esco_category="programming languages")
     sql_normalized = NormalizedSkill(skill = "sql", esco_category="database management")
+    # This profile is temporary, will be switched after we got scraped data analysis
     profile = {
         "Data Scientist": [c_normalized, sql_normalized],
         "Software Engineer": [java_normalized, c_normalized]
