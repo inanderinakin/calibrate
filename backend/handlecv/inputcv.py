@@ -22,7 +22,7 @@ def extract_cv_text(bucket: str, key: str) -> list[str]:
     print("Waiting for results...")
     while (isSuccess != "SUCCEEDED"):
         attemptCount += 1
-        if (attemptCount< 30):
+        if (attemptCount< 60):
             result = client.get_document_text_detection(JobId=response["JobId"])
             isSuccess = result["JobStatus"]
 
