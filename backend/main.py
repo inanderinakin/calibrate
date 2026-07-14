@@ -5,9 +5,11 @@ from pathlib import Path
 from aiohttp import ClientError
 from fastapi.concurrency import run_in_threadpool
 from agent import get_recommendations
-from models import GapResult
+from handlecv import compute_gaps
+from normalize import normalize_skill
+from models import GapResult, NormalizedSkill
 
-from fastapi import FastAPI, HTTPException, UploadFile, status
+from fastapi import FastAPI, Form, HTTPException, UploadFile, status
 from fastapi.params import File
 
 import boto3
@@ -20,7 +22,29 @@ async def root():
     return {"message": "Hello World"}
 
 @app.post("/upload_cv")
-async def upload_cv(file: UploadFile = File(...)):
+async def upload_cv(target_roles_raw: str = Form(...), file: UploadFile = File(...)):
+    java_normalized = NormalizedSkill(skill = "java", esco_category="programming languages")
+    c_normalized = NormalizedSkill(skill = "c", esco_category="programming languages")
+    sql_normalized = NormalizedSkill(skill = "sql", esco_category="database management")
+    profile = {
+        "Data Scientist": [c_normalized, sql_normalized],
+        "Software Engineer": [java_normalized, c_normalized]
+        }
+    
+    target_roles = [role.strip() for role in target_roles_raw.split(",")]
+
+    unsupported_roles = []
+    for role in target_roles:
+        if role not in profile:
+            unsupported_roles.append(role)
+    
+    if unsupported_roles:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail={
+                "message": "Some roles are not supported.",
+                "unsupported_roles": unsupported_roles,
+                "supported_roles": [role for role in profile]
+            })
+        
     if file.content_type not in {"application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"}:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid file type")
     
@@ -59,8 +83,11 @@ async def upload_cv(file: UploadFile = File(...)):
 
     lines = await run_in_threadpool(extract_cv_text, "calibrate-teamthrow", f"uploads/{safe_name}")
     candidates = extract_skill_candidates(lines)
+    skills = list(filter(None, (normalize_skill(candidate) for candidate in candidates)))
 
-    return {"filename": safe_name, "candidates": candidates}
+    gaps = compute_gaps(cv_skills = skills, target_roles = target_roles, demand_profile = profile)
+    
+    return {"filename": safe_name, "target_roles": target_roles, "skills": skills, "gaps": gaps.dict()}
 
 @app.post("/recommendations")
 async def recommend_with_agent(report: GapResult):
