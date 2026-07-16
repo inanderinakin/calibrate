@@ -41,33 +41,36 @@ class EscoNormalizer:
         """
         try:
             df = pd.read_csv(self.csv_path)
-            
+            preferred_labels = []
+            alt_labels = []
             for _, row in df.iterrows():
                 uri = row.get('conceptUri') or row.get('URI')
                 if not uri:
                     continue
-                
-                # We collect both TR and EN labels
-                labels = []
-                if 'preferredLabel_tr' in row and pd.notna(row['preferredLabel_tr']):
-                    labels.append(str(row['preferredLabel_tr']))
-                if 'preferredLabel_en' in row and pd.notna(row['preferredLabel_en']):
-                    labels.append(str(row['preferredLabel_en']))
-                
-                # If your CSV uses different names like preferredLabel, fallback to them
-                if 'preferredLabel' in row and pd.notna(row['preferredLabel']):
-                    labels.append(str(row['preferredLabel']))
 
                 cleaned_labels = []
-                for label in labels:
-                    cleaned_label = self._clean_text(label)
-                    if cleaned_label:
-                        cleaned_labels.append(cleaned_label)
-                        # Build the reverse lookup map on the fly
-                        self.label_to_uri_map[cleaned_label] = uri
                 
-                if cleaned_labels:
-                    self.uri_lookup[uri] = list(set(cleaned_labels))
+                if 'preferredLabel' in row and pd.notna(row['preferredLabel']):
+                    cleaned_label = self._clean_text(str(row['preferredLabel']))
+                    if cleaned_label:
+                        preferred_labels.append((cleaned_label, uri))
+                        cleaned_labels.append(cleaned_label)
+                
+                if 'altLabels' in row and pd.notna(row['altLabels']):
+                    split_labels = str(row['altLabels']).split('\n')
+                    for label in split_labels:
+                        cleaned_label = self._clean_text(str(label))
+                        if cleaned_label:
+                            alt_labels.append((cleaned_label, uri))
+                            cleaned_labels.append(cleaned_label)
+
+                self.uri_lookup[uri] = list(set(cleaned_labels))
+
+            for label, uri in preferred_labels:
+                self.label_to_uri_map[label] = uri
+
+            for label, uri in alt_labels:
+                self.label_to_uri_map.setdefault(label, uri)
                     
         except Exception as e:
             print(f"An error occurred while loading the ESCO dataset: {e}")
