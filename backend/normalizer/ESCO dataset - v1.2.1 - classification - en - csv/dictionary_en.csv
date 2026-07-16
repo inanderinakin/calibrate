@@ -1,0 +1,185 @@
+filename,data header,property,description
+occupations,conceptType,,No direct related property exists
+occupations,conceptUri,,No direct related property exists
+occupations,iscoGroup,http://www.w3.org/2004/02/skos/core#notation,"A notation, also known as classification code, is a string of characters such as ""T58.5"" or ""303.4833"" used to uniquely identify a concept within the scope of a given concept scheme."
+occupations,preferredLabel,http://www.w3.org/2004/02/skos/core#prefLabel,"The preferred lexical label for a resource, in a given language."
+occupations,altLabels,http://www.w3.org/2004/02/skos/core#altLabel,An alternative lexical label for a resource.
+occupations,hiddenLabels,http://www.w3.org/2004/02/skos/core#hiddenLabel,"A lexical label for a resource that should be hidden when generating visual displays of the resource, but should still be accessible to free text search operations."
+occupations,status,http://purl.org/iso25964/skos-thes#status,"ISO status
+- on ThesaurusConcept
+- on ThesaurusTerm"
+occupations,modifiedDate,http://purl.org/dc/terms/modified,Date on which the resource was changed.
+occupations,regulatedProfessionNote,http://data.europa.eu/esco/model#regulatedProfessionNote,The subject occupation is regulated according the description in the note.  The note typically contains a hyperlink.
+occupations,scopeNote,http://www.w3.org/2004/02/skos/core#scopeNote,A note that helps to clarify the meaning and/or the use of a concept.
+occupations,definition,http://www.w3.org/2004/02/skos/core#definition,A statement or formal explanation of the meaning of a concept.
+occupations,inScheme,http://www.w3.org/2004/02/skos/core#inScheme,Relates a resource (for example a concept) to a concept scheme in which it is included.
+occupations,description,http://purl.org/dc/terms/description,An account of the resource.
+occupations,code,http://www.w3.org/2004/02/skos/core#notation,"A notation, also known as classification code, is a string of characters such as ""T58.5"" or ""303.4833"" used to uniquely identify a concept within the scope of a given concept scheme."
+occupations,naceCode,http://data.europa.eu/esco/model#hasNACECode,A tagging concept using the NACE codes to specify the industry sector of the tagged subject.
+skills,conceptType,,No direct related property exists
+skills,conceptUri,,No direct related property exists
+skills,skillType,http://data.europa.eu/esco/model#skillType,Type of competence (a tagging concept)
+skills,reuseLevel,http://data.europa.eu/esco/model#skillReuseLevel,Reuseability level of a skill
+skills,preferredLabel,http://www.w3.org/2004/02/skos/core#prefLabel,"The preferred lexical label for a resource, in a given language."
+skills,altLabels,http://www.w3.org/2004/02/skos/core#altLabel,An alternative lexical label for a resource.
+skills,hiddenLabels,http://www.w3.org/2004/02/skos/core#hiddenLabel,"A lexical label for a resource that should be hidden when generating visual displays of the resource, but should still be accessible to free text search operations."
+skills,status,http://purl.org/iso25964/skos-thes#status,"ISO status
+- on ThesaurusConcept
+- on ThesaurusTerm"
+skills,modifiedDate,http://purl.org/dc/terms/modified,Date on which the resource was changed.
+skills,scopeNote,http://www.w3.org/2004/02/skos/core#scopeNote,A note that helps to clarify the meaning and/or the use of a concept.
+skills,definition,http://www.w3.org/2004/02/skos/core#definition,A statement or formal explanation of the meaning of a concept.
+skills,inScheme,http://www.w3.org/2004/02/skos/core#inScheme,Relates a resource (for example a concept) to a concept scheme in which it is included.
+skills,description,http://purl.org/dc/terms/description,An account of the resource.
+ISCOGroups,conceptType,,No direct related property exists
+ISCOGroups,conceptUri,,No direct related property exists
+ISCOGroups,code,http://www.w3.org/2004/02/skos/core#notation,"A notation, also known as classification code, is a string of characters such as ""T58.5"" or ""303.4833"" used to uniquely identify a concept within the scope of a given concept scheme."
+ISCOGroups,preferredLabel,http://www.w3.org/2004/02/skos/core#prefLabel,"The preferred lexical label for a resource, in a given language."
+ISCOGroups,status,http://purl.org/iso25964/skos-thes#status,"ISO status
+- on ThesaurusConcept
+- on ThesaurusTerm"
+ISCOGroups,altLabels,http://www.w3.org/2004/02/skos/core#altLabel,An alternative lexical label for a resource.
+ISCOGroups,inScheme,http://www.w3.org/2004/02/skos/core#inScheme,Relates a resource (for example a concept) to a concept scheme in which it is included.
+ISCOGroups,description,http://purl.org/dc/terms/description,An account of the resource.
+skillGroups,conceptType,,No direct related property exists
+skillGroups,conceptUri,,No direct related property exists
+skillGroups,preferredLabel,http://www.w3.org/2004/02/skos/core#prefLabel,"The preferred lexical label for a resource, in a given language."
+skillGroups,altLabels,http://www.w3.org/2004/02/skos/core#altLabel,An alternative lexical label for a resource.
+skillGroups,hiddenLabels,http://www.w3.org/2004/02/skos/core#hiddenLabel,"A lexical label for a resource that should be hidden when generating visual displays of the resource, but should still be accessible to free text search operations."
+skillGroups,status,http://purl.org/iso25964/skos-thes#status,"ISO status
+- on ThesaurusConcept
+- on ThesaurusTerm"
+skillGroups,modifiedDate,http://purl.org/dc/terms/modified,Date on which the resource was changed.
+skillGroups,scopeNote,http://www.w3.org/2004/02/skos/core#scopeNote,A note that helps to clarify the meaning and/or the use of a concept.
+skillGroups,inScheme,http://www.w3.org/2004/02/skos/core#inScheme,Relates a resource (for example a concept) to a concept scheme in which it is included.
+skillGroups,description,http://purl.org/dc/terms/description,An account of the resource.
+skillGroups,code,http://www.w3.org/2004/02/skos/core#notation,"A notation, also known as classification code, is a string of characters such as ""T58.5"" or ""303.4833"" used to uniquely identify a concept within the scope of a given concept scheme."
+transversalSkillsCollection,conceptType,,No direct related property exists
+transversalSkillsCollection,conceptUri,,No direct related property exists
+transversalSkillsCollection,skillType,http://data.europa.eu/esco/model#skillType,Type of competence (a tagging concept)
+transversalSkillsCollection,reuseLevel,http://data.europa.eu/esco/model#skillReuseLevel,Reuseability level of a skill
+transversalSkillsCollection,preferredLabel,http://www.w3.org/2004/02/skos/core#prefLabel,"The preferred lexical label for a resource, in a given language."
+transversalSkillsCollection,status,http://purl.org/iso25964/skos-thes#status,"ISO status
+- on ThesaurusConcept
+- on ThesaurusTerm"
+transversalSkillsCollection,altLabels,http://www.w3.org/2004/02/skos/core#altLabel,An alternative lexical label for a resource.
+transversalSkillsCollection,description,http://purl.org/dc/terms/description,An account of the resource.
+transversalSkillsCollection,broaderConceptUri,,No direct related property exists
+transversalSkillsCollection,broaderConceptPT,http://www.w3.org/2004/02/skos/core#prefLabel,"The preferred lexical label for a resource, in a given language."
+languageSkillsCollection,conceptType,,No direct related property exists
+languageSkillsCollection,conceptUri,,No direct related property exists
+languageSkillsCollection,skillType,http://data.europa.eu/esco/model#skillType,Type of competence (a tagging concept)
+languageSkillsCollection,reuseLevel,http://data.europa.eu/esco/model#skillReuseLevel,Reuseability level of a skill
+languageSkillsCollection,preferredLabel,http://www.w3.org/2004/02/skos/core#prefLabel,"The preferred lexical label for a resource, in a given language."
+languageSkillsCollection,status,http://purl.org/iso25964/skos-thes#status,"ISO status
+- on ThesaurusConcept
+- on ThesaurusTerm"
+languageSkillsCollection,altLabels,http://www.w3.org/2004/02/skos/core#altLabel,An alternative lexical label for a resource.
+languageSkillsCollection,description,http://purl.org/dc/terms/description,An account of the resource.
+languageSkillsCollection,broaderConceptUri,,No direct related property exists
+languageSkillsCollection,broaderConceptPT,http://www.w3.org/2004/02/skos/core#prefLabel,"The preferred lexical label for a resource, in a given language."
+conceptSchemes,conceptType,,No direct related property exists
+conceptSchemes,conceptSchemeUri,,No direct related property exists
+conceptSchemes,preferredLabel,http://www.w3.org/2004/02/skos/core#prefLabel,"The preferred lexical label for a resource, in a given language."
+conceptSchemes,title,http://purl.org/dc/terms/title,A name given to the resource.
+conceptSchemes,status,http://purl.org/iso25964/skos-thes#status,"ISO status
+- on ThesaurusConcept
+- on ThesaurusTerm"
+conceptSchemes,description,http://purl.org/dc/terms/description,An account of the resource.
+conceptSchemes,hasTopConcept,http://www.w3.org/2004/02/skos/core#hasTopConcept,"Relates, by convention, a concept scheme to a concept which is topmost in the broader/narrower concept hierarchies for that scheme, providing an entry point to these hierarchies."
+digCompSkillsCollection,conceptType,,No direct related property exists
+digCompSkillsCollection,conceptUri,,No direct related property exists
+digCompSkillsCollection,preferredLabel,http://www.w3.org/2004/02/skos/core#prefLabel,"The preferred lexical label for a resource, in a given language."
+digCompSkillsCollection,status,http://purl.org/iso25964/skos-thes#status,"ISO status
+- on ThesaurusConcept
+- on ThesaurusTerm"
+digCompSkillsCollection,skillType,http://data.europa.eu/esco/model#skillType,Type of competence (a tagging concept)
+digCompSkillsCollection,reuseLevel,http://data.europa.eu/esco/model#skillReuseLevel,Reuseability level of a skill
+digCompSkillsCollection,altLabels,http://www.w3.org/2004/02/skos/core#altLabel,An alternative lexical label for a resource.
+digCompSkillsCollection,description,http://purl.org/dc/terms/description,An account of the resource.
+digCompSkillsCollection,broaderConceptUri,,No direct related property exists
+digCompSkillsCollection,broaderConceptPT,http://www.w3.org/2004/02/skos/core#prefLabel,"The preferred lexical label for a resource, in a given language."
+greenSkillsCollection,conceptType,,No direct related property exists
+greenSkillsCollection,conceptUri,,No direct related property exists
+greenSkillsCollection,preferredLabel,http://www.w3.org/2004/02/skos/core#prefLabel,"The preferred lexical label for a resource, in a given language."
+greenSkillsCollection,status,http://purl.org/iso25964/skos-thes#status,"ISO status
+- on ThesaurusConcept
+- on ThesaurusTerm"
+greenSkillsCollection,skillType,http://data.europa.eu/esco/model#skillType,Type of competence (a tagging concept)
+greenSkillsCollection,reuseLevel,http://data.europa.eu/esco/model#skillReuseLevel,Reuseability level of a skill
+greenSkillsCollection,altLabels,http://www.w3.org/2004/02/skos/core#altLabel,An alternative lexical label for a resource.
+greenSkillsCollection,description,http://purl.org/dc/terms/description,An account of the resource.
+greenSkillsCollection,broaderConceptUri,,No direct related property exists
+greenSkillsCollection,broaderConceptPT,http://www.w3.org/2004/02/skos/core#prefLabel,"The preferred lexical label for a resource, in a given language."
+researchSkillsCollection,conceptType,,No direct related property exists
+researchSkillsCollection,conceptUri,,No direct related property exists
+researchSkillsCollection,preferredLabel,http://www.w3.org/2004/02/skos/core#prefLabel,"The preferred lexical label for a resource, in a given language."
+researchSkillsCollection,status,http://purl.org/iso25964/skos-thes#status,"ISO status
+- on ThesaurusConcept
+- on ThesaurusTerm"
+researchSkillsCollection,skillType,http://data.europa.eu/esco/model#skillType,Type of competence (a tagging concept)
+researchSkillsCollection,reuseLevel,http://data.europa.eu/esco/model#skillReuseLevel,Reuseability level of a skill
+researchSkillsCollection,altLabels,http://www.w3.org/2004/02/skos/core#altLabel,An alternative lexical label for a resource.
+researchSkillsCollection,description,http://purl.org/dc/terms/description,An account of the resource.
+researchSkillsCollection,broaderConceptUri,,No direct related property exists
+researchSkillsCollection,broaderConceptPT,http://www.w3.org/2004/02/skos/core#prefLabel,"The preferred lexical label for a resource, in a given language."
+digitalSkillsCollection,conceptType,,No direct related property exists
+digitalSkillsCollection,conceptUri,,No direct related property exists
+digitalSkillsCollection,preferredLabel,http://www.w3.org/2004/02/skos/core#prefLabel,"The preferred lexical label for a resource, in a given language."
+digitalSkillsCollection,status,http://purl.org/iso25964/skos-thes#status,"ISO status
+- on ThesaurusConcept
+- on ThesaurusTerm"
+digitalSkillsCollection,skillType,http://data.europa.eu/esco/model#skillType,Type of competence (a tagging concept)
+digitalSkillsCollection,reuseLevel,http://data.europa.eu/esco/model#skillReuseLevel,Reuseability level of a skill
+digitalSkillsCollection,altLabels,http://www.w3.org/2004/02/skos/core#altLabel,An alternative lexical label for a resource.
+digitalSkillsCollection,description,http://purl.org/dc/terms/description,An account of the resource.
+digitalSkillsCollection,broaderConceptUri,,No direct related property exists
+digitalSkillsCollection,broaderConceptPT,http://www.w3.org/2004/02/skos/core#prefLabel,"The preferred lexical label for a resource, in a given language."
+researchOccupationsCollection,conceptType,,No direct related property exists
+researchOccupationsCollection,conceptUri,,No direct related property exists
+researchOccupationsCollection,preferredLabel,http://www.w3.org/2004/02/skos/core#prefLabel,"The preferred lexical label for a resource, in a given language."
+researchOccupationsCollection,status,http://purl.org/iso25964/skos-thes#status,"ISO status
+- on ThesaurusConcept
+- on ThesaurusTerm"
+researchOccupationsCollection,altLabels,http://www.w3.org/2004/02/skos/core#altLabel,An alternative lexical label for a resource.
+researchOccupationsCollection,description,http://purl.org/dc/terms/description,An account of the resource.
+researchOccupationsCollection,broaderConceptUri,,No direct related property exists
+researchOccupationsCollection,broaderConceptPT,http://www.w3.org/2004/02/skos/core#prefLabel,"The preferred lexical label for a resource, in a given language."
+filename,data header,property,description
+broaderRelationsOccPillar,conceptType,,No direct related property exists
+broaderRelationsOccPillar,conceptUri,,No direct related property exists
+broaderRelationsOccPillar,conceptLabel,http://www.w3.org/2004/02/skos/core#prefLabel,"The preferred lexical label for a resource, in a given language."
+broaderRelationsOccPillar,broaderType,,No direct related property exists
+broaderRelationsOccPillar,broaderUri,,No direct related property exists
+broaderRelationsOccPillar,broaderLabel,http://www.w3.org/2004/02/skos/core#prefLabel,"The preferred lexical label for a resource, in a given language."
+broaderRelationsSkillPillar,conceptType,,No direct related property exists
+broaderRelationsSkillPillar,conceptUri,,No direct related property exists
+broaderRelationsSkillPillar,conceptLabel,http://www.w3.org/2004/02/skos/core#prefLabel,"The preferred lexical label for a resource, in a given language."
+broaderRelationsSkillPillar,broaderType,,No direct related property exists
+broaderRelationsSkillPillar,broaderUri,,No direct related property exists
+broaderRelationsSkillPillar,broaderLabel,http://www.w3.org/2004/02/skos/core#prefLabel,"The preferred lexical label for a resource, in a given language."
+occupationSkillRelations,occupationUri,,No direct related property exists
+occupationSkillRelations,occupationLabel,http://www.w3.org/2004/02/skos/core#prefLabel,"The preferred lexical label for a resource, in a given language."
+occupationSkillRelations,relationType,http://data.europa.eu/esco/model#relatedOptionalSkill | http://data.europa.eu/esco/model#relatedEssentialSkill,The ESCO skill or competence that is relevant (but optional) for the subject occuption. | The ESCO skill or competence that is essential for the subject occupation or skill.
+occupationSkillRelations,skillType,http://data.europa.eu/esco/model#skillType,Type of competence (a tagging concept)
+occupationSkillRelations,skillUri,,No direct related property exists
+occupationSkillRelations,skillLabel,http://www.w3.org/2004/02/skos/core#prefLabel,"The preferred lexical label for a resource, in a given language."
+skillSkillRelations,originalSkillUri,,No direct related property exists
+skillSkillRelations,originalSkillType,http://data.europa.eu/esco/model#skillType,Type of competence (a tagging concept)
+skillSkillRelations,relationType,http://data.europa.eu/esco/model#relatedOptionalSkill | http://data.europa.eu/esco/model#relatedEssentialSkill,The ESCO skill or competence that is relevant (but optional) for the subject occuption. | The ESCO skill or competence that is essential for the subject occupation or skill.
+skillSkillRelations,relatedSkillType,http://data.europa.eu/esco/model#skillType,Type of competence (a tagging concept)
+skillSkillRelations,relatedSkillUri,,No direct related property exists
+skillsHierarchy,Level 0 URI,,No direct related property exists
+skillsHierarchy,Level 0 preferred term,http://www.w3.org/2004/02/skos/core#prefLabel,"The preferred lexical label for a resource, in a given language."
+skillsHierarchy,Level 1 URI,,No direct related property exists
+skillsHierarchy,Level 1 preferred term,http://www.w3.org/2004/02/skos/core#prefLabel,"The preferred lexical label for a resource, in a given language."
+skillsHierarchy,Level 2 URI,,No direct related property exists
+skillsHierarchy,Level 2 preferred term,http://www.w3.org/2004/02/skos/core#prefLabel,"The preferred lexical label for a resource, in a given language."
+skillsHierarchy,Level 3 URI,,No direct related property exists
+skillsHierarchy,Level 3 preferred term,http://www.w3.org/2004/02/skos/core#prefLabel,"The preferred lexical label for a resource, in a given language."
+skillsHierarchy,Description,http://purl.org/dc/terms/description,An account of the resource.
+skillsHierarchy,Scope note,http://www.w3.org/2004/02/skos/core#scopeNote,A note that helps to clarify the meaning and/or the use of a concept.
+skillsHierarchy,Level 0 code,http://www.w3.org/2004/02/skos/core#notation,"A notation, also known as classification code, is a string of characters such as ""T58.5"" or ""303.4833"" used to uniquely identify a concept within the scope of a given concept scheme."
+skillsHierarchy,Level 1 code,http://www.w3.org/2004/02/skos/core#notation,"A notation, also known as classification code, is a string of characters such as ""T58.5"" or ""303.4833"" used to uniquely identify a concept within the scope of a given concept scheme."
+skillsHierarchy,Level 2 code,http://www.w3.org/2004/02/skos/core#notation,"A notation, also known as classification code, is a string of characters such as ""T58.5"" or ""303.4833"" used to uniquely identify a concept within the scope of a given concept scheme."
+skillsHierarchy,Level 3 code,http://www.w3.org/2004/02/skos/core#notation,"A notation, also known as classification code, is a string of characters such as ""T58.5"" or ""303.4833"" used to uniquely identify a concept within the scope of a given concept scheme."
