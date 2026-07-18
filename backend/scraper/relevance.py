@@ -50,6 +50,8 @@ CS_TITLE_KW = re.compile(
     r"embedded|gömülü|firmware|"
     r"web\s?(developer|geliştir|tasarım|arayüz|yazılım|engineer)|ux\s?/?\s?ui|ui\s?/?\s?ux|"
     r"\bjava\b|\.net|c\+\+|c#|python|php|golang|kotlin|swift|scala|"
+    r"\brust\b|\bruby\b|typescript|\bdart\b|\belixir\b|\bperl\b|\bhaskell\b|"
+    r"objective-c|\bmatlab\b|\bgroovy\b|\blua\b|\bcobol\b|\bfortran\b|\bassembly\b|"
     r"react|angular|vue|node\.?js|spring|django|"
     r"linux|unix|"
     r"\bsql\b|nosql|mongodb|postgres|oracle|"
