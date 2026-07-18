@@ -11,7 +11,7 @@ test_list = ["Veri Bilimi", "Data Science", "Veritabanı Yönetimi", "Database M
 def embed_list(text_list: list[str]):
     response = client.invoke_model(
         modelId="cohere.embed-multilingual-v3", 
-        body=json.dumps({"texts": text_list, "input_type": "search_query"})
+        body=json.dumps({"texts": text_list, "input_type": "search_document"})
     )
     return json.loads(response["body"].read())["embeddings"]
 
