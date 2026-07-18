@@ -46,9 +46,9 @@ CS_TITLE_KW = re.compile(
     r"\bit\s?(uzman|yönet|manager|müdür|support|destek|direktör|supervisor|specialist|engineer|mühend|network)|"
     r"bilgi\s?işlem|bilgi\s?teknoloj|information\s?tech|"
     r"scrum|product\s?owner|"
-    r"android|ios\s?(developer|geliştir)|mobil\s?(uygulama|geliştir)|mobile\s?dev|"
+    r"android|ios\s?(developer|geliştir|engineer)|mobil\s?(uygulama|geliştir)|mobile\s?(dev|engineer|application)|"
     r"embedded|gömülü|firmware|"
-    r"web\s?(developer|geliştir|tasarım|arayüz|yazılım)|ux\s?/?\s?ui|ui\s?/?\s?ux|"
+    r"web\s?(developer|geliştir|tasarım|arayüz|yazılım|engineer)|ux\s?/?\s?ui|ui\s?/?\s?ux|"
     r"\bjava\b|\.net|c\+\+|c#|python|php|golang|kotlin|swift|scala|"
     r"react|angular|vue|node\.?js|spring|django|"
     r"linux|unix|"
@@ -57,8 +57,12 @@ CS_TITLE_KW = re.compile(
     r"help\s?desk|teknik\s?destek|technical\s?support|"
     r"network\s?(admin|engineer|uzman|müh|destek|teknisyen|support|specialist|operat)|"
     r"ağ\s?(uzman|müh|güvenlik)|noc\s?(specialist|uzman|operat)|"
-    r"system\s?integration|data\s?(services|center)|"
-    r"otomasyon\s?müh|rpa|bilgisayar\s?müh|bilgisayar\s?bilim",
+    r"system\s?integration|integration\s?engineer|data\s?(services|center)|"
+    r"otomasyon\s?müh|rpa|bilgisayar\s?müh|bilgisayar\s?bilim|"
+    r"platform\s?engineer|infrastructure\s?engineer|security\s?engineer|"
+    r"site\s?reliability|release\s?engineer|search\s?engineer|api\s?engineer|"
+    r"computer\s?vision|\bnlp\b|game\s?(developer|engineer)|oyun\s?(geliştir|programcı)|"
+    r"blockchain|web3|automation\s?engineer|support\s?engineer|applied\s?scientist",
     re.IGNORECASE,
 )
 
