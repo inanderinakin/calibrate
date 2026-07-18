@@ -19,6 +19,10 @@ on:
         description: "Run yenibiris.com scraper (currently 403s from GitHub Actions' IP — see relevance.py / team notes)"
         type: boolean
         default: true
+      run_linkedin_test:
+        description: "Exploratory: run linkedin_scraper_test.py (anonymous-mode probe, not a real source yet) — off by default"
+        type: boolean
+        default: false
   schedule:
     # Every Monday 03:00 UTC, full run — yenibiris is skipped automatically
     # (see the yenibiris step's `if:` below): yenibiris.com blocks GitHub
@@ -85,3 +89,21 @@ jobs:
           else
             python -c "import yenibiris_scraper as s; s.SOURCES = s.SOURCES[:2]; s.MAX_PAGES_PER_SOURCE = 1; s.main()"
           fi
+
+      # Exploratory probe only — checks whether linkedin-jobs-scraper's
+      # anonymous (no-login) mode works from GitHub Actions' IP. The library
+      # warns it may fail in cloud environments like AWS/Heroku; this is the
+      # same class of environment. Never runs on schedule.
+      - name: Install Google Chrome (for LinkedIn scraper test)
+        if: github.event_name == 'workflow_dispatch' && inputs.run_linkedin_test == true
+        run: |
+          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg
+          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+
+      - name: Run LinkedIn scraper test (anonymous mode)
+        if: github.event_name == 'workflow_dispatch' && inputs.run_linkedin_test == true
+        run: |
+          pip install linkedin-jobs-scraper
+          python linkedin_scraper_test.py
