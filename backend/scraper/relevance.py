@@ -36,7 +36,7 @@ CS_TITLE_KW = re.compile(
     r"back\s?end|front\s?end|full.?stack|"
     r"data\s?(scientist|engineer|analyst|analytics)|veri\s?(bilim|müh|analist|analiz|taban)|"
     r"iş\s?zekası|business\s?intelligence|"
-    r"machine\s?learn|makine\s?öğrenme|yapay\s?zeka|deep\s?learn|ml\s?engineer|"
+    r"machine\s?learn|makine\s?öğrenme|yapay\s?zeka|deep\s?learn|ml\s?engineer|\bai\b|"
     r"cloud|bulut|aws|azure|gcp|kubernetes|docker|"
     r"siber|cyber|bilgi\s?güvenli|güvenlik.*bilgi|penetration|"
     r"sistem\s?(müh|yönet|admin|uzman|destek|analist)|systems?\s?(admin|engineer)|"

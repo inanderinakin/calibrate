@@ -175,62 +175,55 @@ def main():
     dedup_index = load_dedup_index(OUTPUT_FILE)
     print(f"Already scraped: {len(seen_ids)} postings ({len(dedup_index)} unique across all sources)")
 
-    total_saved = 0
-    total_skipped = 0
+    counts = {"saved": 0, "skipped_not_cs": 0, "skipped_dupe": 0}
 
-    for label, keyword in SOURCES:
-        print(f"\n=== Source: '{label}' ===")
-        found = []
+    def on_data(data: EventData):
+        if not data.job_id or data.job_id in seen_ids:
+            return
 
-        def on_data(data: EventData):
-            found.append(data)
+        posting = event_to_posting(data)
 
-        def on_error(error):
-            print(f"  [ERROR] {error}")
-
-        scraper = LinkedinScraper(headless=True, max_workers=1, slow_mo=1.3)
-        scraper.on(Events.DATA, on_data)
-        scraper.on(Events.ERROR, on_error)
-
-        try:
-            scraper.run([
-                Query(
-                    query=keyword,
-                    options=QueryOptions(locations=[LOCATION], limit=MAX_RESULTS_PER_SOURCE),
-                )
-            ])
-        except Exception as e:
-            print(f"  [FAILED] query failed entirely: {e}")
-            log_failed_query(label, f"query failed: {e}")
-            continue
-
-        print(f"  Found {len(found)} results")
-
-        for i, data in enumerate(found, 1):
-            if not data.job_id or data.job_id in seen_ids:
-                continue
-
-            posting = event_to_posting(data)
-
-            if not is_cs_relevant(posting):
-                seen_ids.add(data.job_id)
-                total_skipped += 1
-                print(f"  [{i}/{len(found)}] skipped (not CS): {posting['title']}")
-                continue
-
-            if is_duplicate_posting(posting, dedup_index):
-                seen_ids.add(data.job_id)
-                print(f"  [{i}/{len(found)}] skipped (duplicate of another source): {posting['title']}")
-                continue
-
-            save_posting(posting)
-            register_posting(posting, dedup_index)
+        if not is_cs_relevant(posting):
             seen_ids.add(data.job_id)
-            total_saved += 1
-            print(f"  [{i}/{len(found)}] Saved: {posting['title']} — Total: {total_saved}")
+            counts["skipped_not_cs"] += 1
+            print(f"  [{data.query}] skipped (not CS): {posting['title']}")
+            return
+
+        if is_duplicate_posting(posting, dedup_index):
+            seen_ids.add(data.job_id)
+            counts["skipped_dupe"] += 1
+            print(f"  [{data.query}] skipped (duplicate of another source): {posting['title']}")
+            return
+
+        save_posting(posting)
+        register_posting(posting, dedup_index)
+        seen_ids.add(data.job_id)
+        counts["saved"] += 1
+        print(f"  [{data.query}] Saved: {posting['title']} — Total: {counts['saved']}")
+
+    def on_error(error):
+        print(f"  [ERROR] {error}")
+
+    # A single scraper/browser instance runs every query in sequence — reusing
+    # it across all SOURCES avoids paying browser-startup cost per keyword.
+    scraper = LinkedinScraper(headless=True, max_workers=1, slow_mo=1.3)
+    scraper.on(Events.DATA, on_data)
+    scraper.on(Events.ERROR, on_error)
+
+    queries = [
+        Query(query=keyword, options=QueryOptions(locations=[LOCATION], limit=MAX_RESULTS_PER_SOURCE))
+        for _, keyword in SOURCES
+    ]
+
+    try:
+        scraper.run(queries)
+    except Exception as e:
+        print(f"[FAILED] run() raised: {e}")
+        log_failed_query("run", f"run() failed: {e}")
 
     sync_to_s3()
-    print(f"\nDone. Saved {total_saved} CS/IT postings, skipped {total_skipped} irrelevant.")
+    print(f"\nDone. Saved {counts['saved']} CS/IT postings, "
+          f"skipped {counts['skipped_not_cs']} not-CS, {counts['skipped_dupe']} duplicates.")
 
 
 if __name__ == "__main__":
