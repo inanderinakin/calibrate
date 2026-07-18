@@ -27,8 +27,32 @@ import boto3
 from linkedin_jobs_scraper import LinkedinScraper
 from linkedin_jobs_scraper.events import Events, EventData
 from linkedin_jobs_scraper.query import Query, QueryOptions
+import linkedin_jobs_scraper.strategies.anonymous_strategy as _anon_strategy
 
 from relevance import is_cs_relevant, is_duplicate_posting, load_dedup_index, register_posting
+
+# The library hardcodes a 2-second timeout for loading each job's detail pane
+# and for loading more results — too short for anonymous mode, especially as
+# LinkedIn's response time grows over a long session (we saw "Timeout on
+# loading job details" hit roughly 1-in-10 postings early in a run and much
+# more often later on). There's no public parameter for this, so we
+# monkey-patch the (name-mangled) private staticmethods to raise the default.
+_JOB_DETAILS_TIMEOUT = 5
+_LOAD_MORE_TIMEOUT = 5
+_orig_load_job_details = _anon_strategy.AnonymousStrategy._AnonymousStrategy__load_job_details
+_orig_load_more_jobs = _anon_strategy.AnonymousStrategy._AnonymousStrategy__load_more_jobs
+
+
+def _patched_load_job_details(driver, selectors, job_id, timeout=_JOB_DETAILS_TIMEOUT):
+    return _orig_load_job_details(driver, selectors, job_id, timeout=timeout)
+
+
+def _patched_load_more_jobs(driver, selectors, job_links_tot, timeout=_LOAD_MORE_TIMEOUT):
+    return _orig_load_more_jobs(driver, selectors, job_links_tot, timeout=timeout)
+
+
+_anon_strategy.AnonymousStrategy._AnonymousStrategy__load_job_details = staticmethod(_patched_load_job_details)
+_anon_strategy.AnonymousStrategy._AnonymousStrategy__load_more_jobs = staticmethod(_patched_load_more_jobs)
 
 # Windows consoles default to a codepage (e.g. cp1254) that can't encode the
 # Turkish characters / arrows in our prints — force UTF-8 so it doesn't crash.
@@ -60,7 +84,11 @@ SOURCES = [
 ]
 
 LOCATION = "Turkey"
-MAX_RESULTS_PER_SOURCE = 100  # per-query cap; overridden to a small number for validation runs
+MAX_RESULTS_PER_SOURCE = 1000  # per-query cap; LinkedIn's public search interface tops out
+# around 1000 results per query anyway, so this just removes our own artificial ceiling —
+# narrow keywords (e.g. "site reliability engineer") still stop early at however many jobs
+# actually exist, this only matters for broad keywords that have more to give.
+# Overridden to a small number for validation runs.
 
 # All three other scrapers (kariyer, secretcv, yenibiris) write into the SAME
 # postings.jsonl — a "source" field on each posting tells them apart, and
