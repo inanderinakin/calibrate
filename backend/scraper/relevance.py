@@ -36,29 +36,39 @@ CS_TITLE_KW = re.compile(
     r"back\s?end|front\s?end|full.?stack|"
     r"data\s?(scientist|engineer|analyst|analytics)|veri\s?(bilim|müh|analist|analiz|taban)|"
     r"iş\s?zekası|business\s?intelligence|"
-    r"machine\s?learn|makine\s?öğrenme|yapay\s?zeka|deep\s?learn|ml\s?engineer|"
+    r"machine\s?learn|makine\s?öğrenme|yapay\s?zeka|deep\s?learn|ml\s?engineer|\bai\b|"
+    r"mlops|artificial\s?intelligence|prompt\s?engineer|\bllm\s?(engineer|developer|ops)|"
     r"cloud|bulut|aws|azure|gcp|kubernetes|docker|"
     r"siber|cyber|bilgi\s?güvenli|güvenlik.*bilgi|penetration|"
-    r"sistem\s?(müh|yönet|admin|uzman|destek|analist)|systems?\s?(admin|engineer)|"
+    r"sistem\w*.*?(müh|yönet|admin|uzman|destek|analist)|systems?\s?(admin|engineer|analyst|architect)|"
     r"database|veri\s?taban|dba|"
     r"yazılım\s?test|test\s?(otomasyon|automation)|qa\s?engineer|quality\s?assur|"
     r"\berp\b|sap\s?(abap|basis|danış|konsül|mm|fi|sd|hr|müdür|proje|uzman|yönet)|"
-    r"\bit\s?(uzman|yönet|manager|müdür|support|destek|direktör|supervisor|specialist|engineer|mühend|network)|"
-    r"bilgi\s?işlem|bilgi\s?teknoloj|information\s?tech|"
+    r"\bit\b.*?(uzman|yönet|manager|müdür|support|destek|direktör|supervisor|specialist|engineer|mühend|network|proje|auditor|analyst|technician|teknisyen)|"
+    r"bilgi\s?işlem|bilgi\s?teknoloj|information\s?tech|bilişim|"
     r"scrum|product\s?owner|"
-    r"android|ios\s?(developer|geliştir)|mobil\s?(uygulama|geliştir)|mobile\s?dev|"
+    r"android|ios\s?(developer|geliştir|engineer)|mobil\s?(uygulama|geliştir)|mobile\s?(dev|engineer|application)|"
     r"embedded|gömülü|firmware|"
-    r"web\s?(developer|geliştir|tasarım|arayüz|yazılım)|ux\s?/?\s?ui|ui\s?/?\s?ux|"
+    r"web\s?(developer|geliştir|tasarım|arayüz|yazılım|engineer)|ux\s?/?\s?ui|ui\s?/?\s?ux|"
     r"\bjava\b|\.net|c\+\+|c#|python|php|golang|kotlin|swift|scala|"
+    r"\brust\b|\bruby\b|typescript|\bdart\b|\belixir\b|\bperl\b|\bhaskell\b|"
+    r"objective-c|\bmatlab\b|\bgroovy\b|\blua\b|\bcobol\b|\bfortran\b|\bassembly\b|"
     r"react|angular|vue|node\.?js|spring|django|"
     r"linux|unix|"
     r"\bsql\b|nosql|mongodb|postgres|oracle|"
-    r"power\s?bi|tableau|etl|"
+    r"power\s?bi|tableau|\betl\b|"
     r"help\s?desk|teknik\s?destek|technical\s?support|"
     r"network\s?(admin|engineer|uzman|müh|destek|teknisyen|support|specialist|operat)|"
-    r"ağ\s?(uzman|müh|güvenlik)|noc\s?(specialist|uzman|operat)|"
-    r"system\s?integration|data\s?(services|center)|"
-    r"otomasyon\s?müh|rpa|bilgisayar\s?müh|bilgisayar\s?bilim",
+    r"ağ\s?(uzman|müh|güvenli)|noc\s?(specialist|uzman|operat)|"
+    r"system\s?integration|integration\s?engineer|data\s?(services|center)|"
+    r"otomasyon\s?müh|rpa|bilgisayar\s?müh|bilgisayar\s?bilim|"
+    r"platform\s?engineer|infrastructure\s?engineer|security\s?engineer|"
+    r"solutions?\s?architect|enterprise\s?architect|data\s?architect|"
+    r"network\s?architect|security\s?architect|soc\s?analyst|"
+    r"site\s?reliability|release\s?engineer|search\s?engineer|api\s?engineer|"
+    r"performance\s?engineer|windows\s?admin|salesforce|\biot\b|"
+    r"computer\s?vision|\bnlp\b|game\s?(developer|engineer)|oyun\s?(geliştir|programcı)|"
+    r"blockchain|web3|automation\s?engineer|support\s?engineer|applied\s?scientist",
     re.IGNORECASE,
 )
 
@@ -99,11 +109,22 @@ NON_CS_TITLE_KW = re.compile(
 )
 
 
+# Older/formal Turkish spelling uses circumflex vowels (â/î/û — e.g. "Zekâ",
+# "Kâğıt") that are distinct Unicode characters from plain a/i/u, so patterns
+# written with plain vowels silently miss them (same class of bug as the
+# İ-casing issue below) unless normalized away first.
+_CIRCUMFLEX_MAP = str.maketrans("âîûÂÎÛ", "aiuAIU")
+
+
+def _normalize_tr(text: str) -> str:
+    return text.translate(_CIRCUMFLEX_MAP).replace("İ", "i").lower()
+
+
 def is_cs_relevant(posting: dict) -> bool:
     """True if a scraped posting is a genuine CS/IT role, based on its title,
     department and sector."""
-    title = (posting.get("title") or posting.get("position_name") or "").replace("İ", "i").lower()
-    dept  = (posting.get("department") or "").replace("İ", "i").lower()
+    title = _normalize_tr(posting.get("title") or posting.get("position_name") or "")
+    dept  = _normalize_tr(posting.get("department") or "")
 
     has_cs         = bool(CS_TITLE_KW.search(title))
     has_non_cs     = bool(NON_CS_TITLE_KW.search(title))

@@ -16,14 +16,19 @@ on:
         type: boolean
         default: true
       run_yenibiris:
-        description: "Run yenibiris.com scraper (currently 403s from GitHub Actions' IP — see relevance.py / team notes)"
+        description: "Run yenibiris.com scraper (currently 403s from GitHub Actions' IP)"
+        type: boolean
+        default: false
+      run_linkedin:
+        description: "Run LinkedIn scraper (anonymous mode)"
         type: boolean
         default: true
   schedule:
     # Every Monday 03:00 UTC, full run — yenibiris is skipped automatically
     # (see the yenibiris step's `if:` below): yenibiris.com blocks GitHub
-    # Actions' IP with a 403, so the scheduled run only covers kariyer +
-    # secretcv until that's resolved (proxy, or running it elsewhere).
+    # Actions' IP with a 403, so the scheduled run only covers kariyer,
+    # secretcv and linkedin until that's resolved (proxy, or running it
+    # elsewhere).
     - cron: "0 3 * * 1"
 
 jobs:
@@ -46,7 +51,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install Python dependencies
-        run: pip install playwright beautifulsoup4 boto3 requests
+        run: pip install playwright beautifulsoup4 boto3 requests linkedin-jobs-scraper
 
       - name: Install Playwright browsers
         if: github.event_name == 'schedule' || inputs.run_kariyer == true
@@ -84,4 +89,25 @@ jobs:
             python yenibiris_scraper.py
           else
             python -c "import yenibiris_scraper as s; s.SOURCES = s.SOURCES[:2]; s.MAX_PAGES_PER_SOURCE = 1; s.main()"
+          fi
+
+      # ⚠ anonymous (no-login) mode — the library itself warns it "is no
+      # longer maintained and it won't probably work". Confirmed working (as
+      # of writing) from both a residential IP and GitHub Actions' IP, but
+      # there's no guarantee it keeps working if LinkedIn changes its site.
+      - name: Install Google Chrome (for LinkedIn scraper)
+        if: github.event_name == 'schedule' || inputs.run_linkedin == true
+        run: |
+          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/google-chrome.gpg
+          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+
+      - name: Run LinkedIn scraper
+        if: github.event_name == 'schedule' || inputs.run_linkedin == true
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.full_run }}" = "true" ]; then
+            python linkedin_scraper.py
+          else
+            python -c "import linkedin_scraper as s; s.SOURCES = s.SOURCES[:2]; s.MAX_RESULTS_PER_SOURCE = 5; s.main()"
           fi
