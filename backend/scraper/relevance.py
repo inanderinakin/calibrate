@@ -109,11 +109,22 @@ NON_CS_TITLE_KW = re.compile(
 )
 
 
+# Older/formal Turkish spelling uses circumflex vowels (â/î/û — e.g. "Zekâ",
+# "Kâğıt") that are distinct Unicode characters from plain a/i/u, so patterns
+# written with plain vowels silently miss them (same class of bug as the
+# İ-casing issue below) unless normalized away first.
+_CIRCUMFLEX_MAP = str.maketrans("âîûÂÎÛ", "aiuAIU")
+
+
+def _normalize_tr(text: str) -> str:
+    return text.translate(_CIRCUMFLEX_MAP).replace("İ", "i").lower()
+
+
 def is_cs_relevant(posting: dict) -> bool:
     """True if a scraped posting is a genuine CS/IT role, based on its title,
     department and sector."""
-    title = (posting.get("title") or posting.get("position_name") or "").replace("İ", "i").lower()
-    dept  = (posting.get("department") or "").replace("İ", "i").lower()
+    title = _normalize_tr(posting.get("title") or posting.get("position_name") or "")
+    dept  = _normalize_tr(posting.get("department") or "")
 
     has_cs         = bool(CS_TITLE_KW.search(title))
     has_non_cs     = bool(NON_CS_TITLE_KW.search(title))

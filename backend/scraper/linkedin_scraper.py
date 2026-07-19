@@ -18,7 +18,6 @@ Output: postings.jsonl (shared with kariyer/secretcv/yenibiris, one JSON
 object per line, tagged with "source": "linkedin").
 """
 import json
-import logging
 import os
 import sys
 import time
@@ -31,13 +30,6 @@ from linkedin_jobs_scraper.query import Query, QueryOptions
 import linkedin_jobs_scraper.strategies.anonymous_strategy as _anon_strategy
 
 from relevance import is_cs_relevant, is_duplicate_posting, load_dedup_index, register_posting
-
-# The library's internal logger ("li:scraper") dumps a full traceback (via
-# logging.error(..., exc_info=True)) for every single per-job timeout AND
-# every JS exception — extremely noisy over a long run and not actionable
-# per-occurrence. We track our own timeout/error counts instead (see
-# TIMEOUT_TAGS below and the counts dict in main()) and only report totals.
-logging.getLogger("li:scraper").setLevel(logging.CRITICAL)
 
 # The library hardcodes a 2-second timeout for loading each job's detail pane
 # and for loading more results — too short for anonymous mode, especially as
@@ -237,13 +229,8 @@ def main():
         print(f"  [{data.query}] Saved: {posting['title']} — Total: {counts['saved']}")
 
     def on_error(error):
-        # `error` can be a huge multi-hundred-line string (the library embeds
-        # a full traceback/native Chrome stacktrace even for routine
-        # per-job timeouts) — keep only the first line so a run's log stays
-        # readable; the total count is reported at the end instead.
         counts["errors"] += 1
-        first_line = str(error).strip().split("\n", 1)[0]
-        print(f"  [ERROR] {first_line}")
+        print(f"  [ERROR] {error}")
 
     # A single scraper/browser instance runs every query in sequence — reusing
     # it across all SOURCES avoids paying browser-startup cost per keyword.
