@@ -18,6 +18,7 @@ Output: postings.jsonl (shared with kariyer/secretcv/yenibiris, one JSON
 object per line, tagged with "source": "linkedin").
 """
 import json
+import logging
 import os
 import sys
 import time
@@ -31,14 +32,21 @@ import linkedin_jobs_scraper.strategies.anonymous_strategy as _anon_strategy
 
 from relevance import is_cs_relevant, is_duplicate_posting, load_dedup_index, register_posting
 
+# The library's internal logger ("li:scraper") dumps a full traceback (via
+# logging.error(..., exc_info=True)) for every single per-job timeout AND
+# every JS exception — extremely noisy over a long run and not actionable
+# per-occurrence. We track our own timeout/error counts instead (see
+# TIMEOUT_TAGS below and the counts dict in main()) and only report totals.
+logging.getLogger("li:scraper").setLevel(logging.CRITICAL)
+
 # The library hardcodes a 2-second timeout for loading each job's detail pane
 # and for loading more results — too short for anonymous mode, especially as
 # LinkedIn's response time grows over a long session (we saw "Timeout on
 # loading job details" hit roughly 1-in-10 postings early in a run and much
 # more often later on). There's no public parameter for this, so we
 # monkey-patch the (name-mangled) private staticmethods to raise the default.
-_JOB_DETAILS_TIMEOUT = 5
-_LOAD_MORE_TIMEOUT = 5
+_JOB_DETAILS_TIMEOUT = 8
+_LOAD_MORE_TIMEOUT = 8
 _orig_load_job_details = _anon_strategy.AnonymousStrategy._AnonymousStrategy__load_job_details
 _orig_load_more_jobs = _anon_strategy.AnonymousStrategy._AnonymousStrategy__load_more_jobs
 
@@ -84,11 +92,10 @@ SOURCES = [
 ]
 
 LOCATION = "Turkey"
-MAX_RESULTS_PER_SOURCE = 1000  # per-query cap; LinkedIn's public search interface tops out
-# around 1000 results per query anyway, so this just removes our own artificial ceiling —
-# narrow keywords (e.g. "site reliability engineer") still stop early at however many jobs
-# actually exist, this only matters for broad keywords that have more to give.
-# Overridden to a small number for validation runs.
+MAX_RESULTS_PER_SOURCE = 300  # per-query cap. Tried 1000 (LinkedIn's own public-search
+# ceiling) but even broad keywords ("software developer") topped out well under 300 in
+# practice, so 1000 just meant extra time spent finding nothing new. Overridden to a
+# small number for validation runs.
 
 # All three other scrapers (kariyer, secretcv, yenibiris) write into the SAME
 # postings.jsonl — a "source" field on each posting tells them apart, and
@@ -203,7 +210,7 @@ def main():
     dedup_index = load_dedup_index(OUTPUT_FILE)
     print(f"Already scraped: {len(seen_ids)} postings ({len(dedup_index)} unique across all sources)")
 
-    counts = {"saved": 0, "skipped_not_cs": 0, "skipped_dupe": 0}
+    counts = {"saved": 0, "skipped_not_cs": 0, "skipped_dupe": 0, "errors": 0}
 
     def on_data(data: EventData):
         if not data.job_id or data.job_id in seen_ids:
@@ -230,7 +237,13 @@ def main():
         print(f"  [{data.query}] Saved: {posting['title']} — Total: {counts['saved']}")
 
     def on_error(error):
-        print(f"  [ERROR] {error}")
+        # `error` can be a huge multi-hundred-line string (the library embeds
+        # a full traceback/native Chrome stacktrace even for routine
+        # per-job timeouts) — keep only the first line so a run's log stays
+        # readable; the total count is reported at the end instead.
+        counts["errors"] += 1
+        first_line = str(error).strip().split("\n", 1)[0]
+        print(f"  [ERROR] {first_line}")
 
     # A single scraper/browser instance runs every query in sequence — reusing
     # it across all SOURCES avoids paying browser-startup cost per keyword.
