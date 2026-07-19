@@ -35,10 +35,6 @@ for index, row in catalog_df.iterrows():
         for label in split_labels:
             pairs.append((label, str(row['conceptUri'])))
 
-print(f"Collection URIs: {len(collection_uris)}")
-print(f"Catalog DF: {len(catalog_df)}")
-print(f"Pairs: {len(pairs)}")
-
 save_path = Path(__file__).parent / "vectors_array.npy"
 if save_path.exists():
     vectors = np.load(save_path)
@@ -52,30 +48,110 @@ else:
     vectors = np.array(vectors_list)
     np.save(save_path, vectors)
 
-print(f"Vectors NP Array Shape: {vectors.shape}")
-
 test_list = [
-    ("SQL", "http://data.europa.eu/esco/skill/598de5b0-5b58-4ea7-8058-a4bc4d18c742"),
-    ("Haskell", "http://data.europa.eu/esco/skill/000f1d3d-220f-4789-9c0a-cc742521fb02"),
-    ("Postgres", "http://data.europa.eu/esco/skill/a8d07b5a-c1a1-42c6-9d53-db9c7a2ca996"),
-    ("data science", "http://data.europa.eu/esco/skill/edebd83d-35f6-4ed5-a940-6c203d178c01"),
-    ("Veri Bilimi", "http://data.europa.eu/esco/skill/edebd83d-35f6-4ed5-a940-6c203d178c01"),
-    ("Veritabanı Yönetimi", "http://data.europa.eu/esco/skill/ab1e97ed-2319-4293-a8b7-072d2648822f"),
-    ("satranç", None)
+    # A. English exacts / sanity
+    ("Python",            ["Python (computer programming)"]),
+    ("Java",              ["Java (computer programming)"]),          # landmine: JavaScript nearby
+    ("JavaScript",        ["JavaScript"]),
+    ("TypeScript",        ["TypeScript"]),
+    ("C#",                ["C#"]),
+    ("machine learning",  ["machine learning", "utilise machine learning"]),  # knowledge-vs-skill siblings
+    ("cyber security",    ["cyber security"]),
+    ("business intelligence", ["business intelligence"]),
+    ("SQL",               ["SQL"]),                                  # resolves to BOTH URIs automatically
+    ("data science",      ["data science"]),
+
+    # B. Variants / abbreviations
+    ("JS",                ["JavaScript"]),
+    ("MSSQL",             ["MS SQL Server"]),
+    ("PostgreSQL",        ["Postgres"]),
+
+    # C. Turkish translations — the load-bearing category
+    ("Veri Bilimi",       ["data science"]),
+    ("Makine Öğrenmesi",  ["machine learning", "utilise machine learning"]),
+    ("Yapay Zeka",        ["principles of artificial intelligence"]),
+    ("Siber Güvenlik",    ["cyber security"]),
+    ("Bulut Güvenliği",   ["cloud security and compliance"]),
+    ("Veri Madenciliği",  ["data mining", "perform data mining", "data mining methods"]),
+    ("Veri Görselleştirme", ["data visualisation software", "deliver visual presentation of data"]),
+    ("Nesnelerin İnterneti", ["Internet of Things"]),
+    ("İşletim Sistemleri", ["operating systems"]),
+    ("Web Programlama",   ["web programming"]),
+    ("Çevik Proje Yönetimi", ["Agile project management"]),
+    ("Kelime İşlemci",    ["use word processing software"]),
+    ("Arama Motoru Optimizasyonu", ["search engine optimisation", "conduct search engine optimisation"]),
+    ("Şifreleme",         ["ICT encryption"]),
+    ("Veritabanı Yönetimi", ["manage database", "database management systems"]),
+
+    # D. Junk — must be rejected (gold None)
+    ("satranç",           None),
+    ("ehliyet",           None),   # driver's license
+    ("yüzme",             None),   # swimming
+    ("İngilizce",         None),   # language skill, not in digita
+    ("takım çalışması",   None),   # teamwork — soft skill, boundary probe
+
+    # E. Hard rejection probes — real tech skills ABSENT from this catalog
+    ("Kotlin",            None),   # will Scala/Java pull it above
+    ("Docker",            None),
+    ("ReactJS",           None),   # watch if "JavaScript Frameworhat'd be right
 ]
 
+label_to_uris = {}
+for label, uri in pairs:
+    label_to_uris.setdefault(label, set()).add(uri)
+
+resolved_tests = []
+
+for query_text, gold_labels in test_list:
+    if gold_labels is None:
+        resolved_tests.append((query_text, None))
+    else:
+        gold_uris = set()
+        for label in gold_labels:
+            gold_uris |= label_to_uris[label]
+        resolved_tests.append((query_text, gold_uris))
+    
 test_vectors = embed_list(text_list = [q for q, uri in test_list], input_type = "search_query")
 
-for (query_text, gold_uri), query_vector in zip(test_list, test_vectors):
+hit_count = 0
+miss_count = 0
+
+for (query_text, gold_uris), query_vector in zip(resolved_tests, test_vectors):
     scores = vectors @ query_vector
     ranked = np.argsort(scores)[::-1]
     print(f"{query_text} {pairs[ranked[0]][0]} {scores[ranked[0]]}")
 
-    if gold_uri is None:
+    seen_uris = set()
+
+    for index in ranked:
+        pair = pairs[index]
+        label = pair[0]
+        uri = pair[1]
+        score = scores[index]
+
+        if uri in seen_uris:
+            continue
+        else:
+            seen_uris.add(uri)
+        
+        if len(seen_uris) == 5:
+            break
+
+    if gold_uris is None:
         if scores[ranked[0]] < 0.6:
             print("HIT")
-    else:
-        if pairs[ranked[0]][1] == gold_uri:
-            print("HIT")
+            hit_count += 1
         else:
             print("Miss")
+            miss_count += 1
+    else:
+        if pairs[ranked[0]][1] in gold_uris and scores[ranked[0]] >= 0.6:
+            print("HIT")
+            hit_count += 1
+        else:
+            print("Miss")
+            miss_count += 1
+
+print("----------------------")
+print(f"Hit Count: {hit_count}/{len(test_list)}")
+print(f"Miss Count: {miss_count}/{len(test_list)}")
