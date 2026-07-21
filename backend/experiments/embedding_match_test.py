@@ -142,31 +142,25 @@ miss_list = []
 for (query_text, gold_uris), query_vector in zip(resolved_tests, test_vectors):
     scores = vectors @ query_vector
     ranked = np.argsort(scores)[::-1]
-    top_label, top_uri = pairs[ranked[0]]
-    top_score = scores[ranked[0]]
-    print(f"{query_text} {top_label} {top_score}")
+    print(f"{query_text} {pairs[ranked[0]][0]} {scores[ranked[0]]}")
     print(ranked[:5])
 
     if gold_uris is None:
-        if top_score < THRESHOLD:
+        if scores[ranked[0]] < THRESHOLD:
             print("HIT")
             hit_count += 1
         else:
             print("Miss")
             miss_count += 1
-            miss_list.append((query_text, top_label, top_score))
+            miss_list.append((query_text, query_vector))
     else:
-        if top_uri in gold_uris and top_score >= THRESHOLD:
+        if pairs[ranked[0]][1] in gold_uris and scores[ranked[0]] >= THRESHOLD:
             print("HIT")
             hit_count += 1
         else:
             print("Miss")
             miss_count += 1
-            miss_list.append((query_text, top_label, top_score))
 
 print("----------------------")
 print(f"Hit Count: {hit_count}/{len(test_list)}")
 print(f"Miss Count: {miss_count}/{len(test_list)}")
-
-for query_text, top_label, top_score in miss_list:
-    print(f"  {query_text} -> {top_label} ({top_score:.4f})")

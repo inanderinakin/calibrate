@@ -6,8 +6,8 @@ from aiohttp import ClientError
 from fastapi.concurrency import run_in_threadpool
 from agent import get_recommendations
 from handlecv import compute_gaps
-from normalize import normalize_skill
-from models import GapResult, NormalizedSkill
+from normalize import normalize_skills
+from models import GapResult
 
 from fastapi import FastAPI, Form, HTTPException, UploadFile, status
 from fastapi.params import File
@@ -23,13 +23,11 @@ async def root():
 
 @app.post("/upload_cv")
 async def upload_cv(target_roles_raw: str = Form(...), file: UploadFile = File(...)):
-    java_normalized = NormalizedSkill(skill = "java", esco_category="programming languages")
-    c_normalized = NormalizedSkill(skill = "c", esco_category="programming languages")
-    sql_normalized = NormalizedSkill(skill = "sql", esco_category="database management")
+    java_normalized, cpp_normalized, sql_normalized = normalize_skills(["java", "C++", "sql"])
     # This profile is temporary, will be switched after we got scraped data analysis
     profile = {
-        "Data Scientist": [c_normalized, sql_normalized],
-        "Software Engineer": [java_normalized, c_normalized]
+        "Data Scientist": [cpp_normalized, sql_normalized],
+        "Software Engineer": [java_normalized, cpp_normalized]
         }
     
     target_roles = [role.strip() for role in target_roles_raw.split(",")]
@@ -84,7 +82,7 @@ async def upload_cv(target_roles_raw: str = Form(...), file: UploadFile = File(.
 
     lines = await run_in_threadpool(extract_cv_text, "calibrate-teamthrow", f"uploads/{safe_name}")
     candidates = extract_skill_candidates(lines)
-    skills = list(filter(None, (normalize_skill(candidate) for candidate in candidates)))
+    skills = list(filter(None, normalize_skills(candidates = candidates)))
 
     gaps = compute_gaps(cv_skills = skills, target_roles = target_roles, demand_profile = profile)
     

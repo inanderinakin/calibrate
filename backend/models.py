@@ -8,7 +8,7 @@ class Gap(BaseModel):
 
 class GapResult(BaseModel): 
     target_roles: list[str]
-    gaps: list[Gap]
+    gaps: dict[str, list[Gap]]
 
 class NormalizedSkill(BaseModel):
     skill: str
