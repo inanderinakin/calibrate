@@ -1,4 +1,7 @@
+from pathlib import Path
+
 import jsonlines
+import pandas as pd
 from .esco_utils import EscoNormalizer
 
 class PostingSkillExtractor:
@@ -41,3 +44,24 @@ class PostingSkillExtractor:
                 print(f"Posting has {idx+1}: {len(matched_skills)} number of matching talents.")
                 
         return processed_postings
+
+if __name__ == "__main__":
+    collection_csv_path = (Path(__file__).parent / "esco_dataset" / "digitalSkillsCollection_en.csv")
+    skills_csv_path = (Path(__file__).parent / "esco_dataset" / "skills_en.csv")
+    catalog_csv_path = (Path(__file__).parent / "esco_dataset" / "catalog.csv")
+
+    collection_df = pd.read_csv(collection_csv_path)
+    skills_df = pd.read_csv(skills_csv_path)
+
+    collection_uris = set(collection_df["conceptUri"])
+    catalog_df = skills_df[skills_df["conceptUri"].isin(collection_uris)]
+    
+    catalog_df = catalog_df.drop_duplicates(subset="conceptUri")
+    normalizer = EscoNormalizer(csv_path=catalog_csv_path)
+    extractor = PostingSkillExtractor(normalizer=normalizer)
+
+    jsonl_csv_path = (Path(__file__).parent.parent / "scraper" / "postings.jsonl")
+    postings = extractor.extract_from_jsonl(jsonl_path=jsonl_csv_path)
+
+    for i in range (0, 5):
+        print(postings[i])
