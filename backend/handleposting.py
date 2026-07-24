@@ -64,7 +64,7 @@ if __name__ == "__main__":
             for skill in role_skill_counts[role]:
                 skill_demand = role_skill_counts[role][skill] / postings_per_role[role]
                 if skill_demand > 0.2:
-                    demanded_skill = DemandedSkill(skill=skill, esco_category=skill_category[skill], demand_percentage=skill_demand)
+                    demanded_skill = DemandedSkill(skill=skill, esco_category=skill_category[skill], demand_percentage=skill_demand, trend="Stable")
                     demand_profile.setdefault(role, list()).append(demanded_skill)
 
         for role in demand_profile:
