@@ -1,43 +1,18 @@
+import json
+from pathlib import Path
 from typing_extensions import Literal
-
 from strands import Agent, tool
 from strands_tools import calculator, current_time
 from dotenv import load_dotenv
-from pydantic import BaseModel
-from models import GapResult
-
-class Resource(BaseModel):
-    title: str
-    url: str
-    type: Literal["documentation", "video", "course"]
-    language: Literal["tr", "en"]
-
-class Recommendation(BaseModel):
-    rank: int
-    skill: str
-    esco_category: str
-    reason: str
-    trend: Literal["Emerging", "Stable", "Fading"]
-    closest_cv_skill: str | None = None
-    resources: list[Resource]
-
-class Report(BaseModel):
-    target_roles: list[str]
-    summary: str
-    recommendations: list[Recommendation]
+from models import GapResult, Recommendation, Report, Resource
 
 load_dotenv()
 
 def load_role_demand(role: str) -> list[dict] | None:
     """The single source of demand data (later: reads the aggregator's artifacts)."""
-    demands = {
-        "Data Scientist": [
-            {"skill": "Python", "demand_pct": 0.91, "trend": "Stable"},
-            {"skill": "Docker", "demand_pct": 0.48, "trend": "Emerging"},
-            {"skill": "SQL",    "demand_pct": 0.74, "trend": "Stable"},
-        ],
-    }
-    return demands.get(role)
+    with open((Path(__file__).parent.parent / "demand_profile.json")) as json_file:
+        json_data = json.load(json_file)
+        return json_data[role]
 
 @tool
 def get_role_demand(role: str):
@@ -81,7 +56,7 @@ def get_recommendations(gaps: GapResult):
     demand: dict[str, float] = {}
     for role in gaps.target_roles:
         for item in load_role_demand(role) or []:
-            demand[item["skill"]] = max(demand.get(item["skill"], 0.0), float(item["demand_pct"]))
+            demand[item["skill"]] = max(demand.get(item["skill"], 0.0), float(item["demand_percentage"]))
 
     report.recommendations.sort(key=lambda r: demand.get(r.skill, 0.0), reverse=True)
     for i, rec in enumerate(report.recommendations, start=1):
@@ -92,12 +67,12 @@ def get_recommendations(gaps: GapResult):
 if __name__ == "__main__":
     gaps = {
         "target_roles": ["Data Scientist"],
-        "gaps": [
-        { "skill": "Docker", "esco_category": "containerization", "closest_cv_skill": "Kubernetes" },
-        { "skill": "SQL", "esco_category": "database" }
-        ]
+        "gaps": {
+            "Data Scientist": [
+                {"skill": "Docker", "esco_category": "containerization", "closest_cv_skill": "Kubernetes"},
+                {"skill": "SQL", "esco_category": "query languages"}
+            ]
+        } 
     }
-
     parsedData = GapResult(**gaps)
-
     print(get_recommendations(parsedData))

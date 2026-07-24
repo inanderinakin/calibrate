@@ -1,3 +1,4 @@
+from typing import Literal
 from pydantic import BaseModel
 
 class Gap(BaseModel): 
@@ -14,7 +15,28 @@ class NormalizedSkill(BaseModel):
     skill: str
     esco_category: str
 
+class Resource(BaseModel):
+    title: str
+    url: str
+    type: Literal["documentation", "video", "course"]
+    language: Literal["tr", "en"]
+
+class Recommendation(BaseModel):
+    rank: int
+    skill: str
+    esco_category: str
+    reason: str
+    trend: Literal["Emerging", "Stable", "Fading"]
+    closest_cv_skill: str | None = None
+    resources: list[Resource]
+
+class Report(BaseModel):
+    target_roles: list[str]
+    summary: str
+    recommendations: list[Recommendation]
+
 class DemandedSkill(BaseModel):
     skill: str
     esco_category: str
     demand_percentage: float
+    trend: Literal["Emerging", "Stable", "Fading"]
