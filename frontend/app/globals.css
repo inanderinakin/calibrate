@@ -1,81 +1,100 @@
-/* Importe Tailwind CSS */
 @import "tailwindcss";
 
-/* Active le mode sombre via l'attribut data-theme="dark" */
-@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+/* ThemeContext toggles the `.dark` class on <html>, so dark mode is driven
+   by that class rather than the OS `prefers-color-scheme` media query. */
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --color-cream: #F8F1E7;
+  /* Exact tokens pulled from Figma (dashboard / cv-analyse / settings / profile) */
+  --burgundy: #5b0f18;   /* sidebar + primary accent, light mode */
+  --win: #7a1f2b;        /* secondary accent, light mode (progress bars, "MATCH") */
+  --creamy: #f8f1e7;     /* text-on-dark / text-on-burgundy, both modes */
+  --pink: #d8a7a7;       /* active nav item highlight, light mode */
+  --dark-blue: #1b314c;  /* primary accent, dark mode */
+  --bg-blue: #3c5e82;    /* card + sidebar surface, dark mode */
+  --light-blue: #789aca; /* secondary accent, dark mode */
 
-  --color-bg-light: #F8F1E7;
-  --color-primary-light: #5B0F18;
-  --color-accent-light: #D8A7A7;
-  --color-text-light: #000000;
+  --page-bg: #ffffff;
+  --card-bg: rgba(255, 255, 255, 0.91);
+  --sidebar-bg: var(--burgundy);
+  --border-color: var(--burgundy);
+  --hover-bg: rgba(91, 15, 24, 0.06);
+  --input-bg: #ffffff;
 
-  --color-bg-dark: #00072d;
-  --color-primary-dark: #1B314C;
-  --color-accent-dark: #789ACA;
-  --color-text-dark: #F8F1E7;
+  --text-primary: #000000;
+  --text-secondary: #000000;
+  --accent: var(--burgundy);
+  --accent-2: var(--win);
+  --on-accent: var(--creamy);
 
-  --color-sidebar-dark: #3C5E82;
-  --color-title-light: #7A1F2B;
-  --color-title-dark: #F8F1E7;
+  --accent-bg: var(--burgundy);
+  --accent-text: var(--creamy);
+  --icon-color: var(--burgundy);
+
+  --bg-texture: url("/bg/white-bg.png");
+  --sidebar-texture: url("/bg/burgundy-bg.png");
+  --landing-texture: url("/bg/light-picture.png");
+
+  /* Sidebar hover/active color — pink in light mode, light-blue in dark mode */
+  --nav-active: var(--pink);
+  --landing-accent: var(--burgundy);
 }
 
-/* Expose les variables à Tailwind */
-@theme inline {
-  /* Couleurs */
-  --color-cream: var(--color-cream);
-  --color-primary-light: var(--color-primary-light);
-  --color-accent-light: var(--color-accent-light);
-  --color-bg-light: var(--color-bg-light);
-  --color-text-light: var(--color-text-light);
+.dark {
+  --page-bg: #0d1620;
+  --card-bg: var(--bg-blue);
+  --sidebar-bg: var(--bg-blue);
+  --border-color: var(--creamy);
+  --hover-bg: rgba(248, 241, 231, 0.08);
+  --input-bg: var(--bg-blue);
 
-  --color-primary-dark: var(--color-primary-dark);
-  --color-accent-dark: var(--color-accent-dark);
-  --color-bg-dark: var(--color-bg-dark);
-  --color-text-dark: var(--color-text-dark);
+  --text-primary: var(--creamy);
+  --text-secondary: var(--creamy);
+  --accent: var(--dark-blue);
+  --accent-2: var(--light-blue);
+  --on-accent: var(--creamy);
 
-  --color-sidebar-dark: var(--color-sidebar-dark);
-  --color-title-light: var(--color-title-light);
-  --color-title-dark: var(--color-title-dark);
+  --accent-bg: var(--creamy);
+  --accent-text: var(--dark-blue);
+  --icon-color: var(--creamy);
 
-  /* Police */
-  --font-heading: var(--font-inter);
-  --font-body: var(--font-inter);
+  --bg-texture: url("/bg/blue-bg.png");
+  --sidebar-texture: none; /* dark sidebar is a flat #3C5E82 fill in the design, no texture */
+  --landing-texture: url("/bg/dark-picture.png");
+
+  /* Sidebar hover/active color — light-blue in dark mode (was pink) */
+  --nav-active: var(--light-blue);
+  --landing-accent: var(--light-blue);
 }
 
-/* Police par défaut */
+/*
+  BACKGROUND ASSETS — see /public/bg/README.md.
+  The 3 files (white-bg.png, blue-bg.png, burgundy-bg.png) must be saved there
+  manually; this sandbox can't reach figma.com to fetch them for you.
+*/
+.page-texture {
+  background-image: var(--bg-texture);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.sidebar-texture {
+  background-image: var(--sidebar-texture);
+  background-color: var(--sidebar-bg);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.landing-texture {
+  background-image: var(--landing-texture);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+html,
 body {
-  font-family: var(--font-inter), sans-serif;
-}
-
-/* --- Textures de fond Calibrate --- */
-/* Une seule classe par usage : le changement light/dark est géré ici en CSS pur,
-   pas via le préfixe dark: de Tailwind (qui ne fonctionne pas sur des classes
-   custom non reconnues comme utilitaires). */
-
-.bg-texture-page {
-  background-color: #F8F1E7;
-  background-image: url("/textures/white-bg.jpg");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-}
-[data-theme="dark"] .bg-texture-page ,
-.bg-texture-page[data-theme="dark"] {
-  background-image: url("/textures/blue-bg.jpg");
-}
-
-.bg-texture-sidebar {
-  background-color: #5B0F18;
-  background-image: url("/textures/burgundy-bg.jpg");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-}
-[data-theme="dark"] .bg-texture-sidebar,
-.bg-texture-sidebar[data-theme="dark"] {
-  background-image: none;
-  background-color: #1B314C;
+  padding: 0;
+  margin: 0;
+  background: var(--page-bg);
 }
