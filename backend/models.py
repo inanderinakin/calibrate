@@ -13,3 +13,8 @@ class GapResult(BaseModel):
 class NormalizedSkill(BaseModel):
     skill: str
     esco_category: str
+
+class DemandedSkill(BaseModel):
+    skill: str
+    esco_category: str
+    demand_percentage: float

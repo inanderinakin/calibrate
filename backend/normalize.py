@@ -46,6 +46,34 @@ def normalize_skills(candidates: list[str]) -> list[NormalizedSkill | None]:
         normalized_skills.append(normalized_skill)
     
     return normalized_skills
+
+def normalize_posting(candidates = list[str]) -> list[NormalizedSkill]:
+    phrases = []
+    words = []
+    for candidate in candidates:
+        if " " in candidate:
+            phrases.append(candidate)
+        else:
+            words.append(candidate)
+    
+    normalized_phrases = normalize_skills(phrases)
+
+    normalized_words = []
+    for word in words:
+        uri = esco_normalizer.normalize_skill(word)
+        if uri is not None:
+            normalized_skill = NormalizedSkill(skill=uri_to_label[uri], esco_category=uri_to_category[uri])
+            normalized_words.append(normalized_skill)
+    
+    combined_skills_raw = normalized_phrases + normalized_words
+    combined_skills = list(filter(None, combined_skills_raw))
+
+    deduped = {}
+    for skill in combined_skills:
+        deduped[skill.skill] = skill
+    
+    return list(deduped.values())
+
     
 if __name__ == "__main__":
     test_list = [
