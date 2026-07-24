@@ -72,7 +72,7 @@ def normalize_posting(candidates = list[str]) -> list[NormalizedSkill]:
     for skill in combined_skills:
         deduped[skill.skill] = skill
     
-    return list(deduped)
+    return list(deduped.values())
 
     
 if __name__ == "__main__":

@@ -7,3 +7,4 @@ uploads/
 *.npy
 *.npz
 catalog.csv
+demand_profile.json

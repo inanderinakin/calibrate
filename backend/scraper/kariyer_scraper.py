@@ -24,6 +24,7 @@ from bs4 import BeautifulSoup
 import boto3
 
 from relevance import is_cs_relevant, is_duplicate_posting, load_dedup_index, register_posting
+from roles import map_to_role
 
 # Windows consoles default to a codepage (e.g. cp1254) that can't encode
 # the arrow/emoji characters used in our print statements — force UTF-8
@@ -88,64 +89,6 @@ SOURCE_NAME = "kariyer"
 OUTPUT_FILE = os.path.join(_HERE, "postings.jsonl")
 FAILED_LOG_FILE = os.path.join(_HERE, "failed_pages_kariyer.log")
 MAX_PAGES_PER_SOURCE = 50
-
-# Sub-classifies a posting that already passed the shared is_cs_relevant()
-# gate into one of the 6 target roles — relevance.py only answers "CS or
-# not", it doesn't say which kind. Kept local to this scraper for now since
-# it's the only one anything downstream (T1.1 role breakdown) needs yet.
-ROLE_PATTERNS = {
-    "DevOps": [
-        "devops", "site reliability", "cloud engineer", "bulut mühend",
-        "platform engineer", "infrastructure engineer", "system administrator",
-        "system administration", "sistem yönetici", "network engineer",
-        "systems engineer", "sistem uzman", "network uzman", "sistem destek",
-        "network destek", "siber güvenlik", "bilgi güvenliği", "cyber security",
-        "information security", "network mühend", "ağ ve güvenlik",
-        "network güvenlik", "ağ güvenliği",
-    ],
-    "ML Engineer": [
-        "makine öğrenme", "machine learning", "yapay zeka mühend", "ai engineer",
-        "computer vision", " nlp ", "derin öğrenme", "deep learning", " ai ",
-        "ai specialist", "yapay zeka uzman",
-    ],
-    "Data Scientist": [
-        "veri bilim", "data scien", "veri mühend", "data engineer",
-        "veri analist", "veri analiz", "data analyst", "data analytics",
-        "veri analitik", "iş zekası", "business intelligence",
-    ],
-    "Backend Engineer": ["backend", "back-end", "back end"],
-    "Frontend Engineer": [
-        "frontend", "front-end", "front end", "react", "angular", "vue",
-        "ux/ui", "ux tasarım", "ui tasarım", "ui/ux",
-        "web geliştir", "web tasarım", "web arayüz",
-    ],
-}
-
-
-def map_to_role(title: str, description: str | None = None) -> str:
-    """Sub-classify an already-CS-relevant posting into one of the 5
-    specific roles, or "Full Stack or Product Engineer" as the catch-all
-    when nothing more specific matches the title. Also checks the
-    description, since Turkish postings very often title everything
-    "Yazılım Geliştirici" and only name the actual stack (React,
-    Kubernetes, ML...) in the body."""
-    def _has(text, *words):
-        return any(w in text for w in words)
-
-    # Plain ASCII "I" is left alone (titles use it for English acronyms
-    # like "UI"/"IT"/"AI"); only Turkish capital İ needs the fix, since
-    # Python's default .lower() otherwise mangles it into "i" + a
-    # combining dot instead of plain "i".
-    t = (title or "").replace("İ", "i").lower()
-    for role, patterns in ROLE_PATTERNS.items():
-        if _has(t, *patterns):
-            return role
-    if description:
-        d = description.replace("İ", "i").lower()
-        for role, patterns in ROLE_PATTERNS.items():
-            if _has(d, *patterns):
-                return role
-    return "Full Stack or Product Engineer"
 
 S3_BUCKET = "calibrate-teamthrow"
 S3_POSTINGS_KEY = "scraper-data/postings.jsonl"

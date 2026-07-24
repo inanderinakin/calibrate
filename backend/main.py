@@ -15,6 +15,8 @@ from fastapi.params import File
 import boto3
 from handlecv import extract_skill_candidates, extract_cv_text
 
+from handleposting import load_demand_profile
+profile = load_demand_profile()
 app = FastAPI()
 
 @app.get("/")
@@ -23,13 +25,6 @@ async def root():
 
 @app.post("/upload_cv")
 async def upload_cv(target_roles_raw: str = Form(...), file: UploadFile = File(...)):
-    java_normalized, cpp_normalized, sql_normalized = normalize_skills(["java", "C++", "sql"])
-    # This profile is temporary, will be switched after we got scraped data analysis
-    profile = {
-        "Data Scientist": [cpp_normalized, sql_normalized],
-        "Software Engineer": [java_normalized, cpp_normalized]
-        }
-    
     target_roles = [role.strip() for role in target_roles_raw.split(",")]
 
     unsupported_roles = []
