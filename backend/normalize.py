@@ -9,7 +9,7 @@ vectors = load_or_build_vectors(pairs = pairs)
 csv_path = Path(Path(__file__).parent/"normalizer"/"esco_dataset"/"catalog.csv")
 esco_normalizer = EscoNormalizer(csv_path = csv_path)
 
-def normalize_skills(candidates: list[str]) -> list[NormalizedSkill | None]:
+def normalize_phrases(candidates: list[str]) -> list[NormalizedSkill | None]:
     """
         With this function, we input the skills (or candidates of skills), and the function checks
         if the candidate is an actual skill located in ESCO. If it is, it creates a NormalizedSkill
@@ -47,7 +47,7 @@ def normalize_skills(candidates: list[str]) -> list[NormalizedSkill | None]:
     
     return normalized_skills
 
-def normalize_posting(candidates = list[str]) -> list[NormalizedSkill]:
+def normalize(candidates = list[str]) -> list[NormalizedSkill]:
     phrases = []
     words = []
     for candidate in candidates:
@@ -56,7 +56,7 @@ def normalize_posting(candidates = list[str]) -> list[NormalizedSkill]:
         else:
             words.append(candidate)
     
-    normalized_phrases = normalize_skills(phrases)
+    normalized_phrases = normalize_phrases(phrases)
 
     normalized_words = []
     for word in words:
@@ -115,7 +115,7 @@ if __name__ == "__main__":
     ("ReactJS", None),
     ]
     candidates = [query_text for query_text, gold_labels in test_list]
-    skills = normalize_skills(candidates = candidates)
+    skills = normalize(candidates = candidates)
 
     for skill in skills:
         print(skill)

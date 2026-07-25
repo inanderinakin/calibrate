@@ -3,7 +3,7 @@ import json
 import re
 import jsonlines as jl
 from pathlib import Path
-from normalize import normalize_skills, normalize_posting
+from normalize import normalize
 from scraper.roles import map_to_role
 from models import DemandedSkill
 
@@ -54,7 +54,7 @@ if __name__ == "__main__":
             postings_per_role[role] += 1
 
             candidates = extract_posting_candidates(obj["description_text"])
-            skills = normalize_posting(candidates)
+            skills = normalize(candidates)
             for skill in skills:
                 role_skill_counts[role][skill.skill] += 1
                 skill_category[skill.skill] = skill.esco_category

@@ -6,7 +6,7 @@ from aiohttp import ClientError
 from fastapi.concurrency import run_in_threadpool
 from agent import get_recommendations
 from handlecv import compute_gaps
-from normalize import normalize_skills
+from normalize import normalize
 from models import GapResult
 
 from fastapi import FastAPI, Form, HTTPException, UploadFile, status
@@ -77,7 +77,7 @@ async def upload_cv(target_roles_raw: str = Form(...), file: UploadFile = File(.
 
     lines = await run_in_threadpool(extract_cv_text, "calibrate-teamthrow", f"uploads/{safe_name}")
     candidates = extract_skill_candidates(lines)
-    skills = list(filter(None, normalize_skills(candidates = candidates)))
+    skills = normalize(candidates = candidates)
 
     gaps = compute_gaps(cv_skills = skills, target_roles = target_roles, demand_profile = profile)
     
