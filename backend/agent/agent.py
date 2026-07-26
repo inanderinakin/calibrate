@@ -1,10 +1,11 @@
 import json
 from pathlib import Path
-from typing_extensions import Literal
 from strands import Agent, tool
-from strands_tools import calculator, current_time
 from dotenv import load_dotenv
-from models import GapResult, Recommendation, Report, Resource
+from models import GapResult, Report
+
+with open(Path(__file__).parent.parent / "resources.json") as resources_json_file:
+    resources_json = json.load(resources_json_file)
 
 load_dotenv()
 
@@ -26,14 +27,8 @@ def get_role_demand(role: str):
 
 @tool
 def get_learning_resources(skill: str):
-    """This tool returns courses or videos for that specific skill"""
-    resources = {
-        "Docker": [
-            {"title": "Docker Official Docs", "url": "https://docs.docker.com", "type": "documentation", "language": "en" },
-        ]
-    }
-
-    output = resources.get(skill)
+    'This tool returns courses or videos for that specific skill'
+    output = resources_json.get(skill)
 
     if output is None:
         return f"We got no information for {skill}. Express to the user such that we do not have any resources for {skill} at the moment. Do not reccommend anything"
@@ -42,7 +37,7 @@ def get_learning_resources(skill: str):
 
 def get_recommendations(gaps: GapResult):
     # callback handler none is to block the agent code to print the message to console.
-    agent = Agent(tools=[calculator, current_time, get_role_demand, get_learning_resources], callback_handler = None, structured_output_model = Report,
+    agent = Agent(tools=[get_role_demand, get_learning_resources], callback_handler = None, structured_output_model = Report,
                 system_prompt = ("Only use data returned by the tools. Never invent demand figures or resources."
                                 "For each gap, get it's role demand to get its market frequency and trend, Get the learning resources for that skill, then produce a ranked list (most in-demand gaps first) of explainable recommendations."
                                 "Every recommendation must state its market-frequency reason ('X appears in 38 percent of postings…')."
@@ -69,10 +64,13 @@ if __name__ == "__main__":
         "target_roles": ["Data Scientist"],
         "gaps": {
             "Data Scientist": [
-                {"skill": "Docker", "esco_category": "containerization", "closest_cv_skill": "Kubernetes"},
-                {"skill": "SQL", "esco_category": "query languages"}
+                {"skill": "Docker", "esco_category": "containerization", "closest_cv_skill": "Kubernetes", "demand_percentage": 0.45, "trend": "Stable"},
+                {"skill": "SQL", "esco_category": "query languages", "demand_percentage": 0.67, "trend": "Stable"}
             ]
-        } 
+        },
+        "matched_data": {
+            "Data Scientist": {"matched_demanded": 3, "total_demanded": 5, "ratio": 0.6}
+        }
     }
     parsedData = GapResult(**gaps)
     print(get_recommendations(parsedData))

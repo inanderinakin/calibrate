@@ -1,0 +1,323 @@
+{
+    "SQL": [
+        {
+            "title": "SQLBolt",
+            "url": "https://sqlbolt.com",
+            "type": "course",
+            "language": "en"
+        },
+        {
+            "title": "Kaggle Intro to SQL",
+            "url": "https://www.kaggle.com/learn/intro-to-sql",
+            "type": "course",
+            "language": "en"
+        },
+        {
+            "title": "BTK Akademi Uygulamalarla SQL Öğreniyorum",
+            "url": "https://www.btkakademi.gov.tr/portal/course/uygulamalarla-sql-ogreniyorum-8249",
+            "type": "course",
+            "language": "tr"
+        }
+    ],
+    "Python (computer programming)": [
+        {
+            "title": "Python Official Tutorial",
+            "url": "https://docs.python.org/3/tutorial/",
+            "type": "documentation",
+            "language": "en"
+        },
+        {
+            "title": "freeCodeCamp - Scientific Computing with Python",
+            "url": "https://www.freecodecamp.org/learn/scientific-computing-with-python/",
+            "type": "course",
+            "language": "en"
+        },
+        {
+            "title": "BTK Akademi - Sıfırdan İleri Seviye Python Programlama",
+            "url": "https://www.btkakademi.gov.tr/portal/course/sifirdan-ileri-seviye-python-programlama-5877",
+            "type": "course",
+            "language": "tr"
+        }
+    ],
+    "JavaScript": [
+        {
+            "title": "MDN Web Docs - JavaScript",
+            "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
+            "type": "documentation",
+            "language": "en"
+        },
+        {
+            "title": "The Odin Project - Foundations",
+            "url": "https://www.theodinproject.com/paths/foundations/courses/foundations",
+            "type": "course",
+            "language": "en"
+        },
+        {
+            "title": "BTK Akademi - Javascript Temelleri",
+            "url": "https://www.btkakademi.gov.tr/portal/course/javascript-temelleri-25317",
+            "type": "course",
+            "language": "tr"
+        }
+    ],
+    "tools for software configuration management": [
+        {
+            "title": "Pro Git Book (Official)",
+            "url": "https://git-scm.com/book/en/v2",
+            "type": "documentation",
+            "language": "en"
+        },
+        {
+            "title": "Ansible Official Documentation",
+            "url": "https://docs.ansible.com/",
+            "type": "documentation",
+            "language": "en"
+        },
+        {
+            "title": "BTK Akademi - Versiyon Kontrolleri: Git ve GitHub",
+            "url": "https://www.btkakademi.gov.tr/portal/course/versiyon-kontrolleri-git-ve-github-19439",
+            "type": "course",
+            "language": "tr"
+        }
+    ],
+    "PostgreSQL": [
+        {
+            "title": "PostgreSQL Official Documentation",
+            "url": "https://www.postgresql.org/docs/",
+            "type": "documentation",
+            "language": "en"
+        },
+        {
+            "title": "PostgreSQL Tutorial",
+            "url": "https://www.postgresqltutorial.com/",
+            "type": "documentation",
+            "language": "en"
+        },
+        {
+            "title": "BTK Akademi - PostgreSQL için SQL Dili",
+            "url": "https://www.btkakademi.gov.tr/portal/course/postgresql-icin-sql-dili-65960",
+            "type": "course",
+            "language": "tr"
+        }
+    ],
+
+    "business intelligence": [
+        {
+            "title": "Microsoft Power BI Documentation",
+            "url": "https://learn.microsoft.com/en-us/power-bi/",
+            "type": "documentation",
+            "language": "en"
+        },
+        {
+            "title": "Kaggle - Data Visualization",
+            "url": "https://www.kaggle.com/learn/data-visualization",
+            "type": "course",
+            "language": "en"
+        },
+        {
+            "title": "BTK Akademi - Uygulamalı Microsoft Power BI",
+            "url": "https://www.btkakademi.gov.tr/portal/course/uygulamali-microsoft-power-bi-13323",
+            "type": "course",
+            "language": "tr"
+        }
+    ],
+    "Visual Basic": [
+        {
+            "title": "Microsoft Visual Basic Documentation",
+            "url": "https://learn.microsoft.com/en-us/dotnet/visual-basic/",
+            "type": "documentation",
+            "language": "en"
+        },
+        {
+            "title": "Get started with Visual Basic",
+            "url": "https://learn.microsoft.com/en-us/dotnet/visual-basic/getting-started/",
+            "type": "documentation",
+            "language": "en"
+        },
+        {
+            "title": "Berk Okan - Visual Basic .NET Dersleri",
+            "url": "https://www.youtube.com/playlist?list=PLEvARWgf9ZWTVTY4z3uwDGpQEbx3LHrnl",
+            "type": "video",
+            "language": "tr"
+        }
+    ],
+    "DevOps": [
+        {
+            "title": "AWS DevOps Documentation",
+            "url": "https://aws.amazon.com/devops/what-is-devops/",
+            "type": "documentation",
+            "language": "en"
+        },
+        {
+            "title": "edureka! - DevOps Tutorial for Beginners",
+            "url": "https://www.youtube.com/watch?v=hQcFE0RD0cQ",
+            "type": "video",
+            "language": "en"
+        },
+        {
+            "title": "BTK Akademi - Microsoft Azure DevOps",
+            "url": "https://www.btkakademi.gov.tr/portal/course/microsoft-azure-devops-12930",
+            "type": "course",
+            "language": "tr"
+        }
+    ],
+    "TypeScript": [
+        {
+            "title": "TypeScript Official Handbook",
+            "url": "https://www.typescriptlang.org/docs/handbook/intro.html",
+            "type": "documentation",
+            "language": "en"
+        },
+        {
+            "title": "Academind - TypeScript Course for Beginners",
+            "url": "https://www.youtube.com/watch?v=BwuLxPH8IDs",
+            "type": "video",
+            "language": "en"
+        },
+        {
+            "title": "BTK Akademi - Angular 7",
+            "url": "https://www.btkakademi.gov.tr/portal/course/angular-7-9914",
+            "type": "course",
+            "language": "tr"
+        }
+    ],
+    "CSS": [
+        {
+            "title": "MDN Web Docs - CSS",
+            "url": "https://developer.mozilla.org/en-US/docs/Web/CSS",
+            "type": "documentation",
+            "language": "en"
+        },
+        {
+            "title": "web.dev - Learn CSS",
+            "url": "https://web.dev/learn/css/",
+            "type": "course",
+            "language": "en"
+        },
+        {
+            "title": "CSS Temelleri",
+            "url": "https://www.btkakademi.gov.tr/portal/course/css-temelleri-20447",
+            "type": "course",
+            "language": "tr"
+        }
+    ],
+    "ICT project management methodologies": [
+        {
+            "title": "The Scrum Guide",
+            "url": "https://scrumguides.org/",
+            "type": "documentation",
+            "language": "en"
+        },
+        {
+            "title": "Atlassian Agile Project Management Tutorials",
+            "url": "https://www.atlassian.com/agile/project-management",
+            "type": "documentation",
+            "language": "en"
+        },
+        {
+            "title": "BTK Akademi - Çevik Proje Yönetimi",
+            "url": "https://www.btkakademi.gov.tr/portal/course/cevik-proje-yonetimi-16550",
+            "type": "course",
+            "language": "tr"
+        }
+    ],
+    "C#": [
+        {
+            "title": "Microsoft C# Documentation",
+            "url": "https://learn.microsoft.com/en-us/dotnet/csharp/",
+            "type": "documentation",
+            "language": "en"
+        },
+        {
+            "title": "freeCodeCamp - C# Tutorial for Beginners",
+            "url": "https://www.youtube.com/watch?v=GhQdlIFylQ8",
+            "type": "video",
+            "language": "en"
+        },
+        {
+            "title": "BTK Akademi - C# ile Programlama",
+            "url": "https://www.btkakademi.gov.tr/portal/course/c-ile-programlama-59836",
+            "type": "course",
+            "language": "tr"
+        }
+    ],
+    "Java (computer programming)": [
+        {
+            "title": "Oracle Java Tutorials",
+            "url": "https://docs.oracle.com/javase/tutorial/",
+            "type": "documentation",
+            "language": "en"
+        },
+        {
+            "title": "MOOC.fi - Java Programming",
+            "url": "https://java-programming.mooc.fi/",
+            "type": "course",
+            "language": "en"
+        },
+        {
+            "title": "BTK Akademi - JAVA ile Programlamaya Giriş",
+            "url": "https://www.btkakademi.gov.tr/portal/course/java-ile-programlamaya-giris-9617",
+            "type": "course",
+            "language": "tr"
+        }
+    ],
+    "create prototype of user experience solutions": [
+        {
+            "title": "Figma Learn",
+            "url": "https://help.figma.com/hc/en-us",
+            "type": "documentation",
+            "language": "en"
+        },
+        {
+            "title": "freeCodeCamp - UI / UX Design Tutorial",
+            "url": "https://www.youtube.com/watch?v=c9Wg6Cb_YlU",
+            "type": "video",
+            "language": "en"
+        },
+        {
+            "title": "BTK Akademi - Adobe XD ile UI-UX Tasarımı",
+            "url": "https://www.btkakademi.gov.tr/portal/course/adobe-xd-ile-ui-ux-tasarimi-20564",
+            "type": "course",
+            "language": "tr"
+        }
+    ],
+    "domain name service": [
+        {
+            "title": "Cloudflare Learning Center - What is DNS?",
+            "url": "https://www.cloudflare.com/learning/dns/what-is-dns/",
+            "type": "documentation",
+            "language": "en"
+        },
+        {
+            "title": "LearnCantrill - DNS 101 Miniseries",
+            "url": "https://www.youtube.com/watch?v=zEmUuNFBgN8&list=PLTk5ZYSbd9MhMmOiPhfRJNW7bhxHo4q-K",
+            "type": "video",
+            "language": "en"
+        },
+        {
+            "title": "BTK Akademi - Bilgisayar Ağlarına Giriş",
+            "url": "https://www.btkakademi.gov.tr/portal/course/bilgisayar-aglarina-giris-56579",
+            "type": "course",
+            "language": "tr"
+        }
+    ],
+    "machine learning": [
+        {
+            "title": "Google Machine Learning Crash Course",
+            "url": "https://developers.google.com/machine-learning/crash-course",
+            "type": "course",
+            "language": "en"
+        },
+        {
+            "title": "Kaggle - Intro to Machine Learning",
+            "url": "https://www.kaggle.com/learn/intro-to-machine-learning",
+            "type": "course",
+            "language": "en"
+        },
+        {
+            "title": "BTK Akademi - Python ile Makine Öğrenmesi Uygulamaları",
+            "url": "https://www.btkakademi.gov.tr/portal/course/python-ile-makine-ogrenmesi-uygulamalari-30284",
+            "type": "course",
+            "language": "tr"
+        }
+    ]
+}
