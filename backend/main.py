@@ -7,9 +7,9 @@ from fastapi.concurrency import run_in_threadpool
 from agent import get_recommendations
 from handlecv import compute_gaps
 from normalize import normalize
-from models import GapResult
+from models import GapResult, GapRequest
 
-from fastapi import FastAPI, Form, HTTPException, UploadFile, status
+from fastapi import FastAPI, HTTPException, UploadFile, status
 from fastapi.params import File
 
 import boto3
@@ -24,21 +24,7 @@ async def root():
     return {"message": "Hello World"}
 
 @app.post("/upload_cv")
-async def upload_cv(target_roles_raw: str = Form(...), file: UploadFile = File(...)):
-    target_roles = [role.strip() for role in target_roles_raw.split(",")]
-
-    unsupported_roles = []
-    for role in target_roles:
-        if role not in profile:
-            unsupported_roles.append(role)
-    
-    if unsupported_roles:
-            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail={
-                "message": "Some roles are not supported.",
-                "unsupported_roles": unsupported_roles,
-                "supported_roles": [role for role in profile]
-            })
-        
+async def upload_cv(file: UploadFile = File(...)):
     if file.content_type not in {"application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"}:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid file type")
     
@@ -54,10 +40,9 @@ async def upload_cv(target_roles_raw: str = Form(...), file: UploadFile = File(.
     try:
         size = 0
         with cv_dest.open("wb") as buffer:
-            # reading the file in 1 MB chunks to not use much memory and check file size
             while chunk := await file.read(1024*1024): 
                 size += len(chunk)
-                if size > 10*1024*1024: # 10 MB is max size
+                if size > 10*1024*1024:
                     buffer.close()
                     os.remove(cv_dest)
                     raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="File too large (max 10 MB)")
@@ -78,10 +63,29 @@ async def upload_cv(target_roles_raw: str = Form(...), file: UploadFile = File(.
     lines = await run_in_threadpool(extract_cv_text, "calibrate-teamthrow", f"uploads/{safe_name}")
     candidates = extract_skill_candidates(lines)
     skills = normalize(candidates = candidates)
+    
+    return {"filename": safe_name, "skills": skills}
+
+@app.post("/compute_gaps")
+async def get_gaps(gap_request: GapRequest):
+    target_roles = gap_request.target_roles
+    skills = gap_request.cv_skills
+
+    unsupported_roles = []
+    for role in target_roles:
+        if role not in profile:
+            unsupported_roles.append(role)
+    
+    if unsupported_roles:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail={
+                "message": "Some roles are not supported.",
+                "unsupported_roles": unsupported_roles,
+                "supported_roles": [role for role in profile]
+            })
 
     gaps = compute_gaps(cv_skills = skills, target_roles = target_roles, demand_profile = profile)
-    
-    return {"filename": safe_name, "target_roles": target_roles, "skills": skills, "gaps": gaps.dict()}
+
+    return {"gaps": gaps.model_dump()}
 
 @app.post("/recommendations")
 async def recommend_with_agent(report: GapResult):

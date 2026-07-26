@@ -40,3 +40,7 @@ class DemandedSkill(BaseModel):
     esco_category: str
     demand_percentage: float
     trend: Literal["Emerging", "Stable", "Fading"]
+
+class GapRequest(BaseModel):
+    cv_skills: list[NormalizedSkill]
+    target_roles: list[str]
