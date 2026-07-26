@@ -1,168 +1,119 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
-import { useTheme } from "@/contexts/ThemeContext";
-import Sidebar from "@/components/Sidebar";
+import { Icon } from "@iconify/react";
+import AppShell from "@/components/AppShell";
 import StepIndicator from "@/components/StepIndicator";
-import {
-  FileIcon,
-  SmallFileIcon,
-  CheckIcon,
-  ArrowIcon,
-  SecureIcon,
-  AmazonIcon,
-} from "@/components/icons/Icons";
 
 export default function UploadCvPage() {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [progress, setProgress] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const { theme, toggleTheme } = useTheme();
 
-  const handleFile = (selectedFile: File) => {
-    setFile(selectedFile);
+  function handleFile(f: File | null) {
+    if (!f) return;
+    setFile(f);
+    // TODO: replace with real upload progress from the backend once it exists.
     setProgress(0);
     const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
+      setProgress((p) => {
+        if (p >= 100) {
           clearInterval(interval);
           return 100;
         }
-        return prev + 10;
+        return p + 11;
       });
     }, 150);
-  };
+  }
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+  function handleInputChange(e: ChangeEvent<HTMLInputElement>) {
+    handleFile(e.target.files?.[0] ?? null);
+  }
+
+  function handleDrop(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault();
-    setIsDragging(false);
-    const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile) handleFile(droppedFile);
-  };
-
-  const handleContinue = () => {
-    if (progress < 100 || !file) return;
-    try {
-      sessionStorage.setItem("cvFileName", file.name);
-    } catch (err) {
-      console.warn("sessionStorage indisponible :", err);
-    }
-    router.push("/select_role");
-  };
+    handleFile(e.dataTransfer.files?.[0] ?? null);
+  }
 
   return (
-    <div className="flex min-h-screen bg-texture-page">
-      <Sidebar />
+    <AppShell>
+      <div className="p-6 md:p-10 lg:p-14 flex flex-col items-center gap-8 max-w-4xl mx-auto text-center">
+        <StepIndicator activeStep={1} />
 
-      <main className="flex-1 flex flex-col items-center px-8 py-10 relative">
-        <button
-          onClick={toggleTheme}
-          className="absolute top-6 right-8 text-sm px-4 py-2 rounded-full border border-primary-light dark:border-cream text-primary-light dark:text-cream"
-        >
-          {theme === "light" ? "🌙" : "☀️"}
-        </button>
-
-        <StepIndicator currentStep={1} />
-
-        <h1 className="font-bold text-[55px] text-title-light dark:text-title-dark mb-8">
+        <h1 className="text-3xl md:text-5xl font-bold text-[var(--accent-2)]">
           Upload Your CV
         </h1>
 
         <div
-          onDragOver={(e) => {
-            e.preventDefault();
-            setIsDragging(true);
-          }}
-          onDragLeave={() => setIsDragging(false)}
+          onDragOver={(e) => e.preventDefault()}
           onDrop={handleDrop}
-          className={`w-full max-w-[830px] h-[314px] border-2 border-dashed rounded-2xl flex flex-col items-center justify-center gap-2 transition-colors
-            ${
-              isDragging
-                ? "border-primary-light dark:border-sidebar-dark bg-[#d8a7a7]/10"
-                : "border-[#d8a7a7] dark:border-sidebar-dark"
-            }`}
+          onClick={() => fileInputRef.current?.click()}
+          className="w-full border-2 border-dashed border-[var(--pink)] rounded-[20px] py-16 flex flex-col items-center gap-4 cursor-pointer bg-[var(--card-bg)]"
         >
-          <FileIcon className="size-[100px] mb-2" />
-          <p className="font-bold text-[28px] text-primary-light dark:text-accent-dark">
-            Drag & drop your CV here
+          <div className="flex gap-4">
+            <Icon icon="vscode-icons:file-type-pdf2" className="w-12 h-12" />
+            <Icon icon="vscode-icons:file-type-word" className="w-12 h-12" />
+          </div>
+          <Icon icon="mdi-light:file" className="w-16 h-16 text-[var(--accent)]" />
+          <p className="font-black text-xl text-[var(--accent)]">
+            Drag &amp; drop your CV here
           </p>
-          <p className="font-medium text-[21px] text-primary-light/80 dark:text-accent-dark/80">
+          <p className="font-semibold text-[var(--accent)]/90">
             PDF or DOCX up to 15MB
           </p>
-
           <input
-            id="file-input"
+            ref={fileInputRef}
             type="file"
             accept=".pdf,.docx"
+            onChange={handleInputChange}
             className="hidden"
-            onChange={(e) => {
-              const selected = e.target.files?.[0];
-              if (selected) handleFile(selected);
-            }}
           />
-          <label
-            htmlFor="file-input"
-            className="mt-2 text-sm underline cursor-pointer text-primary-light dark:text-accent-dark"
-          >
-            or browse files
-          </label>
         </div>
 
         {file && (
-          <>
-            <div className="w-full max-w-[833px] h-[90px] border-2 border-[#d8a7a7] dark:border-sidebar-dark rounded-2xl flex items-center px-6 mt-6">
-              <SmallFileIcon className="size-[50px] mr-4" />
-              <div className="flex-1">
-                <p className="font-light text-base text-black dark:text-cream">
-                  {file.name}
-                </p>
-                <p className="font-light text-xs text-black/60 dark:text-cream/60">
+          <div className="w-full border-2 border-[var(--pink)] rounded-[20px] p-4 flex flex-col gap-4 text-left bg-[var(--card-bg)]">
+            <div className="flex items-center gap-4">
+              <Icon icon="mdi-light:file" className="w-12 h-12 text-[var(--accent)] shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-[var(--text-primary)] truncate">{file.name}</p>
+                <p className="text-sm text-[var(--text-secondary)]">
                   {(file.size / 1024 / 1024).toFixed(2)} MB
                 </p>
               </div>
-              {progress === 100 && <CheckIcon className="size-10" />}
+              {progress >= 100 && (
+                <Icon icon="material-symbols:check-circle" className="w-9 h-9 text-[var(--accent)] shrink-0" />
+              )}
             </div>
 
-            <div className="w-full max-w-[833px] mt-4">
-              <div className="w-full h-[15px] bg-[#d9d9d9] dark:bg-cream/10 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-primary-light dark:bg-accent-dark transition-all duration-150"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-              <p className="font-bold text-[23px] text-black dark:text-cream mt-1">
-                Uploading ... {progress}%
-              </p>
+            <p className="font-light text-[var(--text-primary)]">
+              Uploading ... {progress}%
+            </p>
+            <div className="h-2.5 rounded-full bg-[var(--hover-bg)] overflow-hidden">
+              <div
+                className="h-full rounded-full bg-[var(--accent)] transition-all"
+                style={{ width: `${progress}%` }}
+              />
             </div>
-          </>
+          </div>
         )}
 
         <button
-          disabled={progress < 100}
-          onClick={handleContinue}
-          className="mt-8 w-full max-w-[500px] h-[85px] rounded-2xl bg-primary-light dark:bg-primary-dark text-cream font-bold text-[32px]
-            transition-all duration-200 flex items-center justify-center gap-3
-            enabled:hover:bg-primary-light/85 enabled:hover:scale-[1.02] enabled:hover:shadow-lg
-            dark:enabled:hover:bg-primary-dark/85
-            disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none"
+          type="button"
+          disabled={!file || progress < 100}
+          onClick={() => router.push("/select_role")}
+          className="bg-[var(--accent)] text-[var(--on-accent)] rounded-[20px] px-10 py-3.5 font-black text-xl flex items-center gap-3 disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          Continue <ArrowIcon className="size-8" />
+          Continue
+          <Icon icon="mdi-light:arrow-up" className="w-6 h-6 rotate-90" />
         </button>
 
-        <p className="font-black text-[21px] text-black dark:text-cream mt-4 flex items-center gap-2">
-          <SecureIcon className="size-4" />
-          Your data is secure and private
-        </p>
-
-        <div className="mt-6 text-center">
-          <p className="font-black text-[14px] text-black dark:text-cream">
-            TRUSTED BY PROFESSIONALS
-          </p>
-          <AmazonIcon className="size-14 mx-auto mt-1" />
+        <div className="flex items-center gap-2 text-[var(--text-primary)]">
+          <Icon icon="gala:secure" className="w-6 h-6" />
+          <span className="font-black">Your data is secure and private</span>
         </div>
-      </main>
-    </div>
+      </div>
+    </AppShell>
   );
 }

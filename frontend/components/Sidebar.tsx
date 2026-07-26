@@ -1,91 +1,116 @@
 "use client";
 
-import { useState } from "react";
-import {
-  UploadCvNavIcon,
-  SelectRoleNavIcon,
-  AnalyseCvNavIcon,
-  ProfileIcon,
-  ChevronIcon,
-} from "./icons/Icons";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Icon } from "@iconify/react";
+import { useAuth } from "@/contexts/AuthContext";
 
-const cvAnalysisItems = [
-  { id: "upload-cv", label: "Upload CV", Icon: UploadCvNavIcon },
-  { id: "select-role", label: "Select Role", Icon: SelectRoleNavIcon },
-  { id: "analyse-cv", label: "Analyse CV", Icon: AnalyseCvNavIcon },
+// Matches the Figma structure exactly: "CV Analysis" is a group that expands
+// into the 3-step flow (Upload CV / Select Role / Analyse CV); Dashboard,
+// Road Map and Settings are flat items below it.
+const CV_FLOW = [
+  { label: "Upload CV", href: "/upload_cv", icon: "pepicons-pencil:cv" },
+  { label: "Select Role", href: "/select_role", icon: "ant-design:select-outlined" },
+  { label: "Analyse CV", href: "/analyse_cv", icon: "hugeicons:chart-analysis" },
+];
+
+const NAV_ITEMS = [
+  { label: "Dashboard", href: "/dashboard", icon: "solar:widget-2-linear" },
+  { label: "Road Map", href: "/roadmap", icon: "solar:routing-2-linear" },
+  { label: "Settings", href: "/settings", icon: "solar:settings-linear" },
 ];
 
 export default function Sidebar() {
-  const [activeItem, setActiveItem] = useState("upload-cv");
+  const pathname = usePathname();
+  const { user } = useAuth();
+
+  const cvFlowActive = CV_FLOW.some(
+    (item) => pathname === item.href || pathname.startsWith(item.href + "/")
+  );
 
   return (
-    <aside className="w-[16.2vw] min-w-[180px] min-h-screen flex flex-col justify-between bg-texture-sidebar p-[1.5vw] relative overflow-hidden">
-      <div className="relative z-10">
-        <h2 className="font-black text-[clamp(28px,3.3vw,48px)] text-cream mb-[2.5vw] leading-none">
-          Calibrate
-        </h2>
+    <aside
+      className="
+        sidebar-texture
+        flex flex-col justify-between
+        h-screen sticky top-0
+        w-16 md:w-64
+        text-[var(--creamy)]
+        transition-[width] duration-200
+      "
+    >
+      <div>
+        <div className="h-20 flex items-center justify-center md:justify-start md:px-6">
+          <span className="hidden md:inline text-3xl font-black">Calibrate</span>
+          <span className="md:hidden text-2xl font-black">C</span>
+        </div>
 
-        <nav className="flex flex-col gap-[0.8vw]">
-          <div className="flex items-center justify-between">
-            <span className="font-black text-[clamp(16px,1.7vw,24px)] text-cream">
-              CV Analysis
-            </span>
-            <ChevronIcon className="w-3 h-5 rotate-180" />
+        <nav className="mt-2 flex flex-col gap-1 px-2 md:px-4">
+          {/* CV Analysis group */}
+          <div
+            className={`
+              flex items-center gap-3 rounded-lg px-3 py-2.5
+              justify-center md:justify-start
+              ${cvFlowActive ? "text-[var(--nav-active)]" : "text-[var(--creamy)] hover:text-[var(--nav-active)]"}
+            `}
+          >
+            <Icon icon="hugeicons:chart-analysis" className="w-6 h-6 shrink-0" />
+            <span className="hidden md:inline text-lg font-black">CV Analysis</span>
           </div>
-
-          <div className="flex flex-col gap-[0.3vw] pl-[0.5vw]">
-            {cvAnalysisItems.map(({ id, label, Icon }) => (
-              <button
-                key={id}
-                onClick={() => setActiveItem(id)}
-                className={`flex items-center gap-2 py-[0.4vw] px-[0.5vw] rounded-lg text-left transition-colors
-                  hover:bg-cream/10
-                  ${
-                    activeItem === id
-                      ? "text-[#d8a7a7] dark:text-sky-300"
-                      : "text-cream hover:text-[#d8a7a7] dark:hover:text-sky-300"
+          <div className="hidden md:flex flex-col gap-1 pl-9 pb-2">
+            {CV_FLOW.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`text-sm font-semibold py-1 ${
+                    isActive ? "text-[var(--nav-active)]" : "text-[var(--creamy)]/80 hover:text-[var(--nav-active)]"
                   }`}
-              >
-                <Icon className="size-[1vw] min-w-[14px] min-h-[14px]" />
-                <span className="font-black text-[clamp(12px,1.15vw,16.5px)]">
-                  {label}
-                </span>
-              </button>
-            ))}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
           </div>
 
-          <div className="flex items-center justify-between mt-[1vw] cursor-pointer">
-            <span className="font-black text-[clamp(16px,1.7vw,24px)] text-cream hover:text-[#d8a7a7] dark:hover:text-sky-300 transition-colors">
-              Dashboard
-            </span>
-            <ChevronIcon className="w-3 h-5" />
-          </div>
-          <div className="flex items-center justify-between cursor-pointer">
-            <span className="font-black text-[clamp(16px,1.7vw,24px)] text-cream hover:text-[#d8a7a7] dark:hover:text-sky-300 transition-colors">
-              Road Map
-            </span>
-            <ChevronIcon className="w-3 h-5" />
-          </div>
-          <div className="flex items-center justify-between cursor-pointer">
-            <span className="font-black text-[clamp(16px,1.7vw,24px)] text-cream hover:text-[#d8a7a7] dark:hover:text-sky-300 transition-colors">
-              Settings
-            </span>
-            <ChevronIcon className="w-3 h-5" />
-          </div>
+          {/* Flat items */}
+          {NAV_ITEMS.map((item) => {
+            const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`
+                  flex items-center gap-3 rounded-lg px-3 py-2.5
+                  justify-center md:justify-start
+                  ${isActive ? "text-[var(--nav-active)]" : "text-[var(--creamy)] hover:text-[var(--nav-active)]"}
+                `}
+              >
+                <Icon icon={item.icon} className="w-6 h-6 shrink-0" />
+                <span className="hidden md:inline text-lg font-black">{item.label}</span>
+              </Link>
+            );
+          })}
         </nav>
       </div>
 
-      <div className="relative z-10 flex items-center gap-2 border-t border-cream/20 pt-[1vw]">
-        <ProfileIcon className="size-[2.2vw] min-w-[32px] min-h-[32px]" />
-        <div>
-          <p className="font-black text-cream text-[clamp(18px,1.75vw,25px)] leading-tight">
-            Cerine
-          </p>
-          <p className="font-light text-cream text-[clamp(8px,0.7vw,10px)] leading-tight">
-            front-end developer
-          </p>
+      {/* Bottom: profile summary, driven entirely by AuthContext */}
+      <Link
+        href="/profile"
+        className="
+          flex items-center gap-3 px-3 py-4 mx-2 mb-2
+          justify-center md:justify-start
+        "
+      >
+        <Icon icon="iconamoon:profile-circle-bold" className="w-10 h-10 shrink-0" />
+        <div className="hidden md:flex md:flex-col md:min-w-0">
+          <span className="text-lg font-bold truncate">{user?.firstName ?? "Guest"}</span>
+          <span className="text-[10px] font-light truncate">
+            {user?.studyField ?? "No field set"}
+          </span>
         </div>
-      </div>
+      </Link>
     </aside>
   );
 }
