@@ -73,4 +73,6 @@ if __name__ == "__main__":
         }
     }
     parsedData = GapResult(**gaps)
-    print(get_recommendations(parsedData))
+
+    with open(Path(__file__).parent.parent / "example_result.json", "w", encoding="utf-8") as json_file:
+        json.dump(get_recommendations(parsedData).model_dump(), json_file, indent=4)
