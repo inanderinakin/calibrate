@@ -24,12 +24,15 @@ on:
         type: boolean
         default: true
   schedule:
-    # Every Monday 03:00 UTC, full run — yenibiris is skipped automatically
-    # (see the yenibiris step's `if:` below): yenibiris.com blocks GitHub
-    # Actions' IP with a 403, so the scheduled run only covers kariyer,
-    # secretcv and linkedin until that's resolved (proxy, or running it
-    # elsewhere).
-    - cron: "0 3 * * 1"
+    # Fires daily; the "Determine schedule flags" step below decides whether
+    # today is actually a scrape day. cron's own day-of-month step syntax
+    # (e.g. "1-31/3") resets at every month boundary — days 31→1 are only 1
+    # day apart, not 3 — so a true "1 day scrape, 2 days off" rolling cadence
+    # is computed in shell instead, from a day count that never resets.
+    # secretcv and yenibiris are NOT on the schedule at all — manual
+    # (workflow_dispatch) only. yenibiris.com blocks GitHub Actions' IP with
+    # a 403.
+    - cron: "0 3 * * *"
 
 jobs:
   scrape:
@@ -50,19 +53,35 @@ jobs:
         with:
           python-version: "3.12"
 
+      # The cron fires every day — figure out here whether today is actually
+      # one of the "1 scrape day, 2 days off" days, using a day count from a
+      # fixed epoch (never resets, unlike cron's own day-of-month step).
+      # Every other step below is gated on this for schedule runs, so a
+      # non-scrape day costs only this one cheap step.
+      - name: Determine schedule flags
+        id: sched
+        run: |
+          days=$(( $(date -u +%s) / 86400 ))
+          if [ $((days % 3)) -eq 0 ]; then
+            echo "is_scrape_day=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_scrape_day=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Install Python dependencies
+        if: github.event_name != 'schedule' || steps.sched.outputs.is_scrape_day == 'true'
         run: pip install playwright beautifulsoup4 boto3 requests linkedin-jobs-scraper
 
       - name: Install Playwright browsers
-        if: github.event_name == 'schedule' || inputs.run_kariyer == true
+        if: (github.event_name == 'schedule' && steps.sched.outputs.is_scrape_day == 'true') || inputs.run_kariyer == true
         run: playwright install --with-deps chromium
 
       - name: Install Xvfb
-        if: github.event_name == 'schedule' || inputs.run_kariyer == true
+        if: (github.event_name == 'schedule' && steps.sched.outputs.is_scrape_day == 'true') || inputs.run_kariyer == true
         run: sudo apt-get update && sudo apt-get install -y xvfb
 
       - name: Run kariyer.net scraper
-        if: github.event_name == 'schedule' || inputs.run_kariyer == true
+        if: (github.event_name == 'schedule' && steps.sched.outputs.is_scrape_day == 'true') || inputs.run_kariyer == true
         run: |
           if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.full_run }}" = "true" ]; then
             xvfb-run -a python kariyer_scraper.py
@@ -70,10 +89,11 @@ jobs:
             xvfb-run -a python -c "import kariyer_scraper as s; s.SOURCES = s.SOURCES[:2]; s.MAX_PAGES_PER_SOURCE = 1; s.main()"
           fi
 
+      # NOT on the schedule at all anymore — manual (workflow_dispatch) only.
       - name: Run secretcv.com scraper
-        if: github.event_name == 'schedule' || inputs.run_secretcv == true
+        if: inputs.run_secretcv == true
         run: |
-          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.full_run }}" = "true" ]; then
+          if [ "${{ inputs.full_run }}" = "true" ]; then
             python secretcv_scraper.py
           else
             python -c "import secretcv_scraper as s; s.SOURCES = s.SOURCES[:2]; s.MAX_PAGES_PER_SOURCE = 1; s.main()"
@@ -96,7 +116,7 @@ jobs:
       # of writing) from both a residential IP and GitHub Actions' IP, but
       # there's no guarantee it keeps working if LinkedIn changes its site.
       - name: Install Google Chrome (for LinkedIn scraper)
-        if: github.event_name == 'schedule' || inputs.run_linkedin == true
+        if: (github.event_name == 'schedule' && steps.sched.outputs.is_scrape_day == 'true') || inputs.run_linkedin == true
         run: |
           wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/google-chrome.gpg
           echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
@@ -104,7 +124,7 @@ jobs:
           sudo apt-get install -y google-chrome-stable
 
       - name: Run LinkedIn scraper
-        if: github.event_name == 'schedule' || inputs.run_linkedin == true
+        if: (github.event_name == 'schedule' && steps.sched.outputs.is_scrape_day == 'true') || inputs.run_linkedin == true
         run: |
           if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.full_run }}" = "true" ]; then
             python linkedin_scraper.py
@@ -117,7 +137,10 @@ jobs:
       # have no trend history at all. Server-side S3 copy, runs once after
       # every scraper above has finished (not inside sync_to_s3(), which
       # runs once per scraper and would produce four partial snapshots).
+      # Skipped on non-scrape schedule days — nothing changed in S3, so a
+      # snapshot would just be a redundant copy of the previous one.
       - name: Archive dated snapshot
+        if: github.event_name == 'workflow_dispatch' || steps.sched.outputs.is_scrape_day == 'true'
         run: |
           aws s3 cp \
             s3://calibrate-teamthrow/scraper-data/postings.jsonl \
