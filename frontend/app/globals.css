@@ -1,11 +1,8 @@
 @import "tailwindcss";
 
-/* ThemeContext toggles the `.dark` class on <html>, so dark mode is driven
-   by that class rather than the OS `prefers-color-scheme` media query. */
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  /* Exact tokens pulled from Figma (dashboard / cv-analyse / settings / profile) */
   --burgundy: #5b0f18;   /* sidebar + primary accent, light mode */
   --win: #7a1f2b;        /* secondary accent, light mode (progress bars, "MATCH") */
   --creamy: #f8f1e7;     /* text-on-dark / text-on-burgundy, both modes */
@@ -36,7 +33,6 @@
   --sidebar-texture: url("/bg/burgundy-bg.jpg");
   --landing-texture: url("/bg/light-picture.png");
 
-  /* Sidebar hover/active color — pink in light mode, light-blue in dark mode */
   --nav-active: var(--pink);
   --landing-accent: var(--burgundy);
 }

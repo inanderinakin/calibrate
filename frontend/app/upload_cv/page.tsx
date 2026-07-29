@@ -70,7 +70,7 @@ export default function UploadCvPage() {
       <div className="p-6 md:p-10 lg:p-14 flex flex-col items-center gap-8 max-w-4xl mx-auto text-center">
         <StepIndicator activeStep={1} />
 
-        <h1 className="text-3xl md:text-5xl font-bold text-(--accent-2)">
+        <h1 className="text-3xl md:text-5xl font-bold text-(--text-primary)">
           Upload Your CV
         </h1>
 
@@ -78,14 +78,12 @@ export default function UploadCvPage() {
           onDragOver={(e) => e.preventDefault()}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
-          className="w-full border-2 border-dashed border-(--pink) rounded-[20px] py-16 flex flex-col items-center gap-4 cursor-pointer bg-[var(--card-bg)]"
-        >
-          <Icon icon="vscode-icons:file-type-pdf2" className="w-12 h-12" />
-          <Icon icon="mdi-light:file" className="w-16 h-16 text-(--accent)" />
-          <p className="font-black text-xl text-(--accent)">
+          className="w-full border-2 border-dashed border-(--pink) rounded-[20px] py-16 flex flex-col items-center gap-4 cursor-pointer bg-(--card-bg)">
+          <Icon icon="mdi:file-pdf-box" className="w-20 h-20 text-(--accent-bg)" />
+          <p className="font-black text-xl text-(--accent-bg)">
             Drag &amp; drop your CV here
           </p>
-          <p className="font-semibold text-(--accent)/90">
+          <p className="font-semibold text-(--accent-bg)">
             PDF up to 10MB
           </p>
           <input
@@ -100,7 +98,7 @@ export default function UploadCvPage() {
         {file && (
           <div className="w-full border-2 border-(--pink) rounded-[20px] p-4 flex flex-col gap-4 text-left bg-(--card-bg)">
             <div className="flex items-center gap-4">
-              <Icon icon="mdi-light:file" className="w-12 h-12 text-(--accent) shrink-0" />
+              <Icon icon="mdi:file-pdf-box" className="w-12 h-12 text-(--accent-bg) shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-(--text-primary) truncate">{file.name}</p>
                 <p className="text-sm text-(--text-secondary)">
