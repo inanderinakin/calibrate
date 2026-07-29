@@ -1,6 +1,7 @@
 {
     "target_roles": [
-        "Data Scientist"
+        "Data Scientist",
+        "Software Engineer"
     ],
     "summary": "You currently match 3 out of 5 demanded skills for the Data Scientist role (60% match). Two skill gaps were identified: SQL and Docker. SQL is the higher-priority gap, appearing in roughly 70% of Data Scientist job postings, and rich learning resources are available to close it quickly. Docker also appears frequently but no learning resources are currently available for it \u2014 keep an eye out as materials become available.",
     "recommendations": [

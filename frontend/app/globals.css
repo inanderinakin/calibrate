@@ -23,6 +23,7 @@
 
   --text-primary: #000000;
   --text-secondary: #000000;
+  --text-muted: rgba(0, 0, 0, 0.55);
   --accent: var(--burgundy);
   --accent-2: var(--win);
   --on-accent: var(--creamy);
@@ -50,6 +51,7 @@
 
   --text-primary: var(--creamy);
   --text-secondary: var(--creamy);
+  --text-muted: rgba(248, 241, 231, 0.72);
   --accent: var(--dark-blue);
   --accent-2: var(--light-blue);
   --on-accent: var(--creamy);
