@@ -14,10 +14,10 @@ export default function StepIndicator({ activeStep }: { activeStep: 1 | 2 | 3 })
           <div key={step.n} className="flex items-center gap-4 md:gap-10">
             <div className="flex flex-col items-center gap-1">
               <div
-                className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl border-2 border-[var(--accent)] ${
+                className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl border-2 border-(--accent-bg) ${
                   isActive || isDone
-                    ? "bg-[var(--accent)] text-[var(--on-accent)]"
-                    : "bg-transparent text-[var(--accent)]"
+                    ? "bg-(--accent-bg) text-(--accent-text)"
+                    : "bg-transparent text-(--accent-bg)"
                 }`}
               >
                 {step.n}
@@ -25,13 +25,13 @@ export default function StepIndicator({ activeStep }: { activeStep: 1 | 2 | 3 })
               <span
                 className={`text-sm md:text-base ${
                   isActive ? "font-black" : "font-light"
-                } text-[var(--accent)]`}
+                } text-(--accent-bg)`}
               >
                 {step.label}
               </span>
             </div>
             {i < STEPS.length - 1 && (
-              <div className="w-10 md:w-24 h-0.5 bg-[var(--accent)]" />
+              <div className="w-10 md:w-24 h-0.5 bg-(--accent-bg)" />
             )}
           </div>
         );
