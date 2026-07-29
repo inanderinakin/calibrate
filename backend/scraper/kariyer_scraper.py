@@ -614,8 +614,8 @@ def main():
                                 print(f"  [{i}/{len(new_cards)}] Skipped (duplicate of another source): {posting['title']}")
                                 continue
                             posting["role"] = map_to_role(posting.get("title"), posting.get("description_text"))
-                            save_posting(posting)
                             register_posting(posting, dedup_index)
+                            save_posting(posting)
                             total_saved += 1
                             print(f"  [{i}/{len(new_cards)}] Saved: {posting['title']} ({posting['role']}) — Total: {total_saved}")
                         else:

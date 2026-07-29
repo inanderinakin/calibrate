@@ -111,3 +111,14 @@ jobs:
           else
             python -c "import linkedin_scraper as s; s.SOURCES = s.SOURCES[:2]; s.MAX_RESULTS_PER_SOURCE = 5; s.main()"
           fi
+
+      # Dated, immutable copy of the corpus as it stood after this run — the
+      # live postings.jsonl gets overwritten every run, so without this we
+      # have no trend history at all. Server-side S3 copy, runs once after
+      # every scraper above has finished (not inside sync_to_s3(), which
+      # runs once per scraper and would produce four partial snapshots).
+      - name: Archive dated snapshot
+        run: |
+          aws s3 cp \
+            s3://calibrate-teamthrow/scraper-data/postings.jsonl \
+            s3://calibrate-teamthrow/scraper-data/snapshots/postings_$(date -u +%F).jsonl

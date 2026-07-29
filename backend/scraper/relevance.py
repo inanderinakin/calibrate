@@ -17,6 +17,7 @@ Logic:
 import difflib
 import json
 import re
+from datetime import datetime, timezone
 
 CS_SECTORS = (
     "bilgi teknolojileri", "bilişim", "yazılım", "teknoloji",
@@ -228,9 +229,19 @@ def is_duplicate_posting(posting: dict, index: dict) -> bool:
 
 
 def register_posting(posting: dict, index: dict):
-    """Record a newly-saved posting in the in-memory dedup index (call right
-    after saving it) so later postings in the same run can be checked
-    against it too."""
+    """Record a posting in the in-memory dedup index and stamp it with
+    first_seen if it doesn't already have one — this is the single place a
+    posting enters the corpus, across all four scrapers.
+
+    Must be called BEFORE save_posting() (or whatever writes the dict to
+    disk), since the stamp is applied in place — call it after writing and
+    the saved JSON won't have first_seen at all.
+
+    setdefault is load-bearing: re-running this on a posting that already
+    has first_seen (re-scraped in a later run) must NOT overwrite it, or
+    every posting's first_seen resets to "today" and trend data is gone.
+    """
+    posting.setdefault("first_seen", datetime.now(timezone.utc).strftime("%Y-%m-%d"))
     key = posting_dedup_key(posting)
     desc = _normalize_for_dedup(posting.get("description_text") or "")
     index.setdefault(key, []).append(desc)

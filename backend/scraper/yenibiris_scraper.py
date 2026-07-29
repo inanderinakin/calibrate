@@ -408,8 +408,8 @@ def main():
                         seen_ids.add(card["id"])
                         print(f"  [{i}/{len(new_cards)}] skipped (duplicate of another source): {posting['title']}")
                         continue
-                    save_posting(posting)
                     register_posting(posting, dedup_index)
+                    save_posting(posting)
                     seen_ids.add(card["id"])
                     total_saved += 1
                     print(f"  [{i}/{len(new_cards)}] Saved: {posting['title']} — Total: {total_saved}")
