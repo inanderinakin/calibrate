@@ -11,6 +11,7 @@ from models import GapResult, GapRequest
 
 from fastapi import FastAPI, HTTPException, UploadFile, status
 from fastapi.params import File
+from fastapi.middleware.cors import CORSMiddleware
 
 import boto3
 from handlecv import extract_skill_candidates, extract_cv_text
@@ -18,6 +19,21 @@ from handlecv import extract_skill_candidates, extract_cv_text
 from handleposting import load_demand_profile
 profile = load_demand_profile()
 app = FastAPI()
+
+origins = [
+    "http://localhost:3000",
+    "http://localhost",
+    "http://127.0.0.1",
+    "http://127.0.0.1:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
 @app.get("/")
 async def root():

@@ -1,35 +1,49 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import AppShell from "@/components/AppShell";
-
-import localJson from './example_result.json'
-
-interface Resource {
-  title: string,
-  url: string,
-  type: "documentation" | "video" | "course",
-  language: "tr" | "en", 
-}
-
-interface Recommendation {
-  rank: number,
-  skill: string,
-  esco_category: string,
-  reason: string,
-  trend: "Emerging" | "Stable" | "Fading",
-  closest_cv_skill: string | null,
-  resources: Resource[],
-}
-
-interface Report {
-  target_roles: string[],
-  summary: string,
-  recommendations: Recommendation[]
-}
-
-const FINAL_REPORT = localJson as Report
+import { session } from "@/lib/session";
+import type { Report } from "@/lib/types";
 
 export default function RoadmapPage() {
+  const [report, setReport] = useState<Report | null>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    setReport(session.getReport());
+    setLoaded(true);
+  }, []);
+
+  if (!loaded) {
+    return (
+      <AppShell>
+        <div className="p-6 md:p-10 lg:p-14" />
+      </AppShell>
+    );
+  }
+
+  if (!report) {
+    return (
+      <AppShell>
+        <div className="p-6 md:p-10 lg:p-14 flex flex-col items-start gap-4">
+          <h1 className="text-3xl md:text-5xl font-bold text-(--text-primary)">
+            No roadmap yet
+          </h1>
+          <p className="text-(--text-secondary) text-lg">
+            Upload your CV and pick your target roles, and we&apos;ll build one for you.
+          </p>
+          <Link
+            href="/upload_cv"
+            className="bg-(--accent) text-(--on-accent) rounded-[20px] px-8 py-3.5 font-bold text-lg"
+          >
+            Upload your CV
+          </Link>
+        </div>
+      </AppShell>
+    );
+  }
+
   return (
     <AppShell>
       <div className="p-6 md:p-10 lg:p-14 flex flex-col gap-6">
@@ -38,23 +52,23 @@ export default function RoadmapPage() {
             Your Personalized Roadmap!
           </h1>
           <h2 className="mt-2 text-lg font-medium text-(--text-primary)">
-            {FINAL_REPORT.target_roles.join(", ")} Career Path
+            {report.target_roles.join(", ")} Career Path
           </h2>
           <p className="text-(--text-secondary) text-lg font-semibold">
             Follow this roadmap to build the skills you need and achieve your career goals.
           </p>
+          {report.summary && (
+            <p className="mt-3 max-w-prose text-(--text-muted)">{report.summary}</p>
+          )}
         </header>
 
-        {/* Timeline. The spine is one line drawn behind every row; each row places
-            its own card on alternating sides and centres its circle on the spine,
-            so any number of recommendations lays out correctly. */}
         <div className="relative flex flex-col gap-10">
           <div
             aria-hidden
             className="absolute top-0 bottom-0 left-5 w-0.5 -translate-x-1/2 bg-(--accent-2) md:left-1/2"
           />
 
-          {FINAL_REPORT.recommendations.map((skill, index) => (
+          {report.recommendations.map((skill, index) => (
             <div key={skill.skill} className="relative">
               <div className="absolute left-5 top-8 z-10 flex size-11 -translate-x-1/2 items-center justify-center rounded-full bg-(--accent-bg) text-lg font-semibold text-(--accent-text) md:top-1/2 md:left-1/2 md:-translate-y-1/2">
                 {skill.rank}
