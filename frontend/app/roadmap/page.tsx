@@ -1,12 +1,94 @@
+"use client";
+
 import AppShell from "@/components/AppShell";
+
+import localJson from './example_result.json'
+
+interface Resource {
+  title: string,
+  url: string,
+  type: "documentation" | "video" | "course",
+  language: "tr" | "en", 
+}
+
+interface Recommendation {
+  rank: number,
+  skill: string,
+  esco_category: string,
+  reason: string,
+  trend: "Emerging" | "Stable" | "Fading",
+  closest_cv_skill: string | null,
+  resources: Resource[],
+}
+
+interface Report {
+  target_roles: string[],
+  summary: string,
+  recommendations: Recommendation[]
+}
+
+const FINAL_REPORT = localJson as Report
 
 export default function RoadmapPage() {
   return (
     <AppShell>
-      <div className="p-6 md:p-10">
-        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
-          Your Learning Roadmap
-        </h1>
+      <div className="p-6 md:p-10 lg:p-14 flex flex-col gap-6">
+        <header>
+          <h1 className="text-3xl md:text-5xl font-bold text-(--text-primary)">
+            Your Personalized Roadmap!
+          </h1>
+          <h2 className="mt-2 text-lg font-medium text-(--text-primary)">
+            {FINAL_REPORT.target_roles.join(", ")} Career Path
+          </h2>
+          <p className="text-(--text-secondary) text-lg font-semibold">
+            Follow this roadmap to build the skills you need and achieve your career goals.
+          </p>
+        </header>
+
+        {/* Timeline. The spine is one line drawn behind every row; each row places
+            its own card on alternating sides and centres its circle on the spine,
+            so any number of recommendations lays out correctly. */}
+        <div className="relative flex flex-col gap-10">
+          <div
+            aria-hidden
+            className="absolute top-0 bottom-0 left-5 w-0.5 -translate-x-1/2 bg-(--accent-2) md:left-1/2"
+          />
+
+          {FINAL_REPORT.recommendations.map((skill, index) => (
+            <div key={skill.skill} className="relative">
+              <div className="absolute left-5 top-8 z-10 flex size-11 -translate-x-1/2 items-center justify-center rounded-full bg-(--accent-bg) text-lg font-semibold text-(--accent-text) md:top-1/2 md:left-1/2 md:-translate-y-1/2">
+                {skill.rank}
+              </div>
+
+              <div className={index % 2 === 0 ? "ml-16 md:ml-0 md:w-1/2 md:pr-10" : "ml-16 md:ml-auto md:w-1/2 md:pl-10"}>
+                <div className="bg-(--card-bg) rounded-[20px] shadow-[4px_4px_4px_rgba(0,0,0,0.2)] p-6 flex flex-col gap-5">
+                  <div className="text-xs font-light text-(--text-muted)">{skill.esco_category}</div>
+                  <p className="text-2xl font-black">{skill.skill}</p>
+                  <p className="max-w-prose">{skill.reason}</p>
+                  <span className="self-start rounded-[5px] bg-(--accent) px-3 py-1 text-xs font-bold text-(--on-accent)">
+                    {skill.trend}
+                  </span>
+                  <div className="flex flex-col gap-2">
+                    {skill.resources.length > 0 ? skill.resources.map((resource) => (
+                      <div key={resource.url} className="flex items-baseline gap-2">
+                        <a href={resource.url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
+                          {resource.title}
+                        </a>
+                        <span className="text-xs uppercase text-(--text-muted)">{resource.language}</span>
+                        <span className="text-xs capitalize text-(--text-muted)">{resource.type}</span>
+                      </div>
+                    )) : (
+                      <p className="text-sm text-(--text-muted)">
+                        No learning resources are available for this skill at the moment. Please check back later.
+                      </p>
+                    )}
+                    <button className="border-2 rounded-lg">Mark as Completed!</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </AppShell>
   );

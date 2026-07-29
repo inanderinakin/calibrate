@@ -23,6 +23,7 @@
 
   --text-primary: #000000;
   --text-secondary: #000000;
+  --text-muted: rgba(0, 0, 0, 0.55);
   --accent: var(--burgundy);
   --accent-2: var(--win);
   --on-accent: var(--creamy);
@@ -31,8 +32,8 @@
   --accent-text: var(--creamy);
   --icon-color: var(--burgundy);
 
-  --bg-texture: url("/bg/white-bg.png");
-  --sidebar-texture: url("/bg/burgundy-bg.png");
+  --bg-texture: url("/bg/white-bg.jpg");
+  --sidebar-texture: url("/bg/burgundy-bg.jpg");
   --landing-texture: url("/bg/light-picture.png");
 
   /* Sidebar hover/active color — pink in light mode, light-blue in dark mode */
@@ -50,6 +51,7 @@
 
   --text-primary: var(--creamy);
   --text-secondary: var(--creamy);
+  --text-muted: rgba(248, 241, 231, 0.72);
   --accent: var(--dark-blue);
   --accent-2: var(--light-blue);
   --on-accent: var(--creamy);
@@ -58,7 +60,7 @@
   --accent-text: var(--dark-blue);
   --icon-color: var(--creamy);
 
-  --bg-texture: url("/bg/blue-bg.png");
+  --bg-texture: url("/bg/blue-bg.jpg");
   --sidebar-texture: none; /* dark sidebar is a flat #3C5E82 fill in the design, no texture */
   --landing-texture: url("/bg/dark-picture.png");
 
@@ -69,8 +71,9 @@
 
 /*
   BACKGROUND ASSETS — see /public/bg/README.md.
-  The 3 files (white-bg.png, blue-bg.png, burgundy-bg.png) must be saved there
-  manually; this sandbox can't reach figma.com to fetch them for you.
+  The 3 files (white-bg.jpg, blue-bg.jpg, burgundy-bg.jpg) are saved there.
+  Figma served them as JPEG, not PNG, so the extensions differ from the
+  original README; light-picture / dark-picture are still PNG.
 */
 .page-texture {
   background-image: var(--bg-texture);
