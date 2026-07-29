@@ -32,34 +32,34 @@ export default function SettingsPage() {
         <form onSubmit={handleSave} className="flex flex-col gap-6">
           {/* Profile information */}
           <div className="bg-[var(--card-bg)] rounded-[30px] shadow-lg p-6 md:p-9 flex flex-col gap-6">
-            <h2 className="text-2xl font-medium text-[var(--accent)]">Profile Information</h2>
+            <h2 className="text-2xl font-medium text-(--accent-bg)">Profile Information</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <label className="flex flex-col gap-2">
-                <span className="text-[var(--accent)] font-medium">First Name</span>
+                <span className="text-(--accent-bg) font-medium">First Name</span>
                 <input
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="border-2 border-[var(--accent)] rounded-[20px] px-4 py-3 bg-transparent text-[var(--text-primary)]"
+                  className="border-2 border-(--accent-bg) rounded-[20px] px-4 py-3 bg-transparent text-[var(--text-primary)]"
                 />
               </label>
               <label className="flex flex-col gap-2">
-                <span className="text-[var(--accent)] font-medium">Last Name</span>
+                <span className="text-(--accent-bg) font-medium">Last Name</span>
                 <input
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="border-2 border-[var(--accent)] rounded-[20px] px-4 py-3 bg-transparent text-[var(--text-primary)]"
+                  className="border-2 border-(--accent-bg) rounded-[20px] px-4 py-3 bg-transparent text-[var(--text-primary)]"
                 />
               </label>
             </div>
 
             <label className="flex flex-col gap-2">
-              <span className="text-[var(--accent)] font-medium">E-mail</span>
+              <span className="text-(--accent-bg) font-medium">E-mail</span>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="border-2 border-[var(--accent)] rounded-[20px] px-4 py-3 bg-transparent text-[var(--text-primary)]"
+                className="border-2 border-(--accent-bg) rounded-[20px] px-4 py-3 bg-transparent text-[var(--text-primary)]"
               />
             </label>
 
@@ -73,22 +73,22 @@ export default function SettingsPage() {
 
           {/* Language & Appearance */}
           <div className="bg-[var(--card-bg)] rounded-[30px] shadow-lg p-6 md:p-9 flex flex-col gap-4">
-            <h2 className="text-2xl font-medium text-[var(--accent)]">Language & Appearence</h2>
+            <h2 className="text-2xl font-medium text-(--accent-bg)">Language & Appearence</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex flex-col gap-2">
-                <span className="text-[var(--accent)] font-medium">Language</span>
-                <div className="border-2 border-[var(--accent)] rounded-[20px] px-4 py-3 flex items-center justify-between text-[var(--accent)]">
+                <span className="text-(--accent-bg) font-medium">Language</span>
+                <div className="border-2 border-(--accent-bg) rounded-[20px] px-4 py-3 flex items-center justify-between text-(--accent-bg)">
                   <span>English</span>
                   <Icon icon="weui:arrow-outlined" className="w-5 h-5 rotate-90" />
                 </div>
               </div>
 
               <div className="flex flex-col gap-2">
-                <span className="text-[var(--accent)] font-medium">Appearence</span>
+                <span className="text-(--accent-bg) font-medium">Appearence</span>
                 <button
                   type="button"
                   onClick={toggleTheme}
-                  className="border-2 border-[var(--accent)] rounded-[20px] px-4 py-3 flex items-center justify-between text-[var(--accent)]"
+                  className="border-2 border-(--accent-bg) rounded-[20px] px-4 py-3 flex items-center justify-between text-(--accent-bg)"
                 >
                   <span>{theme === "light" ? "Light Mode" : "Dark Mode"}</span>
                   <Icon icon="weui:arrow-outlined" className="w-5 h-5 rotate-90" />
