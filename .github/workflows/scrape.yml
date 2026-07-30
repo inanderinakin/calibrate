@@ -140,7 +140,7 @@ jobs:
       # Skipped on non-scrape schedule days — nothing changed in S3, so a
       # snapshot would just be a redundant copy of the previous one.
       - name: Archive dated snapshot
-        if: github.event_name == 'workflow_dispatch' || steps.sched.outputs.is_scrape_day == 'true'
+        if: (github.event_name == 'workflow_dispatch' || steps.sched.outputs.is_scrape_day == 'true') && !cancelled()
         run: |
           aws s3 cp \
             s3://calibrate-teamthrow/scraper-data/postings.jsonl \
