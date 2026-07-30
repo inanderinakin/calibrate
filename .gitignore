@@ -10,3 +10,4 @@ uploads/
 *.npz
 catalog.csv
 demand_profile.json
+*.bak
