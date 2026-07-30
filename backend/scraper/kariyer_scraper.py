@@ -89,6 +89,13 @@ SOURCE_NAME = "kariyer"
 OUTPUT_FILE = os.path.join(_HERE, "postings.jsonl")
 FAILED_LOG_FILE = os.path.join(_HERE, "failed_pages_kariyer.log")
 MAX_PAGES_PER_SOURCE = 50
+# A source drops out of rotation once it's gone this many consecutive pages
+# with cards but none of them new — a single stale page (e.g. the listing
+# isn't strictly newest-first, or a batch of old postings happens to sit at
+# the top) shouldn't permanently cut off pages further down that may still
+# have new content. A genuinely empty page (0 cards at all) still drops the
+# source immediately — that's a real end-of-results signal.
+STALE_PAGE_LIMIT = 3
 
 S3_BUCKET = "calibrate-teamthrow"
 S3_POSTINGS_KEY = "scraper-data/postings.jsonl"
@@ -553,9 +560,10 @@ def main():
         total_saved = 0
 
         # Round-robin across sources: all sources' page 1 first, then all
-        # sources' page 2, etc. A source drops out of rotation once a page
-        # returns no cards or no new cards; the others keep going.
-        active_sources = list(SOURCES)
+        # sources' page 2, etc. A source drops out of rotation immediately on
+        # a genuinely empty page (0 cards — real end of results), or after
+        # STALE_PAGE_LIMIT consecutive pages with cards but none new.
+        active_sources = [(label, url, 0) for label, url in SOURCES]
 
         for page_num in range(1, MAX_PAGES_PER_SOURCE + 1):
             if not active_sources:
@@ -565,22 +573,29 @@ def main():
             print(f"\n########## Page {page_num} — {len(active_sources)} active sources ##########")
             still_active = []
 
-            for label, base_url in active_sources:
+            for label, base_url, stale_count in active_sources:
                 page_url = build_page_url(base_url, page_num)
                 print(f"\n=== Source: '{label}' — page {page_num} ===")
                 cards = collect_cards(page_url, page)
                 print(f"  Found {len(cards)} cards")
 
                 if not cards:
-                    print("  No cards on this page — dropping source from rotation.")
+                    print("  No cards on this page — end of results, dropping source from rotation.")
                     continue
 
                 new_cards = [c for c in cards if c["id"] not in seen_ids]
                 print(f"  New (not yet scraped): {len(new_cards)}")
 
                 if not new_cards:
-                    print("  No new cards on this page — dropping source from rotation.")
+                    stale_count += 1
+                    if stale_count >= STALE_PAGE_LIMIT:
+                        print(f"  No new cards for {stale_count} pages in a row — dropping source from rotation.")
+                        continue
+                    print(f"  No new cards on this page ({stale_count}/{STALE_PAGE_LIMIT} stale) — trying next page anyway.")
+                    still_active.append((label, base_url, stale_count))
                     continue
+
+                stale_count = 0
 
                 for i, card in enumerate(new_cards, 1):
                     if card["id"] in seen_ids:  # re-check inside loop to catch within-batch dupes
@@ -614,18 +629,21 @@ def main():
                                 print(f"  [{i}/{len(new_cards)}] Skipped (duplicate of another source): {posting['title']}")
                                 continue
                             posting["role"] = map_to_role(posting.get("title"), posting.get("description_text"))
-                            save_posting(posting)
                             register_posting(posting, dedup_index)
+                            save_posting(posting)
                             total_saved += 1
                             print(f"  [{i}/{len(new_cards)}] Saved: {posting['title']} ({posting['role']}) — Total: {total_saved}")
                         else:
                             print(f"  [{i}/{len(new_cards)}] Skipped (not CS): {posting['title']}")
                     except Exception as e:
                         print(f"  [{i}/{len(new_cards)}] FAILED {card['url']}: {e}")
+                    finally:
+                        # Always pace requests — even on captcha/dupe/error
+                        # skips — so a streak of blocked pages doesn't turn a
+                        # soft block into a hard one by hammering unpaced.
+                        time.sleep(random.uniform(2.0, 4.0))
 
-                    time.sleep(random.uniform(2.0, 4.0))
-
-                still_active.append((label, base_url))
+                still_active.append((label, base_url, stale_count))
 
             active_sources = still_active
 

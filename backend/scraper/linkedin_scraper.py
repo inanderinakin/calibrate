@@ -222,8 +222,8 @@ def main():
             print(f"  [{data.query}] skipped (duplicate of another source): {posting['title']}")
             return
 
-        save_posting(posting)
         register_posting(posting, dedup_index)
+        save_posting(posting)
         seen_ids.add(data.job_id)
         counts["saved"] += 1
         print(f"  [{data.query}] Saved: {posting['title']} — Total: {counts['saved']}")
