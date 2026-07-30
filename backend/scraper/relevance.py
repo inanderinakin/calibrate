@@ -19,6 +19,8 @@ import json
 import re
 from datetime import datetime, timezone
 
+from roles import map_to_role
+
 CS_SECTORS = (
     "bilgi teknolojileri", "bilişim", "yazılım", "teknoloji",
     "telekomünikasyon", "internet", "bilgisayar",
@@ -120,7 +122,6 @@ _CIRCUMFLEX_MAP = str.maketrans("âîûÂÎÛ", "aiuAIU")
 def _normalize_tr(text: str) -> str:
     return text.translate(_CIRCUMFLEX_MAP).replace("İ", "i").lower()
 
-
 def is_cs_relevant(posting: dict) -> bool:
     """True if a scraped posting is a genuine CS/IT role, based on its title,
     department and sector."""
@@ -167,7 +168,6 @@ def is_cs_relevant(posting: dict) -> bool:
 _PUNCT_RE = re.compile(r"[^\w\s]", re.UNICODE)
 _WS_RE = re.compile(r"\s+")
 DESCRIPTION_SIMILARITY_THRESHOLD = 0.75
-
 
 def _normalize_for_dedup(text: str) -> str:
     t = (text or "").replace("İ", "i").lower()
@@ -230,18 +230,25 @@ def is_duplicate_posting(posting: dict, index: dict) -> bool:
 
 def register_posting(posting: dict, index: dict):
     """Record a posting in the in-memory dedup index and stamp it with
-    first_seen if it doesn't already have one — this is the single place a
-    posting enters the corpus, across all four scrapers.
+    first_seen and role if it doesn't already have them — this is the single
+    place a posting enters the corpus, across all four scrapers.
 
     Must be called BEFORE save_posting() (or whatever writes the dict to
-    disk), since the stamp is applied in place — call it after writing and
-    the saved JSON won't have first_seen at all.
+    disk), since the stamps are applied in place — call it after writing and
+    the saved JSON won't have them at all.
 
     setdefault is load-bearing: re-running this on a posting that already
     has first_seen (re-scraped in a later run) must NOT overwrite it, or
     every posting's first_seen resets to "today" and trend data is gone.
+
+    role is assigned here rather than in each scraper because only kariyer
+    ever did it: linkedin, secretcv and yenibiris all wrote their postings
+    unlabelled, which left 885 of the corpus's 1749 rows (every linkedin and
+    secretcv row) with no role for demand aggregation to group by.
     """
     posting.setdefault("first_seen", datetime.now(timezone.utc).strftime("%Y-%m-%d"))
+    if not posting.get("role"):
+        posting["role"] = map_to_role(posting.get("title"), posting.get("description_text"))
     key = posting_dedup_key(posting)
     desc = _normalize_for_dedup(posting.get("description_text") or "")
     index.setdefault(key, []).append(desc)

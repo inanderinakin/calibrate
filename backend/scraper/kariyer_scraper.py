@@ -24,7 +24,6 @@ from bs4 import BeautifulSoup
 import boto3
 
 from relevance import is_cs_relevant, is_duplicate_posting, load_dedup_index, register_posting
-from roles import map_to_role
 
 # Windows consoles default to a codepage (e.g. cp1254) that can't encode
 # the arrow/emoji characters used in our print statements — force UTF-8
@@ -628,7 +627,6 @@ def main():
                             if is_duplicate_posting(posting, dedup_index):
                                 print(f"  [{i}/{len(new_cards)}] Skipped (duplicate of another source): {posting['title']}")
                                 continue
-                            posting["role"] = map_to_role(posting.get("title"), posting.get("description_text"))
                             register_posting(posting, dedup_index)
                             save_posting(posting)
                             total_saved += 1
