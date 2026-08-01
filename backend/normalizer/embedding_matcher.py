@@ -1,7 +1,9 @@
 import json
+import time
 from pathlib import Path
 import boto3
 from botocore.config import Config
+from botocore.exceptions import BotoCoreError, ClientError
 from dotenv import load_dotenv
 import numpy as np
 import pandas as pd
@@ -11,6 +13,10 @@ client = boto3.client(
     "bedrock-runtime",
     config=Config(read_timeout=120, retries={"max_attempts": 6, "mode": "adaptive"}),
 )
+
+MAX_ATTEMPTS = 5
+BACKOFF_SECONDS = 2
+PACE_SECONDS = 0.2
 
 def build_catalog():
     collection_csv_path = (Path(__file__).parent.parent / "normalizer" / "esco_dataset" / "digitalSkillsCollection_en.csv")
@@ -86,12 +92,27 @@ def build_catalog():
     return pairs, uri_to_label, uri_to_category
 
 def embed_list(text_list: list[str], input_type: str):
-    response = client.invoke_model(
-        modelId="cohere.embed-multilingual-v3",
-         
-        body=json.dumps({"texts": text_list, "input_type": input_type,})
-    )
-    return json.loads(response["body"].read())["embeddings"]
+    for attempt in range(MAX_ATTEMPTS):
+        try:
+            response = client.invoke_model(
+                modelId="cohere.embed-multilingual-v3",
+
+                body=json.dumps({"texts": text_list, "input_type": input_type,})
+            )
+            embeddings = json.loads(response["body"].read())["embeddings"]
+            break
+        except (BotoCoreError, ClientError) as error:
+            if attempt == MAX_ATTEMPTS - 1:
+                raise
+            wait = BACKOFF_SECONDS * (2 ** attempt)
+            print(f"bedrock call failed ({type(error).__name__}), retrying in {wait}s", flush=True)
+            time.sleep(wait)
+
+    if len(embeddings) != len(text_list):
+        raise RuntimeError(f"expected {len(text_list)} embeddings, got {len(embeddings)}")
+
+    time.sleep(PACE_SECONDS)
+    return embeddings
 
 def load_or_build_vectors(pairs, save_path=Path(__file__).parent / "vectors_array.npz"):
     current_labels = np.array([label for label, uri in pairs])

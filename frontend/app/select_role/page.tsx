@@ -31,7 +31,7 @@ const ROLES = [
   },
   {
     id: "full-stack",
-    apiName: "Full Stack or Product Engineer",
+    apiName: "Full Stack Developer",
     title: "Full Stack Developer",
     description: "Work across the stack to build end-to-end solutions.",
     icon: "ri:stack-fill",
@@ -49,6 +49,27 @@ const ROLES = [
     title: "DevOps Engineer",
     description: "Automate, deploy and manage secure systems.",
     icon: "mdi:cloud",
+  },
+  {
+    id: "mobile",
+    apiName: "Mobile Engineer",
+    title: "Mobile Developer",
+    description: "Build native and cross-platform mobile applications.",
+    icon: "mdi:cellphone",
+  },
+  {
+    id: "qa",
+    apiName: "QA Engineer",
+    title: "QA Engineer",
+    description: "Test, automate and safeguard product quality.",
+    icon: "mdi:bug-check",
+  },
+  {
+    id: "software",
+    apiName: "Software Developer",
+    title: "Software Developer",
+    description: "Build and ship software across a broad range of projects.",
+    icon: "mdi:laptop",
   },
 ];
 
@@ -82,7 +103,7 @@ export default function SelectRolePage() {
           Pick every role you&apos;re aiming for — we&apos;ll build one roadmap covering all of them.
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full text-left">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full text-left">
           {ROLES.map((role) => {
             const isSelected = selected.includes(role.apiName);
             return (

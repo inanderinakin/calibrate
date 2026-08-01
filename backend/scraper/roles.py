@@ -32,6 +32,10 @@ ROLE_PATTERNS = {
         "test engineer", "test automation", "test specialist", "yazılım test",
         "quality assurance", "qa", "sdet", "yazılım kalite",
     ],
+    "Full Stack Developer": [
+        "full stack", "fullstack", "full-stack",
+        "product engineer",
+    ],
     "Frontend Engineer": [
         "frontend", "front-end", "front end", "react", "angular", "vue",
         "ux/ui", "ux tasarım", "ui tasarım", "ui/ux",
@@ -40,44 +44,27 @@ ROLE_PATTERNS = {
 }
 
 DEFAULT_ROLE = "Unclassified"
-GENERIC_ROLE = "Software Engineer"
+GENERIC_ROLE = "Software Developer"
 
 GENERIC_PATTERNS = [
     "software engineer", "software developer", "software specialist",
     "yazılım", "bilgisayar mühendis", "computer engineer", "programcı",
-    "developer", "geliştirici", "full stack", "fullstack", "full-stack",
-    "product engineer",
+    "developer", "geliştirici"
 ]
 
-# A title naming the role is near-certain; a description merely mentioning a
-# technology is weak evidence. Weighting them equally is what let any posting
-# whose description said "cloud" or "network" be filed under DevOps.
 TITLE_WEIGHT = 10
 DESC_WEIGHT = 1
-
-# Evidence required before the description alone may decide a role. One stray
-# mention in a 2500-character posting is not enough; two distinct patterns are.
 MIN_DESC_EVIDENCE = 2
 
-# Patterns are matched on a left word boundary only. Several are deliberate
-# prefixes ("web geliştir" must catch "web geliştirici"), so a trailing boundary
-# would break them, while the leading one still stops mid-word false hits.
 _COMPILED = {
-    role: [re.compile(r"(?<!\w)" + re.escape(p.strip()), re.IGNORECASE)
-           for p in patterns]
+    role: [re.compile(r"(?<!\w)" + re.escape(p.strip()), re.IGNORECASE) for p in patterns]
     for role, patterns in ROLE_PATTERNS.items()
 }
 
-_GENERIC = [re.compile(r"(?<!\w)" + re.escape(p), re.IGNORECASE)
-            for p in GENERIC_PATTERNS]
+_GENERIC = [re.compile(r"(?<!\w)" + re.escape(p), re.IGNORECASE) for p in GENERIC_PATTERNS]
 
 
 def _normalize(text: str | None) -> str:
-    # "İ".lower() yields "i" plus a combining dot, which breaks matching, so
-    # fold it explicitly. Dotless "I" is deliberately left alone: mapping it to
-    # Turkish "ı" would turn English "AI Engineer" into "aı engineer", and the
-    # only reason that still matched was an incidental re.IGNORECASE folding
-    # quirk. Patterns are matched case-insensitively, so no fold is needed.
     return (text or "").replace("İ", "i").lower()
 
 
@@ -115,13 +102,9 @@ def map_to_role(title: str, description: str | None = None) -> str:
     if not any(scores.values()):
         return _fallback(t)
 
-    # Ties break toward the role with more title evidence, then by declaration
-    # order -- deterministic, but no longer the primary signal.
     order = list(ROLE_PATTERNS)
     best = max(order, key=lambda r: (scores[r], title_hits[r], -order.index(r)))
 
-    # Nothing in the title matched, so the call rests entirely on description
-    # mentions. Demand corroboration before overriding the generic default.
     if title_hits[best] == 0 and _score(d, best) < MIN_DESC_EVIDENCE:
         return _fallback(t)
 

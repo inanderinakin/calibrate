@@ -28,7 +28,7 @@ def compute_gaps(cv_skills: list[NormalizedSkill], target_roles: list[str], dema
                 gaps_list[role].append(gap)
 
         matched_demanded = total_demanded - len(gaps_list[role])
-        matched_list[role] = MatchData(matched_demanded=matched_demanded, total_demanded=total_demanded, ratio= matched_demanded / total_demanded)
+        matched_list[role] = MatchData(matched_demanded=matched_demanded, total_demanded=total_demanded, ratio= matched_demanded / total_demanded if total_demanded else 0.0)
     return GapResult(target_roles=checked_roles, gaps = gaps_list, matched_data = matched_list)
 
 if __name__ == "__main__":
