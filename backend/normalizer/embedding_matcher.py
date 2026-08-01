@@ -1,12 +1,16 @@
 import json
 from pathlib import Path
 import boto3
+from botocore.config import Config
 from dotenv import load_dotenv
 import numpy as np
 import pandas as pd
 
 load_dotenv()
-client = boto3.client("bedrock-runtime")
+client = boto3.client(
+    "bedrock-runtime",
+    config=Config(read_timeout=120, retries={"max_attempts": 6, "mode": "adaptive"}),
+)
 
 def build_catalog():
     collection_csv_path = (Path(__file__).parent.parent / "normalizer" / "esco_dataset" / "digitalSkillsCollection_en.csv")

@@ -21,6 +21,17 @@ ROLE_PATTERNS = {
         "veri analitik", "iş zekası", "business intelligence",
     ],
     "Backend Engineer": ["backend", "back-end", "back end"],
+    "Mobile Engineer": [
+        "mobil uygulama", "mobile application", "mobile app", "mobil geliştir",
+        "mobile developer", "mobile engineer", "android", "ios geliştir",
+        "ios developer", "ios engineer", "flutter", "react native",
+        "kotlin geliştir", "swift geliştir",
+    ],
+    "QA Engineer": [
+        "test mühendis", "test uzman", "test otomasyon", "test analist",
+        "test engineer", "test automation", "test specialist", "yazılım test",
+        "quality assurance", "qa", "sdet", "yazılım kalite",
+    ],
     "Frontend Engineer": [
         "frontend", "front-end", "front end", "react", "angular", "vue",
         "ux/ui", "ux tasarım", "ui tasarım", "ui/ux",
@@ -28,7 +39,15 @@ ROLE_PATTERNS = {
     ],
 }
 
-DEFAULT_ROLE = "Full Stack or Product Engineer"
+DEFAULT_ROLE = "Unclassified"
+GENERIC_ROLE = "Software Engineer"
+
+GENERIC_PATTERNS = [
+    "software engineer", "software developer", "software specialist",
+    "yazılım", "bilgisayar mühendis", "computer engineer", "programcı",
+    "developer", "geliştirici", "full stack", "fullstack", "full-stack",
+    "product engineer",
+]
 
 # A title naming the role is near-certain; a description merely mentioning a
 # technology is weak evidence. Weighting them equally is what let any posting
@@ -49,6 +68,9 @@ _COMPILED = {
     for role, patterns in ROLE_PATTERNS.items()
 }
 
+_GENERIC = [re.compile(r"(?<!\w)" + re.escape(p), re.IGNORECASE)
+            for p in GENERIC_PATTERNS]
+
 
 def _normalize(text: str | None) -> str:
     # "İ".lower() yields "i" plus a combining dot, which breaks matching, so
@@ -57,6 +79,12 @@ def _normalize(text: str | None) -> str:
     # only reason that still matched was an incidental re.IGNORECASE folding
     # quirk. Patterns are matched case-insensitively, so no fold is needed.
     return (text or "").replace("İ", "i").lower()
+
+
+def _fallback(title: str) -> str:
+    if any(rx.search(title) for rx in _GENERIC):
+        return GENERIC_ROLE
+    return DEFAULT_ROLE
 
 
 def _score(text: str, role: str) -> int:
@@ -85,7 +113,7 @@ def map_to_role(title: str, description: str | None = None) -> str:
         scores[role] = ts * TITLE_WEIGHT + ds * DESC_WEIGHT
 
     if not any(scores.values()):
-        return DEFAULT_ROLE
+        return _fallback(t)
 
     # Ties break toward the role with more title evidence, then by declaration
     # order -- deterministic, but no longer the primary signal.
@@ -95,6 +123,6 @@ def map_to_role(title: str, description: str | None = None) -> str:
     # Nothing in the title matched, so the call rests entirely on description
     # mentions. Demand corroboration before overriding the generic default.
     if title_hits[best] == 0 and _score(d, best) < MIN_DESC_EVIDENCE:
-        return DEFAULT_ROLE
+        return _fallback(t)
 
     return best

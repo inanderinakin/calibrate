@@ -48,8 +48,9 @@ if __name__ == "__main__":
         postings_per_role = collections.Counter()
         role_skill_counts = collections.defaultdict(collections.Counter)
         skill_category = {}
+        processed = 0
 
-        for obj in reader: 
+        for obj in reader:
             role = obj.get("role") or map_to_role(obj["title"], obj.get("description_text"))
             postings_per_role[role] += 1
 
@@ -58,6 +59,10 @@ if __name__ == "__main__":
             for skill in skills:
                 role_skill_counts[role][skill.skill] += 1
                 skill_category[skill.skill] = skill.esco_category
+
+            processed += 1
+            if processed % 100 == 0:
+                print(f"{processed} postings processed", flush=True)
 
         demand_profile = {}
         for role in role_skill_counts:
