@@ -2,7 +2,7 @@ import json
 import random
 import sys
 from pathlib import Path
-from handleposting import extract_posting_candidates
+from pipeline.build_demand_profile import extract_posting_candidates
 from normalize import normalize
 
 postings_path = Path(__file__).parent / "scraper" / "postings.jsonl"

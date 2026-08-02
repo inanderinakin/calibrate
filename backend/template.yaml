@@ -1,0 +1,39 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Globals:
+  Function:
+    Timeout: 60
+    MemorySize: 2048
+
+Resources:
+  CalibrateApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: app/
+      Handler: main.handler
+      Runtime: python3.13
+      Architectures:
+        - x86_64
+      FunctionUrlConfig:
+        AuthType: NONE
+      Policies:
+        - S3FullAccessPolicy:
+            BucketName: calibrate-teamthrow
+
+        - TextractPolicy: {} 
+
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "bedrock:InvokeModel"
+                - "bedrock:InvokeModelWithResponseStream"
+              Resource:
+                - !Sub "arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/global.anthropic.claude-sonnet-4-6"
+                - "arn:aws:bedrock:*::foundation-model/anthropic.claude-sonnet-4-6*"
+                - "arn:aws:bedrock:*::foundation-model/cohere.embed-multilingual-v3"
+
+Outputs:
+  FunctionUrl:
+    Description: "Lambda Function URL"
+    Value: !GetAtt CalibrateApiFunctionUrl.FunctionUrl

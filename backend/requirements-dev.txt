@@ -1,0 +1,2 @@
+fastapi[standard]
+jsonlines==4.0.0
