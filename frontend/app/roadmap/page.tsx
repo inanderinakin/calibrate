@@ -5,6 +5,23 @@ import Link from "next/link";
 import AppShell from "@/components/AppShell";
 import { session } from "@/lib/session";
 import type { Report } from "@/lib/types";
+import { getDisplaySkillName } from "@/lib/escoMapper";
+import { session } from "@/lib/session"; // session okumak için[cite: 3]
+
+export default function CvSkillsList() {
+  const skills = session.getCvSkills(); // NormalizedSkill[] verisini çeker[cite: 3, 4]
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {skills?.map((item, index) => (
+        <span key={index} className="px-3 py-1 bg-gray-200 rounded-lg text-sm">
+          {/* Doğrudan item.skill demek yerine mapper fonksiyonundan geçiriyoruz */}
+          {getDisplaySkillName(item.skill)}
+        </span>
+      ))}
+    </div>
+  );
+}
 
 export default function RoadmapPage() {
   const [report, setReport] = useState<Report | null>(null);
