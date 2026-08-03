@@ -5,7 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Icon } from "@iconify/react";
 import AppShell from "@/components/AppShell";
+import TrendingSkillsChart from "@/components/TrendingSkillsChart";
 import { useAuth } from "@/contexts/AuthContext";
+import { API_URL } from "@/lib/api";
 import { session } from "@/lib/session";
 import type { GapResult } from "@/lib/types";
 import { getDisplaySkillName } from "@/lib/escoMapper";
@@ -55,12 +57,21 @@ export default function DashboardPage() {
 
   const [gaps, setGaps] = useState<GapResult | null>(null);
   const [loaded, setLoaded] = useState(false);
-  const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
+  const [marketSkills, setMarketSkills] = useState<Record<string, DemandedSkill[]>>({});
 
   useEffect(() => {
     setGaps(session.getGaps());
     setLoaded(true);
   }, []);
+
+  useEffect(() => {
+    if (!gaps || gaps.target_roles.length === 0) return;
+    const params = gaps.target_roles.map((role) => `roles=${encodeURIComponent(role)}`).join("&");
+    fetch(`${API_URL}/demand_profile?${params}`)
+      .then((res) => res.json())
+      .then((data) => setMarketSkills(data))
+      .catch(() => {});
+  }, [gaps]);
 
   if (!loaded) {
     return (
@@ -193,6 +204,19 @@ export default function DashboardPage() {
   }, [selected]);
 
   /* ---------------- UI ---------------- */
+
+  const trendingSkillsByName = new Map<string, DemandedSkill>();
+  for (const role of roles) {
+    for (const skill of marketSkills[role] ?? []) {
+      const existing = trendingSkillsByName.get(skill.skill);
+      if (!existing || skill.demand_percentage > existing.demand_percentage) {
+        trendingSkillsByName.set(skill.skill, skill);
+      }
+    }
+  }
+  const trendingSkills = [...trendingSkillsByName.values()]
+    .sort((a, b) => b.demand_percentage - a.demand_percentage)
+    .slice(0, 20);
 
   return (
     <AppShell>

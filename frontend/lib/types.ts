@@ -19,6 +19,13 @@ export interface Gap {
   trend: Trend;
 }
 
+export interface DemandedSkill {
+  skill: string;
+  esco_category: string;
+  demand_percentage: number;
+  trend: Trend;
+}
+
 export interface GapResult {
   target_roles: string[];
   gaps: Record<string, Gap[]>;
