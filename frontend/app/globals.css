@@ -35,6 +35,9 @@
 
   --nav-active: var(--pink);
   --landing-accent: var(--burgundy);
+
+  --chart-line: var(--burgundy);
+  --chart-grid: rgba(0, 0, 0, 0.1);
 }
 
 .dark {
@@ -63,6 +66,10 @@
   /* Sidebar hover/active color — light-blue in dark mode (was pink) */
   --nav-active: var(--light-blue);
   --landing-accent: var(--light-blue);
+
+  /* Own step, not a flip of the burgundy: clears 3:1 on the blue card surface */
+  --chart-line: #f09aa8;
+  --chart-grid: rgba(248, 241, 231, 0.16);
 }
 
 /*

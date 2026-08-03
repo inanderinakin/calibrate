@@ -3,6 +3,7 @@ from pathlib import Path
 from models import DemandedSkill
 
 demand_profile_path = Path(__file__).parent / "demand_profile.json"
+trends_path = Path(__file__).parent / "trends.json"
 
 
 def load_demand_profile():
@@ -17,3 +18,8 @@ def load_demand_profile():
                 profile[role].append(DemandedSkill(**skill))
 
     return profile
+
+
+def load_trends():
+    with open(trends_path) as json_file:
+        return json.load(json_file)

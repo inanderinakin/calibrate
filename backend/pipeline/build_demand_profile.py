@@ -4,13 +4,19 @@ import re
 import jsonlines as jl
 from pathlib import Path
 from normalize import normalize
-from scraper.roles import map_to_role, DEFAULT_ROLE
+from scraper.roles import map_to_role, DEFAULT_ROLE, GENERIC_ROLE, ROLE_PATTERNS
 from models import DemandedSkill
 
 demand_profile_path = Path(__file__).parent.parent / "app" / "demand_profile.json"
 postings_path = Path(__file__).parent.parent / "scraper" / "postings.jsonl"
 normalized_postings_path = Path(__file__).parent.parent / "normalized_postings.jsonl"
 unclassified_role = DEFAULT_ROLE
+baseline_date = "2026-07-29"
+known_roles = set(ROLE_PATTERNS) | {GENERIC_ROLE, DEFAULT_ROLE}
+baseline_month = "2026-06"
+recent_month = "2026-07"
+trend_threshold = 0.15
+min_skill_count = 10
 
 def fold(text: str) -> str:
     for variant in ("İ", "ı", "I"):
@@ -53,29 +59,105 @@ def extract_posting_candidates(description: str) -> list[str]:
     candidates = list(dict.fromkeys(candidates))
     return [candidate for candidate in candidates if fold(candidate) not in BOILERPLATE]
 
+def to_iso_date(value):
+    value = str(value)
+    if "-" in value:
+        return value[:10]
+    day, month, year = value.split(".")
+    return f"{year}-{month}-{day}"
+
+def resolve_role(obj):
+    stored = obj.get("role")
+    if stored in known_roles:
+        return stored
+    return map_to_role(obj["title"], obj.get("description_text"))
+
 def build_normalized_postings():
+    existing = []
+    if normalized_postings_path.exists():
+        with jl.open(normalized_postings_path) as reader:
+            existing = list(reader)
+    done_ids = {obj["id"] for obj in existing if "id" in obj}
+
     temp_path = normalized_postings_path.with_name(normalized_postings_path.name + ".tmp")
     processed = 0
-    with jl.open(postings_path) as reader, jl.open(temp_path, mode="w") as writer:
-        for obj in reader:
-            role = obj.get("role") or map_to_role(obj["title"], obj.get("description_text"))
-            if role == unclassified_role:
-                continue
+    with jl.open(temp_path, mode="w") as writer:
+        for obj in existing:
+            writer.write(obj)
 
-            candidates = extract_posting_candidates(obj["description_text"])
-            skills = normalize(candidates)
-            writer.write({
-                "role": role,
-                "skills": [{"skill": skill.skill, "esco_category": skill.esco_category} for skill in skills],
-            })
+        with jl.open(postings_path) as reader:
+            for obj in reader:
+                if obj.get("first_seen", baseline_date) <= baseline_date:
+                    continue
+                if obj["id"] in done_ids:
+                    continue
 
-            processed += 1
-            if processed % 100 == 0:
-                print(f"{processed} postings processed", flush=True)
+                role = resolve_role(obj)
+                if role == unclassified_role:
+                    continue
+
+                candidates = extract_posting_candidates(obj["description_text"])
+                skills = normalize(candidates)
+                writer.write({
+                    "id": obj["id"],
+                    "role": role,
+                    "source": obj["source"],
+                    "first_seen": obj["first_seen"],
+                    "date_posted": to_iso_date(obj["date_posted"]),
+                    "skills": [{"skill": skill.skill, "esco_category": skill.esco_category} for skill in skills],
+                })
+
+                processed += 1
+                if processed % 100 == 0:
+                    print(f"{processed} new postings processed", flush=True)
 
     temp_path.replace(normalized_postings_path)
+    print(f"{processed} new postings added to {len(existing)} existing")
+
+def compute_trends():
+    postings_per_cell = collections.Counter()
+    skill_counts = collections.defaultdict(collections.Counter)
+
+    with jl.open(normalized_postings_path) as reader:
+        for obj in reader:
+            month = obj.get("date_posted", "")[:7]
+            if month not in (baseline_month, recent_month):
+                continue
+            cell = (obj["source"], month)
+            postings_per_cell[cell] += 1
+            for skill in {entry["skill"] for entry in obj["skills"]}:
+                if skill in ESCO_ARTIFACTS:
+                    continue
+                skill_counts[skill][cell] += 1
+
+    sources = {source for source, month in postings_per_cell}
+    trends = {}
+    for skill in skill_counts:
+        directions = set()
+        for source in sources:
+            old_cell = (source, baseline_month)
+            new_cell = (source, recent_month)
+            old_count = skill_counts[skill][old_cell]
+            new_count = skill_counts[skill][new_cell]
+            if old_count < min_skill_count or new_count < min_skill_count:
+                continue
+            old_share = old_count / postings_per_cell[old_cell]
+            new_share = new_count / postings_per_cell[new_cell]
+            change = (new_share - old_share) / old_share
+            if change > trend_threshold:
+                directions.add("Emerging")
+            elif change < -trend_threshold:
+                directions.add("Fading")
+            else:
+                directions.add("Stable")
+
+        if len(directions) == 1:
+            trends[skill] = directions.pop()
+
+    return trends
 
 def build_demand_profile():
+    trends = compute_trends()
     postings_per_role = collections.Counter()
     role_skill_counts = collections.defaultdict(collections.Counter)
     skill_category = {}
@@ -97,7 +179,7 @@ def build_demand_profile():
         for skill in role_skill_counts[role]:
             skill_demand = role_skill_counts[role][skill] / postings_per_role[role]
             if skill_demand > 0.2:
-                demanded_skill = DemandedSkill(skill=skill, esco_category=skill_category[skill], demand_percentage=skill_demand, trend="Stable")
+                demanded_skill = DemandedSkill(skill=skill, esco_category=skill_category[skill], demand_percentage=skill_demand, trend=trends.get(skill, "Stable"))
                 demand_profile.setdefault(role, list()).append(demanded_skill)
 
     for role in demand_profile:
@@ -113,6 +195,5 @@ def build_demand_profile():
     print(f"{len(json_dict)} roles written from {sum(postings_per_role.values())} postings")
 
 if __name__ == "__main__":
-    if not normalized_postings_path.exists():
-        build_normalized_postings()
+    build_normalized_postings()
     build_demand_profile()
