@@ -28,7 +28,10 @@ const skillIcons: Record<string, string> = {
   TypeScript: "logos:typescript-icon",
   Git: "logos:git-icon",
   GitHub: "mdi:github",
-  SQL: "mdi:database",
+  SQL: "vscode-icons:file-type-sql",
+  PostgreSQL: "logos:postgresql",
+  DevOps: "selfhst:azure-devops",
+  Angular: "material-icon-theme:angular"
 };
 
 function getSkillIcon(skill: string) {
@@ -81,13 +84,13 @@ export default function DashboardPage() {
     return (
       <AppShell>
         <main className="page-texture min-h-screen px-6 py-10 md:px-10 lg:px-14">
-          <div className="mx-auto flex max-w-3xl flex-col items-start gap-5 rounded-[30px] bg-[var(--card-bg)] p-8 shadow-lg">
+          <div className="mx-auto flex max-w-3xl flex-col items-start gap-5 rounded-[30px] bg-(--card-bg) p-8 shadow-lg">
             <Icon
               icon="mdi:file-search-outline"
-              className="h-14 w-14 text-[var(--accent-2)]"
+              className="h-14 w-14 text-(--accent-2)"
             />
 
-            <h1 className="text-3xl font-black text-[var(--text-primary)] md:text-5xl">
+            <h1 className="text-3xl font-black text-(--text-primary) md:text-5xl">
               Nothing to show yet
             </h1>
 
@@ -150,6 +153,8 @@ export default function DashboardPage() {
       return { name, missing, icon: getSkillIcon(name) };
     });
 
+  const missingSkillNames = [...demandBySkill.keys()].map(getDisplaySkillName);
+
   const selected =
     missingSkills.find((skill) => skill.name === selectedSkill) ??
     missingSkills[0] ??
@@ -173,12 +178,12 @@ export default function DashboardPage() {
 
           {/* HEADER */}
           <header className="mb-5">
-            <h1 className="text-4xl font-black tracking-[-0.04em] text-[var(--text-primary)] md:text-5xl lg:text-6xl">
+            <h1 className="text-4xl font-black tracking-[-0.04em] text-(--text-primary) md:text-5xl lg:text-6xl">
               Welcome back
               {user?.firstName ? `, ${user.firstName}` : ""} !
             </h1>
 
-            <p className="mt-1 text-lg text-[var(--text-muted)] md:text-xl">
+            <p className="mt-1 text-lg text-(--text-muted) md:text-xl">
               Here&apos;s how you match{" "}
               {roles.length > 0 ? roles.join(", ") : "your target role"}.
             </p>
@@ -510,7 +515,7 @@ export default function DashboardPage() {
                 Market trends are unavailable right now.
               </p>
             ) : (
-              <TrendingSkillsChart data={trends} />
+              <TrendingSkillsChart data={trends} missing={missingSkillNames} />
             )}
           </section>
 

@@ -29,23 +29,36 @@ function axisScale(peak: number) {
   return { max, ticks };
 }
 
-export default function TrendingSkillsChart({ data }: { data: TrendsPayload | null }) {
+function bareName(value: string) {
+  return value.toLowerCase().replace(/\s*\(.*?\)\s*/g, " ").trim();
+}
+
+export default function TrendingSkillsChart({
+  data,
+  missing,
+}: {
+  data: TrendsPayload | null;
+  missing?: string[];
+}) {
   const [skill, setSkill] = useState<string | null>(null);
   const [range, setRange] = useState(RANGES[1].label);
   const [hover, setHover] = useState<number | null>(null);
 
-  const skills = useMemo(
-    () => (data ? Object.keys(data.series).sort() : []),
-    [data]
-  );
+  const skills = useMemo(() => {
+    if (!data) return [];
+    const all = Object.keys(data.series).sort();
+    if (!missing?.length) return all;
+
+    const wanted = new Set(missing.map(bareName));
+    const yours = all.filter((term) => wanted.has(bareName(term)));
+    return yours.length ? yours : all;
+  }, [data, missing]);
 
   const busiest = useMemo(() => {
     if (!data) return null;
-    const latest = (values: number[]) => values[values.length - 1] ?? 0;
-    return Object.entries(data.series)
-      .sort((a, b) => latest(b[1]) - latest(a[1]))
-      .map(([name]) => name)[0] ?? null;
-  }, [data]);
+    const latest = (term: string) => data.series[term]?.[data.series[term].length - 1] ?? 0;
+    return [...skills].sort((a, b) => latest(b) - latest(a))[0] ?? null;
+  }, [data, skills]);
 
   const selected = skill && data?.series[skill] ? skill : busiest;
 
