@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Icon } from "@iconify/react";
@@ -9,24 +9,8 @@ import TrendingSkillsChart from "@/components/TrendingSkillsChart";
 import { useAuth } from "@/contexts/AuthContext";
 import { API_URL } from "@/lib/api";
 import { session } from "@/lib/session";
-import type { GapResult } from "@/lib/types";
+import type { GapResult, TrendsPayload } from "@/lib/types";
 import { getDisplaySkillName } from "@/lib/escoMapper";
-import { session } from "@/lib/session"; // session okumak için[cite: 3]
-
-export default function CvSkillsList() {
-  const skills = session.getCvSkills(); // NormalizedSkill[] verisini çeker[cite: 3, 4]
-
-  return (
-    <div className="flex flex-wrap gap-2">
-      {skills?.map((item, index) => (
-        <span key={index} className="px-3 py-1 bg-gray-200 rounded-lg text-sm">
-          {/* Doğrudan item.skill demek yerine mapper fonksiyonundan geçiriyoruz */}
-          {getDisplaySkillName(item.skill)}
-        </span>
-      ))}
-    </div>
-  );
-}
 
 type Skill = {
   name: string;
@@ -51,13 +35,27 @@ function getSkillIcon(skill: string) {
   return skillIcons[skill] ?? "mdi:code-tags";
 }
 
+function getRoadmapData(selected: Skill | null) {
+  if (selected && selected.missing >= 70) {
+    return { difficulty: "Advanced", modules: 20, projects: 5, duration: "6–8 weeks" };
+  }
+
+  if (!selected || selected.missing >= 50) {
+    return { difficulty: "Intermediate", modules: 18, projects: 4, duration: "4–6 weeks" };
+  }
+
+  return { difficulty: "Beginner", modules: 12, projects: 3, duration: "3–4 weeks" };
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const { user } = useAuth();
 
   const [gaps, setGaps] = useState<GapResult | null>(null);
   const [loaded, setLoaded] = useState(false);
-  const [marketSkills, setMarketSkills] = useState<Record<string, DemandedSkill[]>>({});
+  const [trends, setTrends] = useState<TrendsPayload | null>(null);
+  const [trendsFailed, setTrendsFailed] = useState(false);
+  const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
 
   useEffect(() => {
     setGaps(session.getGaps());
@@ -65,13 +63,11 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    if (!gaps || gaps.target_roles.length === 0) return;
-    const params = gaps.target_roles.map((role) => `roles=${encodeURIComponent(role)}`).join("&");
-    fetch(`${API_URL}/demand_profile?${params}`)
+    fetch(`${API_URL}/trends`)
       .then((res) => res.json())
-      .then((data) => setMarketSkills(data))
-      .catch(() => {});
-  }, [gaps]);
+      .then((data) => setTrends(data))
+      .catch(() => setTrendsFailed(true));
+  }, []);
 
   if (!loaded) {
     return (
@@ -149,11 +145,10 @@ export default function DashboardPage() {
   const missingSkills: Skill[] = [...demandBySkill.entries()]
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5)
-    .map(([name, missing]) => ({
-      name,
-      missing,
-      icon: getSkillIcon(name),
-    }));
+    .map(([escoSkill, missing]) => {
+      const name = getDisplaySkillName(escoSkill);
+      return { name, missing, icon: getSkillIcon(name) };
+    });
 
   const selected =
     missingSkills.find((skill) => skill.name === selectedSkill) ??
@@ -167,56 +162,9 @@ export default function DashboardPage() {
 
   /* ---------------- ROADMAP DATA ---------------- */
 
-  const roadmapData = useMemo(() => {
-    if (!selected) {
-      return {
-        difficulty: "Intermediate",
-        modules: 18,
-        projects: 4,
-        duration: "4–6 weeks",
-      };
-    }
-
-    if (selected.missing >= 70) {
-      return {
-        difficulty: "Advanced",
-        modules: 20,
-        projects: 5,
-        duration: "6–8 weeks",
-      };
-    }
-
-    if (selected.missing >= 50) {
-      return {
-        difficulty: "Intermediate",
-        modules: 18,
-        projects: 4,
-        duration: "4–6 weeks",
-      };
-    }
-
-    return {
-      difficulty: "Beginner",
-      modules: 12,
-      projects: 3,
-      duration: "3–4 weeks",
-    };
-  }, [selected]);
+  const roadmapData = getRoadmapData(selected);
 
   /* ---------------- UI ---------------- */
-
-  const trendingSkillsByName = new Map<string, DemandedSkill>();
-  for (const role of roles) {
-    for (const skill of marketSkills[role] ?? []) {
-      const existing = trendingSkillsByName.get(skill.skill);
-      if (!existing || skill.demand_percentage > existing.demand_percentage) {
-        trendingSkillsByName.set(skill.skill, skill);
-      }
-    }
-  }
-  const trendingSkills = [...trendingSkillsByName.values()]
-    .sort((a, b) => b.demand_percentage - a.demand_percentage)
-    .slice(0, 20);
 
   return (
     <AppShell>
@@ -540,6 +488,30 @@ export default function DashboardPage() {
                 </p>
               </button>
             </div>
+          </section>
+
+          {/* MARKET TRENDS */}
+          <section className="mt-5 rounded-[20px] border border-black/5 bg-[var(--card-bg)] p-6 shadow-[0_5px_20px_rgba(0,0,0,0.08)]">
+
+            <div className="mb-5 flex items-center gap-2">
+              <h2 className="text-2xl font-black text-[var(--text-primary)]">
+                Market Trends
+              </h2>
+              <span title="Weekly share of job postings mentioning each skill, averaged across job boards.">
+                <Icon
+                  icon="mdi:information-outline"
+                  className="h-5 w-5 text-[var(--text-muted)]"
+                />
+              </span>
+            </div>
+
+            {trendsFailed ? (
+              <p className="text-[var(--text-secondary)]">
+                Market trends are unavailable right now.
+              </p>
+            ) : (
+              <TrendingSkillsChart data={trends} />
+            )}
           </section>
 
           {/* ROADMAP PREVIEW */}

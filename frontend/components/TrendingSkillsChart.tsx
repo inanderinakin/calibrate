@@ -1,60 +1,222 @@
-import type { DemandedSkill } from "@/lib/types";
+"use client";
 
-const MAX_PER_COLUMN = 5;
+import { useMemo, useState } from "react";
+import type { TrendsPayload } from "@/lib/types";
 
-function SkillColumn({
-  title,
-  color,
-  skills,
-}: {
-  title: string;
-  color: string;
-  skills: DemandedSkill[];
-}) {
-  return (
-    <div className="flex-1 flex flex-col gap-3 min-w-0">
-      <div className="flex items-center gap-1.5 text-base font-black text-(--text-primary)">
-        <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: color }} />
-        {title}
-      </div>
-      {skills.length === 0 ? (
-        <p className="text-sm text-(--text-muted)">None right now</p>
-      ) : (
-        <div className="flex flex-col gap-2">
-          {skills.slice(0, MAX_PER_COLUMN).map((gap, i) => {
-            const percent = Math.round(gap.demand_percentage * 100);
-            return (
-              <div key={gap.skill} className="flex items-center gap-3">
-                <span className="flex-1 min-w-0 truncate text-base text-(--text-primary)">
-                  {i + 1}. {gap.skill}
-                </span>
-                <span className="w-12 shrink-0 text-right text-base font-black text-(--text-primary)">
-                  {percent}%
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
+const RANGES = [
+  { label: "30D", weeks: 4 },
+  { label: "90D", weeks: 13 },
+];
+
+const WIDTH = 720;
+const HEIGHT = 260;
+const PAD = { top: 16, right: 60, bottom: 34, left: 46 };
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+function weekLabel(week: string) {
+  const [, month, day] = week.split("-");
+  return `${MONTHS[Number(month) - 1]} ${Number(day)}`;
 }
 
-export default function TrendingSkillsChart({ skills }: { skills: DemandedSkill[] }) {
-  const emerging = skills.filter((g) => g.trend === "Emerging");
-  const fading = skills.filter((g) => g.trend === "Fading");
+function axisScale(peak: number) {
+  const step = [0.01, 0.02, 0.05, 0.1, 0.2].find((candidate) => peak / candidate <= 5) ?? 0.25;
+  const max = Math.max(step, Math.ceil(peak / step) * step);
+  const ticks = [];
+  for (let value = 0; value <= max + 1e-9; value += step) {
+    ticks.push(Number(value.toFixed(4)));
+  }
+  return { max, ticks };
+}
 
-  if (emerging.length === 0 && fading.length === 0) {
-    return (
-      <p className="text-(--text-secondary)">Not enough data yet</p>
-    );
+export default function TrendingSkillsChart({ data }: { data: TrendsPayload | null }) {
+  const [skill, setSkill] = useState<string | null>(null);
+  const [range, setRange] = useState(RANGES[1].label);
+  const [hover, setHover] = useState<number | null>(null);
+
+  const skills = useMemo(
+    () => (data ? Object.keys(data.series).sort() : []),
+    [data]
+  );
+
+  const busiest = useMemo(() => {
+    if (!data) return null;
+    const latest = (values: number[]) => values[values.length - 1] ?? 0;
+    return Object.entries(data.series)
+      .sort((a, b) => latest(b[1]) - latest(a[1]))
+      .map(([name]) => name)[0] ?? null;
+  }, [data]);
+
+  const selected = skill && data?.series[skill] ? skill : busiest;
+
+  if (!data || !selected) {
+    return <p className="text-(--text-secondary)">Loading market trends…</p>;
   }
 
+  const span = RANGES.find((entry) => entry.label === range)?.weeks ?? 13;
+  const weeks = data.weeks.slice(-span);
+  const values = data.series[selected].slice(-span);
+
+  const { max, ticks } = axisScale(Math.max(...values));
+  const innerW = WIDTH - PAD.left - PAD.right;
+  const innerH = HEIGHT - PAD.top - PAD.bottom;
+  const x = (i: number) => PAD.left + (values.length === 1 ? innerW / 2 : (innerW * i) / (values.length - 1));
+  const y = (v: number) => PAD.top + innerH - (v / max) * innerH;
+
+  const points = values.map((v, i) => `${x(i)},${y(v)}`).join(" ");
+  const active = hover ?? values.length - 1;
+  const badge = data.skills.find((entry) => entry.skill === selected);
+
   return (
-    <div className="flex gap-6 w-full min-h-0">
-      <SkillColumn title="Emerging" color="#2f9e44" skills={emerging} />
-      <div className="w-px bg-(--hover-bg)" />
-      <SkillColumn title="Fading" color="#c0392b" skills={fading} />
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <select
+            value={selected}
+            onChange={(event) => setSkill(event.target.value)}
+            className="rounded-[10px] border border-black/10 bg-(--input-bg) px-3 py-2 text-sm text-(--text-primary)"
+          >
+            {skills.map((name) => (
+              <option key={name} value={name}>{name}</option>
+            ))}
+          </select>
+
+          {badge && (
+            <span className="rounded-[6px] bg-(--hover-bg) px-2 py-1 text-xs font-bold text-(--text-primary)">
+              {badge.trend} {badge.change > 0 ? "+" : ""}{Math.round(badge.change * 100)}%
+            </span>
+          )}
+        </div>
+
+        <div className="flex overflow-hidden rounded-[10px] border border-black/10">
+          {RANGES.map((entry) => (
+            <button
+              key={entry.label}
+              onClick={() => { setRange(entry.label); setHover(null); }}
+              className={
+                entry.label === range
+                  ? "bg-(--accent) px-4 py-2 text-sm font-bold text-(--on-accent)"
+                  : "px-4 py-2 text-sm text-(--text-primary)"
+              }
+            >
+              {entry.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="relative">
+        <svg
+          viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+          className="w-full"
+          onMouseLeave={() => setHover(null)}
+        >
+          {ticks.map((tick) => (
+            <g key={tick}>
+              <line
+                x1={PAD.left}
+                x2={WIDTH - PAD.right}
+                y1={y(tick)}
+                y2={y(tick)}
+                stroke="var(--chart-grid)"
+                strokeWidth={1}
+              />
+              <text
+                x={PAD.left - 10}
+                y={y(tick) + 4}
+                textAnchor="end"
+                className="fill-(--text-muted)"
+                fontSize={12}
+              >
+                {Math.round(tick * 100)}%
+              </text>
+            </g>
+          ))}
+
+          {weeks.map((week, i) => (
+            <text
+              key={week}
+              x={x(i)}
+              y={HEIGHT - 10}
+              textAnchor="middle"
+              className="fill-(--text-muted)"
+              fontSize={12}
+            >
+              {weekLabel(week)}
+            </text>
+          ))}
+
+          {hover !== null && (
+            <line
+              x1={x(hover)}
+              x2={x(hover)}
+              y1={PAD.top}
+              y2={PAD.top + innerH}
+              stroke="var(--chart-grid)"
+              strokeWidth={1}
+            />
+          )}
+
+          <polyline
+            points={points}
+            fill="none"
+            stroke="var(--chart-line)"
+            strokeWidth={2}
+            strokeLinejoin="round"
+            strokeLinecap="round"
+          />
+
+          {values.map((v, i) => (
+            <circle
+              key={weeks[i]}
+              cx={x(i)}
+              cy={y(v)}
+              r={i === active ? 5 : 4}
+              fill="var(--chart-line)"
+              stroke="var(--card-bg)"
+              strokeWidth={2}
+            />
+          ))}
+
+          <text
+            x={WIDTH - PAD.right + 10}
+            y={y(values[values.length - 1]) + 4}
+            className="fill-(--text-primary)"
+            fontSize={13}
+            fontWeight={700}
+          >
+            {Math.round(values[values.length - 1] * 100)}%
+          </text>
+
+          {values.map((v, i) => (
+            <rect
+              key={`hit-${weeks[i]}`}
+              x={x(i) - innerW / (values.length * 2)}
+              y={PAD.top}
+              width={innerW / values.length}
+              height={innerH}
+              fill="transparent"
+              onMouseEnter={() => setHover(i)}
+            />
+          ))}
+        </svg>
+
+        {hover !== null && (
+          <div
+            className="pointer-events-none absolute -translate-x-1/2 rounded-[10px] bg-(--card-bg) px-3 py-2 text-xs shadow-lg ring-1 ring-black/10"
+            style={{ left: `${(x(hover) / WIDTH) * 100}%`, top: 0 }}
+          >
+            <div className="font-bold text-(--text-primary)">Week of {weekLabel(weeks[hover])}</div>
+            <div className="text-(--text-muted)">
+              {selected}: {Math.round(values[hover] * 100)}% of postings
+            </div>
+          </div>
+        )}
+      </div>
+
+      <p className="text-xs text-(--text-muted)">
+        {`Share of job postings mentioning ${selected}, averaged across ${data.sources.join(" and ")} so neither board's volume dominates.`}
+      </p>
     </div>
   );
 }

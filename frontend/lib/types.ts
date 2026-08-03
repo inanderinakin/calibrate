@@ -54,3 +54,33 @@ export interface Report {
   summary: string;
   recommendations: Recommendation[];
 }
+
+export interface TrendSource {
+  baseline_count: number;
+  baseline_total: number;
+  baseline_share: number;
+  recent_count: number;
+  recent_total: number;
+  recent_share: number;
+  change: number;
+  z: number;
+  label: Trend;
+}
+
+export interface TrendSkill {
+  skill: string;
+  trend: Trend;
+  confidence: "confirmed" | "directional";
+  demand_percentage: number;
+  change: number;
+  sources: Record<string, TrendSource>;
+}
+
+export interface TrendsPayload {
+  baseline_month: string;
+  recent_month: string;
+  sources: string[];
+  skills: TrendSkill[];
+  weeks: string[];
+  series: Record<string, number[]>;
+}
