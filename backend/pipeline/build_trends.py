@@ -1,4 +1,5 @@
 import collections
+import datetime
 import json
 import math
 import re
@@ -16,6 +17,8 @@ directional_floor = 0.075
 z_score = 2.0
 min_cell_postings = 100
 min_term_occurrences = 10
+min_week_postings = 30
+first_series_week = "2026-06-01"
 
 TERMS = {
     "Python": ["python"],
@@ -92,12 +95,16 @@ def build_pattern(aliases):
 PATTERNS = {term: build_pattern(aliases) for term, aliases in TERMS.items()}
 
 
-def posted_month(obj):
+def posted_date(obj):
     value = str(obj["date_posted"])
     if "-" in value:
-        return value[:7]
+        return value[:10]
     day, month, year = value.split(".")
-    return f"{year}-{month}"
+    return f"{year}-{month}-{day}"
+
+
+def posted_month(obj):
+    return posted_date(obj)[:7]
 
 
 def count_terms():
@@ -118,6 +125,51 @@ def count_terms():
                     term_counts[term][cell] += 1
 
     return postings_per_cell, term_counts
+
+
+def posted_week(obj):
+    day = datetime.date.fromisoformat(posted_date(obj))
+    return (day - datetime.timedelta(days=day.weekday())).isoformat()
+
+
+def build_series(sources):
+    postings_per_week = collections.defaultdict(collections.Counter)
+    term_counts = collections.defaultdict(lambda: collections.defaultdict(collections.Counter))
+
+    with jl.open(postings_path) as reader:
+        for obj in reader:
+            try:
+                week = posted_week(obj)
+            except ValueError:
+                continue
+            if week < first_series_week:
+                continue
+
+            source = obj["source"]
+            postings_per_week[week][source] += 1
+            description = obj.get("description_text") or ""
+            for term, pattern in PATTERNS.items():
+                if pattern.search(description):
+                    term_counts[term][week][source] += 1
+
+    weeks = [
+        week for week in sorted(postings_per_week)
+        if all(postings_per_week[week][source] >= min_week_postings for source in sources)
+    ]
+
+    series = {}
+    for term in TERMS:
+        values = []
+        for week in weeks:
+            shares = [
+                term_counts[term][week][source] / postings_per_week[week][source]
+                for source in sources
+            ]
+            values.append(round(sum(shares) / len(shares), 4))
+        if values:
+            series[term] = values
+
+    return weeks, series
 
 
 def measure(old_count, old_total, new_count, new_total):
@@ -200,11 +252,15 @@ def build_trends():
 
     results.sort(key=lambda entry: entry["change"], reverse=True)
 
+    weeks, series = build_series(usable)
+
     output = {
         "baseline_month": baseline_month,
         "recent_month": recent_month,
         "sources": usable,
         "skills": results,
+        "weeks": weeks,
+        "series": series,
     }
 
     with open(trends_path, "w", encoding="utf-8") as f:
@@ -212,6 +268,7 @@ def build_trends():
 
     counts = collections.Counter((entry["confidence"], entry["trend"]) for entry in results)
     print(f"{len(results)} terms reported from {len(usable)} sources: {dict(counts)}")
+    print(f"{len(series)} terms charted across {len(weeks)} weeks")
 
 
 if __name__ == "__main__":
