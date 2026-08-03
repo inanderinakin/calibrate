@@ -11,26 +11,46 @@ import { session } from "@/lib/session";
 
 const CHECKLIST = [
   { title: "Reading CV", note: "Successfully read your document" },
-  { title: "Extracting Skills", note: "Identifying your key skills and experience" },
-  { title: "Comparing with job market", note: "Analysing market trends and in-demand skills" },
-  { title: "Generating Roadmap", note: "Creating your personalised career roadmap" },
+  {
+    title: "Extracting Skills",
+    note: "Identifying your key skills and experience",
+  },
+  {
+    title: "Comparing with job market",
+    note: "Analysing market trends and in-demand skills",
+  },
+  {
+    title: "Generating Roadmap",
+    note: "Creating your personalised career roadmap",
+  },
 ];
 
 export default function AnalyseCvPage() {
   const router = useRouter();
   const started = useRef(false);
+
   const [step, setStep] = useState(2);
   const [error, setError] = useState<string | null>(null);
+  const [cvUploaded, setCvUploaded] = useState<boolean | null>(null);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
+    const cvSkills = session.getCvSkills();
+
+    setCvUploaded(Array.isArray(cvSkills) && cvSkills.length > 0);
+    setLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (!loaded || cvUploaded === null || !cvUploaded) return;
     if (started.current) return;
+
     started.current = true;
 
     const cvSkills = session.getCvSkills();
     const targetRoles = session.getTargetRoles();
 
-    if (!cvSkills || !targetRoles || targetRoles.length === 0) {
-      router.replace("/upload_cv");
+    if (!cvSkills || cvSkills.length === 0 || !targetRoles || targetRoles.length === 0) {
       return;
     }
 
@@ -39,14 +59,23 @@ export default function AnalyseCvPage() {
         const gapsRes = await fetch(`${API_URL}/compute_gaps`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ cv_skills: cvSkills, target_roles: targetRoles }),
+          body: JSON.stringify({
+            cv_skills: cvSkills,
+            target_roles: targetRoles,
+          }),
         });
 
         if (!gapsRes.ok) {
-          throw new Error(await errorMessage(gapsRes, "We couldn't compare your CV with the market"));
+          throw new Error(
+            await errorMessage(
+              gapsRes,
+              "We couldn't compare your CV with the market"
+            )
+          );
         }
 
         const gaps = (await gapsRes.json()).gaps;
+
         session.setGaps(gaps);
         setStep(3);
 
@@ -57,20 +86,74 @@ export default function AnalyseCvPage() {
         });
 
         if (!reportRes.ok) {
-          throw new Error(await errorMessage(reportRes, "We couldn't build your roadmap"));
+          throw new Error(
+            await errorMessage(
+              reportRes,
+              "We couldn't build your roadmap"
+            )
+          );
         }
 
         const report = (await reportRes.json()).recommendations;
+
         session.setReport(report);
         setStep(4);
-      }
-      catch (e) {
-        setError(e instanceof Error ? e.message : "Something went wrong. Please try again.");
+      } catch (e) {
+        setError(
+          e instanceof Error
+            ? e.message
+            : "Something went wrong. Please try again."
+        );
       }
     }
 
     run();
-  }, [router]);
+  }, [loaded, cvUploaded]);
+
+  /*
+   * Loading state while checking whether a CV exists.
+   */
+  if (!loaded || cvUploaded === null) {
+    return (
+      <AppShell>
+        <main className="page-texture min-h-screen px-6 py-10 md:px-10 lg:px-14" />
+      </AppShell>
+    );
+  }
+
+  /*
+   * No CV uploaded yet.
+   */
+  if (!cvUploaded) {
+    return (
+      <AppShell>
+        <main className="page-texture min-h-screen px-6 py-10 md:px-10 lg:px-14">
+          <div className="mx-auto flex max-w-3xl flex-col items-start gap-5 rounded-[30px] bg-[var(--card-bg)] p-8 shadow-lg">
+            <Icon
+              icon="mdi:file-search-outline"
+              className="h-14 w-14 text-[var(--accent-2)]"
+            />
+
+            <h1 className="text-3xl font-black text-[var(--text-primary)] md:text-5xl">
+              Nothing to show yet
+            </h1>
+
+            <p className="text-lg text-[var(--text-secondary)]">
+              Upload your CV and pick your target roles to see how you match
+              the market.
+            </p>
+
+            <Link
+              href="/upload_cv"
+              className="rounded-[20px] bg-[var(--accent)] px-8 py-3.5 text-lg font-bold text-[var(--on-accent)]"
+            >
+              Upload your CV
+            </Link>
+          </div>
+        </main>
+      </AppShell>
+    );
+  }
 
   const done = step >= CHECKLIST.length;
   const progress = Math.round((step / CHECKLIST.length) * 100);
@@ -81,8 +164,13 @@ export default function AnalyseCvPage() {
         <StepIndicator activeStep={3} />
 
         <h1 className="text-3xl md:text-5xl font-bold text-(--accent-2)">
-          {error ? "We hit a problem" : done ? "Analysis Complete !" : "Analyzing your CV ..."}
+          {error
+            ? "We hit a problem"
+            : done
+              ? "Analysis Complete !"
+              : "Analyzing your CV ..."}
         </h1>
+
         <p className="text-(--text-primary) max-w-xl">
           {error
             ? "Your CV was uploaded, but we couldn't finish the analysis."
@@ -95,19 +183,34 @@ export default function AnalyseCvPage() {
           {CHECKLIST.map((item, i) => {
             const isDone = i < step;
             const isActive = i === step && !error;
+
             return (
-              <div key={item.title} className="flex items-start gap-4">
+              <div
+                key={item.title}
+                className="flex items-start gap-4"
+              >
                 {isDone ? (
-                  <Icon icon="lets-icons:check-fill" className="w-9 h-9 text-(--accent-bg) shrink-0" />
+                  <Icon
+                    icon="lets-icons:check-fill"
+                    className="w-9 h-9 text-(--accent-bg) shrink-0"
+                  />
                 ) : (
                   <Icon
                     icon="cuida:loading-left-outline"
-                    className={`w-9 h-9 text-(--accent-bg) shrink-0 ${isActive ? "animate-spin" : "opacity-30"}`}
+                    className={`w-9 h-9 text-(--accent-bg) shrink-0 ${
+                      isActive ? "animate-spin" : "opacity-30"
+                    }`}
                   />
                 )}
+
                 <div>
-                  <p className="font-black text-(--text-primary)">{item.title}</p>
-                  <p className="text-sm font-light text-(--text-primary)">{item.note}</p>
+                  <p className="font-black text-(--text-primary)">
+                    {item.title}
+                  </p>
+
+                  <p className="text-sm font-light text-(--text-primary)">
+                    {item.note}
+                  </p>
                 </div>
               </div>
             );
@@ -120,15 +223,21 @@ export default function AnalyseCvPage() {
           </p>
         ) : (
           <div className="w-full flex flex-col items-center gap-4">
-            <span className="text-4xl font-black text-(--accent-bg)">{progress} %</span>
+            <span className="text-4xl font-black text-(--accent-bg)">
+              {progress} %
+            </span>
+
             <div className="w-full h-2.5 rounded-full bg-(--hover-bg) overflow-hidden">
               <div
                 className="h-full rounded-full bg-(--accent) transition-all"
                 style={{ width: `${progress}%` }}
               />
             </div>
+
             {!done && (
-              <p className="text-(--text-primary) font-light">this may take a few moments ...</p>
+              <p className="text-(--text-primary) font-light">
+                this may take a few moments ...
+              </p>
             )}
           </div>
         )}
@@ -140,7 +249,10 @@ export default function AnalyseCvPage() {
               className="bg-(--accent) text-(--on-accent) rounded-[20px] px-8 py-3.5 font-bold text-lg flex items-center gap-3"
             >
               Start over
-              <Icon icon="mdi-light:arrow-up" className="w-6 h-6 rotate-90" />
+              <Icon
+                icon="mdi-light:arrow-up"
+                className="w-6 h-6 rotate-90"
+              />
             </Link>
           ) : (
             <button
@@ -150,7 +262,10 @@ export default function AnalyseCvPage() {
               className="bg-(--accent) text-(--on-accent) rounded-[20px] px-8 py-3.5 font-bold text-lg flex items-center gap-3 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Continue to Dashboard
-              <Icon icon="mdi-light:arrow-up" className="w-6 h-6 rotate-90" />
+              <Icon
+                icon="mdi-light:arrow-up"
+                className="w-6 h-6 rotate-90"
+              />
             </button>
           )}
 
@@ -160,14 +275,19 @@ export default function AnalyseCvPage() {
               className="border-2 border-(--accent-bg) text-(--accent-bg) rounded-[20px] px-8 py-3.5 font-bold text-lg flex items-center gap-3"
             >
               Check Profile Settings
-              <Icon icon="solar:settings-linear" className="w-6 h-6" />
+              <Icon
+                icon="solar:settings-linear"
+                className="w-6 h-6"
+              />
             </Link>
           )}
         </div>
 
         <div className="flex items-center gap-2 text-(--text-primary)">
           <Icon icon="gala:secure" className="w-6 h-6" />
-          <span className="font-black">Your data is secure and private</span>
+          <span className="font-black">
+            Your data is secure and private
+          </span>
         </div>
       </div>
     </AppShell>

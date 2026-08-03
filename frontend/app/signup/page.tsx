@@ -22,7 +22,7 @@ export default function SignupPage() {
     // the raw form values below.
     login({ firstName, lastName, email, studyField });
 
-    router.push("/dashboard");
+    router.push("/upload_cv");
   }
 
   return (
