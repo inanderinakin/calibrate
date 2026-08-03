@@ -16,10 +16,11 @@ import boto3
 from botocore.exceptions import ClientError
 from handlecv import extract_skill_candidates, extract_cv_text
 
-from handleposting import load_demand_profile
+from handleposting import load_demand_profile, load_trends
 from mangum import Mangum
 
 profile = load_demand_profile()
+trends = load_trends()
 app = FastAPI()
 
 origins = [
@@ -104,6 +105,10 @@ async def get_gaps(gap_request: GapRequest):
     gaps = compute_gaps(cv_skills = skills, target_roles = target_roles, demand_profile = profile)
 
     return {"gaps": gaps.model_dump()}
+
+@app.get("/trends")
+async def get_trends():
+    return trends
 
 @app.post("/recommendations")
 async def recommend_with_agent(report: GapResult):
