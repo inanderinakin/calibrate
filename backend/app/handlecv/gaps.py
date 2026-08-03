@@ -20,7 +20,7 @@ def compute_gaps(cv_skills: list[NormalizedSkill], target_roles: list[str], dema
                     skill = demanded.skill,
                     esco_category = demanded.esco_category,
                     demand_percentage= demanded.demand_percentage,
-                    trend="Stable")
+                    trend=demanded.trend)
                 for cv_skill in cv_skills:
                     if cv_skill.esco_category == demanded.esco_category:
                         gap.closest_cv_skill = cv_skill.skill

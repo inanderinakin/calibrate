@@ -1,27 +1,82 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Icon } from "@iconify/react";
 import AppShell from "@/components/AppShell";
+import TrendingSkillsChart from "@/components/TrendingSkillsChart";
 import { useAuth } from "@/contexts/AuthContext";
+import { API_URL } from "@/lib/api";
 import { session } from "@/lib/session";
 import type { GapResult } from "@/lib/types";
+import { getDisplaySkillName } from "@/lib/escoMapper";
+import { session } from "@/lib/session"; // session okumak için[cite: 3]
+
+export default function CvSkillsList() {
+  const skills = session.getCvSkills(); // NormalizedSkill[] verisini çeker[cite: 3, 4]
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {skills?.map((item, index) => (
+        <span key={index} className="px-3 py-1 bg-gray-200 rounded-lg text-sm">
+          {/* Doğrudan item.skill demek yerine mapper fonksiyonundan geçiriyoruz */}
+          {getDisplaySkillName(item.skill)}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+type Skill = {
+  name: string;
+  missing: number;
+  icon: string;
+};
+
+const skillIcons: Record<string, string> = {
+  Docker: "logos:docker-icon",
+  FastAPI: "logos:fastapi-icon",
+  JavaScript: "logos:javascript",
+  MySQL: "logos:mysql",
+  Python: "logos:python",
+  React: "logos:react",
+  TypeScript: "logos:typescript-icon",
+  Git: "logos:git-icon",
+  GitHub: "mdi:github",
+  SQL: "mdi:database",
+};
+
+function getSkillIcon(skill: string) {
+  return skillIcons[skill] ?? "mdi:code-tags";
+}
 
 export default function DashboardPage() {
+  const router = useRouter();
   const { user } = useAuth();
+
   const [gaps, setGaps] = useState<GapResult | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [marketSkills, setMarketSkills] = useState<Record<string, DemandedSkill[]>>({});
 
   useEffect(() => {
     setGaps(session.getGaps());
     setLoaded(true);
   }, []);
 
+  useEffect(() => {
+    if (!gaps || gaps.target_roles.length === 0) return;
+    const params = gaps.target_roles.map((role) => `roles=${encodeURIComponent(role)}`).join("&");
+    fetch(`${API_URL}/demand_profile?${params}`)
+      .then((res) => res.json())
+      .then((data) => setMarketSkills(data))
+      .catch(() => {});
+  }, [gaps]);
+
   if (!loaded) {
     return (
       <AppShell>
-        <div className="p-6 md:p-10 lg:p-14" />
+        <div className="page-texture min-h-screen p-6 md:p-10 lg:p-14" />
       </AppShell>
     );
   }
@@ -29,178 +84,669 @@ export default function DashboardPage() {
   if (!gaps) {
     return (
       <AppShell>
-        <div className="p-6 md:p-10 lg:p-14 flex flex-col items-start gap-4">
-          <h1 className="text-3xl md:text-5xl font-bold text-(--text-primary)">
-            Nothing to show yet
-          </h1>
-          <p className="text-(--text-secondary) text-lg">
-            Upload your CV and pick your target roles to see how you match the market.
-          </p>
-          <Link href="/upload_cv" className="bg-(--accent) text-(--on-accent) rounded-[20px] px-8 py-3.5 font-bold text-lg">
-            Upload your CV
-          </Link>
-        </div>
+        <main className="page-texture min-h-screen px-6 py-10 md:px-10 lg:px-14">
+          <div className="mx-auto flex max-w-3xl flex-col items-start gap-5 rounded-[30px] bg-[var(--card-bg)] p-8 shadow-lg">
+            <Icon
+              icon="mdi:file-search-outline"
+              className="h-14 w-14 text-[var(--accent-2)]"
+            />
+
+            <h1 className="text-3xl font-black text-[var(--text-primary)] md:text-5xl">
+              Nothing to show yet
+            </h1>
+
+            <p className="text-lg text-[var(--text-secondary)]">
+              Upload your CV and pick your target roles to see how you match
+              the market.
+            </p>
+
+            <Link
+              href="/upload_cv"
+              className="rounded-[20px] bg-[var(--accent)] px-8 py-3.5 text-lg font-bold text-[var(--on-accent)]"
+            >
+              Upload your CV
+            </Link>
+          </div>
+        </main>
       </AppShell>
     );
   }
 
   const roles = gaps.target_roles;
 
+  /* ---------------- MATCH CALCULATION ---------------- */
+
   let matched = 0;
   let total = 0;
+
   for (const role of roles) {
     const data = gaps.matched_data[role];
+
     if (data) {
       matched += data.matched_demanded;
       total += data.total_demanded;
     }
   }
-  const matchPercent = total === 0 ? 0 : Math.round((matched / total) * 100);
+
+  const matchPercent =
+    total === 0 ? 0 : Math.round((matched / total) * 100);
+
+  /* ---------------- MISSING SKILLS ---------------- */
 
   const demandBySkill = new Map<string, number>();
+
   for (const role of roles) {
     for (const gap of gaps.gaps[role] ?? []) {
       const percent = Math.round(gap.demand_percentage * 100);
-      demandBySkill.set(gap.skill, Math.max(demandBySkill.get(gap.skill) ?? 0, percent));
+
+      demandBySkill.set(
+        gap.skill,
+        Math.max(demandBySkill.get(gap.skill) ?? 0, percent)
+      );
     }
   }
-  const missingSkills = [...demandBySkill.entries()]
+
+  const missingSkills: Skill[] = [...demandBySkill.entries()]
     .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
+    .slice(0, 5)
+    .map(([name, missing]) => ({
+      name,
+      missing,
+      icon: getSkillIcon(name),
+    }));
+
+  const selected =
+    missingSkills.find((skill) => skill.name === selectedSkill) ??
+    missingSkills[0] ??
+    null;
+
+  /* ---------------- SELECTED ROLE MATCH ---------------- */
+
+  const selectedRoleData =
+    roles.length === 1 ? gaps.matched_data[roles[0]] : null;
+
+  /* ---------------- ROADMAP DATA ---------------- */
+
+  const roadmapData = useMemo(() => {
+    if (!selected) {
+      return {
+        difficulty: "Intermediate",
+        modules: 18,
+        projects: 4,
+        duration: "4–6 weeks",
+      };
+    }
+
+    if (selected.missing >= 70) {
+      return {
+        difficulty: "Advanced",
+        modules: 20,
+        projects: 5,
+        duration: "6–8 weeks",
+      };
+    }
+
+    if (selected.missing >= 50) {
+      return {
+        difficulty: "Intermediate",
+        modules: 18,
+        projects: 4,
+        duration: "4–6 weeks",
+      };
+    }
+
+    return {
+      difficulty: "Beginner",
+      modules: 12,
+      projects: 3,
+      duration: "3–4 weeks",
+    };
+  }, [selected]);
+
+  /* ---------------- UI ---------------- */
+
+  const trendingSkillsByName = new Map<string, DemandedSkill>();
+  for (const role of roles) {
+    for (const skill of marketSkills[role] ?? []) {
+      const existing = trendingSkillsByName.get(skill.skill);
+      if (!existing || skill.demand_percentage > existing.demand_percentage) {
+        trendingSkillsByName.set(skill.skill, skill);
+      }
+    }
+  }
+  const trendingSkills = [...trendingSkillsByName.values()]
+    .sort((a, b) => b.demand_percentage - a.demand_percentage)
+    .slice(0, 20);
 
   return (
     <AppShell>
-      <div className="p-6 md:p-10 lg:p-14 flex flex-col gap-6">
-        <header>
-          <h1 className="text-3xl md:text-5xl font-bold text-(--text-primary)">
-            Welcome back{user?.firstName ? `, ${user.firstName}` : ""} !
-          </h1>
-          <p className="text-(--text-secondary) mt-2 text-lg">
-            Here&apos;s how you match {roles.join(", ")}.
-          </p>
-        </header>
+      <main className="page-texture min-h-screen overflow-x-hidden px-5 py-6 md:px-8 md:py-8 lg:px-10 lg:py-9">
+        <div className="mx-auto max-w-[1500px]">
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="bg-(--card-bg) rounded-[30px] shadow-lg p-6 flex flex-col items-center justify-center text-center gap-2">
-            <div className="relative w-40 h-40 flex items-center justify-center">
-              <svg viewBox="0 0 100 100" className="absolute inset-0 -rotate-90">
-                <circle cx="50" cy="50" r="42" fill="none" stroke="var(--hover-bg)" strokeWidth="10" />
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="42"
-                  fill="none"
-                  stroke="var(--accent-2)"
-                  strokeWidth="10"
-                  strokeLinecap="round"
-                  strokeDasharray={`${(matchPercent / 100) * 264} 264`}
-                />
-              </svg>
-              <span className="text-3xl font-black text-(--text-primary)">
-                {matchPercent}%
-              </span>
-            </div>
-            <p className="font-black text-(--accent-2) text-xl">MATCH</p>
-            <p className="font-black text-(--text-primary)">
-              {matchPercent >= 60
-                ? "Your profile is a strong match!"
-                : "There's room to grow here."}
+          {/* HEADER */}
+          <header className="mb-5">
+            <h1 className="text-4xl font-black tracking-[-0.04em] text-[var(--text-primary)] md:text-5xl lg:text-6xl">
+              Welcome back
+              {user?.firstName ? `, ${user.firstName}` : ""} !
+            </h1>
+
+            <p className="mt-1 text-lg text-[var(--text-muted)] md:text-xl">
+              Here&apos;s how you match{" "}
+              {roles.length > 0 ? roles.join(", ") : "your target role"}.
             </p>
-            <p className="text-sm text-(--text-secondary)">
-              You have {matched} of the {total} skills these roles ask for.
-            </p>
-            {roles.length > 1 && (
-              <div className="mt-2 flex flex-col gap-1 w-full">
-                {roles.map((role) => {
-                  const data = gaps.matched_data[role];
-                  if (!data) return null;
-                  return (
-                    <div key={role} className="flex justify-between text-sm text-(--text-secondary)">
-                      <span>{role}</span>
-                      <span className="font-bold">{Math.round(data.ratio * 100)}%</span>
+          </header>
+
+          {/* TOP SECTION */}
+          <section className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_1.3fr]">
+
+            {/* MATCH CARD */}
+            <div className="rounded-[20px] border border-black/5 bg-[var(--card-bg)] p-7 shadow-[0_5px_20px_rgba(0,0,0,0.08)]">
+              <div className="flex h-full flex-col justify-center gap-5 md:flex-row md:items-center md:gap-8">
+
+                {/* MATCH CIRCLE */}
+                <div className="relative mx-auto flex h-[220px] w-[220px] shrink-0 items-center justify-center rounded-full bg-[#dedede]">
+                  <div
+                    className="absolute inset-0 rounded-full"
+                    style={{
+                      background: `conic-gradient(
+                        var(--accent-2) ${matchPercent}%,
+                        #dedede ${matchPercent}%
+                      )`,
+                    }}
+                  />
+
+                  <div className="absolute inset-[13px] flex flex-col items-center justify-center rounded-full bg-[var(--card-bg)]">
+                    <span className="text-5xl font-black text-[var(--text-primary)]">
+                      {matchPercent}%
+                    </span>
+
+                    <span className="mt-1 text-2xl font-black text-[var(--accent-2)]">
+                      MATCH
+                    </span>
+                  </div>
+                </div>
+
+                {/* MATCH INFO */}
+                <div className="flex flex-col justify-center">
+                  <h2 className="text-2xl font-black text-[var(--text-primary)]">
+                    {matchPercent >= 60
+                      ? "Strong Match"
+                      : "Room to Grow"}
+                  </h2>
+
+                  <p className="mt-2 max-w-[250px] text-lg leading-snug text-[var(--text-secondary)]">
+                    Your profile matches
+                    <br />
+                    {matchPercent}% of the selected role.
+                  </p>
+
+                  <div className="mt-4 flex w-fit items-center gap-2 rounded-xl bg-[var(--hover-bg)] px-3 py-2 text-sm font-semibold text-[var(--accent-2)]">
+                    <Icon
+                      icon={
+                        matchPercent >= 60
+                          ? "mdi:trending-up"
+                          : "mdi:trending-down"
+                      }
+                      className="h-5 w-5"
+                    />
+
+                    {matchPercent >= 60
+                      ? "You’re on the right track!"
+                      : "There’s room to grow."}
+                  </div>
+
+                  <p className="mt-3 text-xs text-[var(--text-muted)]">
+                    You have {matched} of the {total} demanded skills.
+                  </p>
+
+                  {/* ROLE BREAKDOWN */}
+                  {roles.length > 1 && (
+                    <div className="mt-3 flex flex-col gap-1.5">
+                      {roles.map((role) => {
+                        const data = gaps.matched_data[role];
+
+                        if (!data) return null;
+
+                        return (
+                          <div
+                            key={role}
+                            className="flex justify-between gap-5 text-sm text-[var(--text-secondary)]"
+                          >
+                            <span>{role}</span>
+
+                            <span className="font-bold">
+                              {Math.round(data.ratio * 100)}%
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
-                  );
-                })}
+                  )}
+                </div>
               </div>
-            )}
-          </div>
+            </div>
 
-          <div className="bg-(--card-bg) rounded-[30px] shadow-lg p-6 lg:col-span-2 flex flex-col gap-5">
-            <h2 className="text-2xl font-black text-(--text-primary)">Missing Skills !</h2>
-            {missingSkills.length === 0 ? (
-              <p className="text-(--text-muted)">
-                No gaps found! Your CV covers everything these roles ask for.
+            {/* MISSING SKILLS */}
+            <div className="rounded-[20px] border border-black/5 bg-[var(--card-bg)] p-6 shadow-[0_5px_20px_rgba(0,0,0,0.08)]">
+
+              <div className="mb-5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Icon
+                    icon="mdi:target"
+                    className="h-9 w-9 text-[var(--accent-2)]"
+                  />
+
+                  <h2 className="text-2xl font-black text-[var(--text-primary)]">
+                    Missing Skills
+                  </h2>
+                </div>
+
+                <button
+                  type="button"
+                  className="flex items-center gap-2 rounded-lg border border-black/15 px-4 py-2 text-sm font-medium text-[var(--accent-2)]"
+                >
+                  Why these skills
+                  <Icon
+                    icon="mdi:information-outline"
+                    className="h-5 w-5"
+                  />
+                </button>
+              </div>
+
+              {missingSkills.length === 0 ? (
+                <p className="text-[var(--text-muted)]">
+                  No gaps found! Your CV covers everything these roles ask
+                  for.
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {missingSkills.map((skill) => (
+                    <button
+                      key={skill.name}
+                      type="button"
+                      onClick={() => setSelectedSkill(skill.name)}
+                      className={`grid w-full grid-cols-[58px_1fr_65px] items-center gap-3 rounded-xl text-left transition ${
+                        selectedSkill === skill.name
+                          ? "scale-[1.01]"
+                          : ""
+                      }`}
+                    >
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#f1f1f1]">
+                        <Icon
+                          icon={skill.icon}
+                          className="h-8 w-8"
+                        />
+                      </div>
+
+                      <div>
+                        <div className="mb-1 flex items-center justify-between">
+                          <span className="text-base font-bold text-[var(--text-primary)]">
+                            {skill.name}
+                          </span>
+                        </div>
+
+                        <div className="h-2 rounded-full bg-[#e4e4e4]">
+                          <div
+                            className="h-full rounded-full bg-[var(--accent-2)]"
+                            style={{
+                              width: `${skill.missing}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="text-right">
+                        <span className="text-xl font-black text-[var(--text-primary)]">
+                          {skill.missing}%
+                        </span>
+
+                        <p className="text-xs text-[var(--text-muted)]">
+                          Missing
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <p className="mt-5 text-xs text-[var(--text-muted)]">
+                Percentages show how often each skill appears in job postings
+                for these roles.
               </p>
-            ) : (
-              missingSkills.map(([skill, percent]) => (
-                <div key={skill} className="flex items-center gap-4">
-                  <div className="flex-1">
-                    <p className="text-(--text-primary) mb-1">{skill}</p>
-                    <div className="h-2.5 rounded-full bg-(--hover-bg) overflow-hidden">
+            </div>
+          </section>
+
+          {/* LEARNING FOCUS */}
+          <section className="mt-5 rounded-[20px] border border-black/5 bg-[var(--card-bg)] p-6 shadow-[0_5px_20px_rgba(0,0,0,0.08)]">
+
+            <div className="mb-5 flex items-start gap-3">
+              <Icon
+                icon="mdi:target"
+                className="mt-0.5 h-9 w-9 shrink-0 text-[var(--accent-2)]"
+              />
+
+              <div>
+                <h2 className="text-2xl font-black text-[var(--text-primary)]">
+                  Choose your learning focus
+                </h2>
+
+                <p className="mt-1 text-base text-[var(--text-secondary)]">
+                  Select one skill to generate a personalized roadmap.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+
+              {/* SKILLS */}
+              {missingSkills.map((skill) => {
+                const isSelected = selectedSkill === skill.name;
+
+                return (
+                  <button
+                    key={skill.name}
+                    type="button"
+                    onClick={() => setSelectedSkill(skill.name)}
+                    className={`relative rounded-[16px] border-2 p-4 text-left transition ${
+                      isSelected
+                        ? "border-[var(--accent-2)]"
+                        : "border-black/10 hover:border-[var(--accent-2)]/50"
+                    }`}
+                  >
+                    <div
+                      className={`absolute right-4 top-4 flex h-6 w-6 items-center justify-center rounded-full border-2 ${
+                        isSelected
+                          ? "border-[var(--accent-2)]"
+                          : "border-black/30"
+                      }`}
+                    >
+                      {isSelected && (
+                        <div className="h-3 w-3 rounded-full bg-[var(--accent-2)]" />
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-[#f1f1f1]">
+                        <Icon
+                          icon={skill.icon}
+                          className="h-9 w-9"
+                        />
+                      </div>
+
+                      <div>
+                        <h3 className="text-base font-bold text-[var(--text-primary)]">
+                          {skill.name}
+                        </h3>
+
+                        <p className="text-sm text-[var(--text-muted)]">
+                          Missing Level
+                        </p>
+
+                        <p className="text-base font-black text-[var(--accent-2)]">
+                          {skill.missing}%
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 h-1.5 rounded-full bg-[#e4e4e4]">
                       <div
-                        className="h-full rounded-full bg-(--accent-2)"
-                        style={{ width: `${percent}%` }}
+                        className="h-full rounded-full bg-[var(--accent-2)]"
+                        style={{
+                          width: `${skill.missing}%`,
+                        }}
                       />
                     </div>
-                  </div>
-                  <span className="font-black text-(--text-primary) w-14 text-right">
-                    {percent}%
-                  </span>
+                  </button>
+                );
+              })}
+
+              {/* COMPLETE ROADMAP */}
+              <button
+                type="button"
+                onClick={() => setSelectedSkill(null)}
+                className={`relative rounded-[16px] border-2 border-dashed p-4 text-left transition ${
+                  selectedSkill === null
+                    ? "border-[var(--accent-2)]"
+                    : "border-black/15 hover:border-[var(--accent-2)]/50"
+                }`}
+              >
+                <div
+                  className={`absolute right-4 top-4 flex h-6 w-6 items-center justify-center rounded-full border-2 ${
+                    selectedSkill === null
+                      ? "border-[var(--accent-2)]"
+                      : "border-black/30"
+                  }`}
+                >
+                  {selectedSkill === null && (
+                    <div className="h-3 w-3 rounded-full bg-[var(--accent-2)]" />
+                  )}
                 </div>
-              ))
-            )}
-            <p className="text-xs text-(--text-muted)">
-              Percentages show how often each skill appears in job postings for these roles.
-            </p>
-          </div>
-        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="bg-(--card-bg) rounded-[30px] shadow-lg p-6 lg:col-span-2 min-h-70 flex items-center justify-center">
-            <p className="text-(--text-secondary)">Market trends chart</p>
-          </div>
+                <Icon
+                  icon="mdi:map-outline"
+                  className="h-10 w-10 text-[var(--accent-2)]"
+                />
 
-          <div className="flex flex-col gap-6">
-            <div className="bg-(--card-bg) rounded-[25px] shadow-lg p-5 flex flex-col gap-3">
-              <h2 className="font-black text-(--text-primary)">Profile Summary</h2>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-(--accent) rounded-[18px] p-3 flex flex-col gap-1">
-                  <Icon icon="carbon:user-role" className="w-8 h-8 text-(--on-accent)" />
-                  <span className="text-sm font-black text-(--on-accent)">Current Role</span>
-                  <span className="text-xs font-light text-(--on-accent)">
+                <h3 className="mt-2 text-lg font-black leading-tight text-[var(--text-primary)]">
+                  Complete Career
+                  <br />
+                  Roadmap
+                </h3>
+
+                <p className="mt-1 text-sm text-[var(--text-muted)]">
+                  All missing skills
+                  <br />
+                  in one plan
+                </p>
+              </button>
+            </div>
+          </section>
+
+          {/* ROADMAP PREVIEW */}
+          <section className="mt-5 rounded-[20px] border border-black/5 bg-[var(--card-bg)] p-6 shadow-[0_5px_20px_rgba(0,0,0,0.08)]">
+
+            <div className="mb-5 flex items-center gap-3">
+              <Icon
+                icon="mdi:chart-box-outline"
+                className="h-9 w-9 text-[var(--accent-2)]"
+              />
+
+              <h2 className="text-xl font-black text-[var(--text-primary)]">
+                Roadmap preview for{" "}
+                {selected?.name ?? "Complete Career"}
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 divide-y divide-black/10 md:grid-cols-4 md:divide-x md:divide-y-0">
+
+              {/* DIFFICULTY */}
+              <div className="flex items-center gap-4 px-4 py-2 md:px-6">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#f0f0f0]">
+                  <Icon
+                    icon="mdi:chart-bar"
+                    className="h-7 w-7 text-[var(--accent-2)]"
+                  />
+                </div>
+
+                <div>
+                  <p className="text-sm text-[var(--text-muted)]">
+                    Difficulty
+                  </p>
+
+                  <p className="text-base font-black text-[var(--text-primary)]">
+                    {roadmapData.difficulty}
+                  </p>
+                </div>
+              </div>
+
+              {/* MODULES */}
+              <div className="flex items-center gap-4 px-4 py-2 md:px-6">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#f0f0f0]">
+                  <Icon
+                    icon="mdi:book-open-outline"
+                    className="h-7 w-7 text-[var(--accent-2)]"
+                  />
+                </div>
+
+                <div>
+                  <p className="text-sm text-[var(--text-muted)]">
+                    Modules
+                  </p>
+
+                  <p className="text-base font-black text-[var(--text-primary)]">
+                    {roadmapData.modules}
+                  </p>
+                </div>
+              </div>
+
+              {/* PROJECTS */}
+              <div className="flex items-center gap-4 px-4 py-2 md:px-6">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#f0f0f0]">
+                  <Icon
+                    icon="mdi:laptop"
+                    className="h-7 w-7 text-[var(--accent-2)]"
+                  />
+                </div>
+
+                <div>
+                  <p className="text-sm text-[var(--text-muted)]">
+                    Projects
+                  </p>
+
+                  <p className="text-base font-black text-[var(--text-primary)]">
+                    {roadmapData.projects}
+                  </p>
+                </div>
+              </div>
+
+              {/* DURATION */}
+              <div className="flex items-center gap-4 px-4 py-2 md:px-6">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#f0f0f0]">
+                  <Icon
+                    icon="mdi:clock-outline"
+                    className="h-7 w-7 text-[var(--accent-2)]"
+                  />
+                </div>
+
+                <div>
+                  <p className="text-sm text-[var(--text-muted)]">
+                    Estimated duration
+                  </p>
+
+                  <p className="text-base font-black text-[var(--text-primary)]">
+                    {roadmapData.duration}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* PROFILE + ROADMAP */}
+          <section className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-3">
+
+            {/* PROFILE SUMMARY */}
+            <div className="rounded-[20px] bg-[var(--card-bg)] p-5 shadow-[0_5px_20px_rgba(0,0,0,0.08)] lg:col-span-2">
+
+              <div className="mb-4 flex items-center gap-3">
+                <Icon
+                  icon="mdi:account-circle-outline"
+                  className="h-8 w-8 text-[var(--accent-2)]"
+                />
+
+                <h2 className="text-xl font-black text-[var(--text-primary)]">
+                  Profile Summary
+                </h2>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+
+                {/* CURRENT ROLE */}
+                <div className="flex flex-col gap-1 rounded-[18px] bg-[var(--accent)] p-4">
+                  <Icon
+                    icon="carbon:user-role"
+                    className="h-8 w-8 text-[var(--on-accent)]"
+                  />
+
+                  <span className="text-sm font-black text-[var(--on-accent)]">
+                    Current Role
+                  </span>
+
+                  <span className="text-xs font-light text-[var(--on-accent)]">
                     {user?.studyField ?? "Not set"}
                   </span>
                 </div>
-                <div className="bg-(--accent) rounded-[18px] p-3 flex flex-col gap-1">
-                  <Icon icon="clarity:email-line" className="w-8 h-8 text-(--on-accent)" />
-                  <span className="text-sm font-black text-(--on-accent)">E-mail</span>
+
+                {/* EMAIL */}
+                <div className="flex flex-col gap-1 rounded-[18px] bg-[var(--accent)] p-4">
+                  <Icon
+                    icon="clarity:email-line"
+                    className="h-8 w-8 text-[var(--on-accent)]"
+                  />
+
+                  <span className="text-sm font-black text-[var(--on-accent)]">
+                    E-mail
+                  </span>
+
                   <a
                     href={`mailto:${user?.email ?? ""}`}
-                    className="text-xs font-light text-(--on-accent) underline truncate"
+                    className="truncate text-xs font-light text-[var(--on-accent)] underline"
                   >
                     {user?.email ?? "—"}
                   </a>
                 </div>
               </div>
+
               <Link
                 href="/profile"
-                className="border-2 border-(--accent-bg) text-(--accent-bg) rounded-[18px] py-2.5 text-center font-black flex items-center justify-center gap-2"
+                className="mt-4 flex items-center justify-center gap-2 rounded-[18px] border-2 border-[var(--accent-bg)] py-2.5 text-center font-black text-[var(--accent-bg)]"
               >
                 View full profile
-                <Icon icon="weui:arrow-outlined" className="w-4 h-4 rotate-90" />
+
+                <Icon
+                  icon="weui:arrow-outlined"
+                  className="h-4 w-4 rotate-90"
+                />
               </Link>
             </div>
 
+            {/* QUICK ROADMAP */}
             <Link
               href="/roadmap"
-              className="bg-(--accent) rounded-[20px] shadow-lg px-6 py-5 flex items-center justify-between"
+              className="flex items-center justify-between rounded-[20px] bg-[var(--accent)] px-6 py-5 shadow-lg transition hover:scale-[1.01]"
             >
-              <span className="font-black text-(--on-accent) text-xl">Get your Roadmap !</span>
-              <Icon icon="mdi-light:arrow-up" className="w-9 h-9 rotate-90 text-(--on-accent)" />
+              <span className="text-xl font-black text-[var(--on-accent)]">
+                Get your Roadmap !
+              </span>
+
+              <Icon
+                icon="mdi-light:arrow-up"
+                className="h-9 w-9 rotate-90 text-[var(--on-accent)]"
+              />
             </Link>
+          </section>
+
+          {/* GENERATE BUTTON */}
+          <div className="flex justify-center py-6">
+            <button
+              type="button"
+              onClick={() => router.push("/roadmap")}
+              className="flex min-w-[390px] items-center justify-center gap-4 rounded-[18px] bg-[var(--accent-2)] px-10 py-4 text-xl font-black text-[var(--on-accent)] shadow-[0_5px_12px_rgba(0,0,0,0.2)] transition hover:scale-[1.01] active:scale-[0.99]"
+            >
+              <Icon
+                icon="mdi:auto-fix"
+                className="h-6 w-6"
+              />
+
+              Generate Personalized Roadmap
+
+              <Icon
+                icon="mdi:arrow-right"
+                className="h-7 w-7"
+              />
+            </button>
           </div>
         </div>
-      </div>
+      </main>
     </AppShell>
   );
 }

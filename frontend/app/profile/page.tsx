@@ -3,6 +3,23 @@
 import { Icon } from "@iconify/react";
 import AppShell from "@/components/AppShell";
 import { useAuth } from "@/contexts/AuthContext";
+import { getDisplaySkillName } from "@/lib/escoMapper";
+import { session } from "@/lib/session"; // session okumak için[cite: 3]
+
+export default function CvSkillsList() {
+  const skills = session.getCvSkills(); // NormalizedSkill[] verisini çeker[cite: 3, 4]
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {skills?.map((item, index) => (
+        <span key={index} className="px-3 py-1 bg-gray-200 rounded-lg text-sm">
+          {/* Doğrudan item.skill demek yerine mapper fonksiyonundan geçiriyoruz */}
+          {getDisplaySkillName(item.skill)}
+        </span>
+      ))}
+    </div>
+  );
+}
 
 export default function ProfilePage() {
   const { user } = useAuth();

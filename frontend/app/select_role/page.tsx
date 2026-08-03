@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@iconify/react";
 import AppShell from "@/components/AppShell";
@@ -75,7 +75,15 @@ const ROLES = [
 
 export default function SelectRolePage() {
   const router = useRouter();
+
   const [selected, setSelected] = useState<string[]>([]);
+  const [cvUploaded, setCvUploaded] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const skills = session.getCvSkills();
+
+    setCvUploaded(Array.isArray(skills) && skills.length > 0);
+  }, []);
 
   function toggleRole(apiName: string) {
     setSelected((current) =>
@@ -87,10 +95,54 @@ export default function SelectRolePage() {
 
   function handleContinue() {
     if (selected.length === 0) return;
+
     session.setTargetRoles(selected);
     router.push("/analyse_cv");
   }
 
+  // Avoid showing the wrong screen before checking the session.
+  if (cvUploaded === null) {
+    return (
+      <AppShell>
+        <main className="page-texture min-h-screen px-6 py-10 md:px-10 lg:px-14" />
+      </AppShell>
+    );
+  }
+
+  // No CV uploaded yet
+  if (!cvUploaded) {
+    return (
+      <AppShell>
+        <main className="page-texture min-h-screen px-6 py-10 md:px-10 lg:px-14">
+          <div className="mx-auto flex max-w-3xl flex-col items-start gap-5 rounded-[30px] bg-[var(--card-bg)] p-8 shadow-lg">
+            <Icon
+              icon="mdi:file-search-outline"
+              className="h-14 w-14 text-[var(--accent-2)]"
+            />
+
+            <h1 className="text-3xl font-black text-[var(--text-primary)] md:text-5xl">
+              Nothing to show yet
+            </h1>
+
+            <p className="text-lg text-[var(--text-secondary)]">
+              Upload your CV and pick your target roles to see how you match
+              the market.
+            </p>
+
+            <button
+              type="button"
+              onClick={() => router.push("/upload_cv")}
+              className="rounded-[20px] bg-[var(--accent)] px-8 py-3.5 text-lg font-bold text-[var(--on-accent)]"
+            >
+              Upload your CV
+            </button>
+          </div>
+        </main>
+      </AppShell>
+    );
+  }
+
+  // CV exists — show the normal role selection page
   return (
     <AppShell>
       <div className="p-6 md:p-10 lg:p-14 flex flex-col items-center gap-8 max-w-5xl mx-auto text-center">
@@ -99,13 +151,16 @@ export default function SelectRolePage() {
         <h1 className="text-3xl md:text-5xl font-bold text-(--accent-2)">
           Select Your Target Roles
         </h1>
+
         <p className="text-(--text-primary)">
-          Pick every role you&apos;re aiming for — we&apos;ll build one roadmap covering all of them.
+          Pick every role you&apos;re aiming for — we&apos;ll build one roadmap
+          covering all of them.
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full text-left">
           {ROLES.map((role) => {
             const isSelected = selected.includes(role.apiName);
+
             return (
               <button
                 key={role.id}
@@ -113,16 +168,28 @@ export default function SelectRolePage() {
                 aria-pressed={isSelected}
                 onClick={() => toggleRole(role.apiName)}
                 className={`relative rounded-[20px] border-4 p-5 flex items-start gap-4 bg-(--card-bg) transition-colors ${
-                  isSelected ? "border-(--accent-bg)" : "border-(--text-secondary)/30"
+                  isSelected
+                    ? "border-(--accent-bg)"
+                    : "border-(--text-secondary)/30"
                 }`}
               >
                 <div className="w-14 h-14 rounded-full bg-(--hover-bg) flex items-center justify-center shrink-0">
-                  <Icon icon={role.icon} className="w-7 h-7 text-(--accent-bg)" />
+                  <Icon
+                    icon={role.icon}
+                    className="w-7 h-7 text-(--accent-bg)"
+                  />
                 </div>
+
                 <div>
-                  <p className="font-black text-lg text-(--text-primary)">{role.title}</p>
-                  <p className="font-light text-(--text-primary)">{role.description}</p>
+                  <p className="font-black text-lg text-(--text-primary)">
+                    {role.title}
+                  </p>
+
+                  <p className="font-light text-(--text-primary)">
+                    {role.description}
+                  </p>
                 </div>
+
                 {isSelected && (
                   <Icon
                     icon="lets-icons:check-fill"
@@ -140,13 +207,21 @@ export default function SelectRolePage() {
           onClick={handleContinue}
           className="bg-(--accent) text-(--on-accent) rounded-[20px] px-10 py-3.5 font-black text-xl flex items-center gap-3 disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          {selected.length > 1 ? `Continue with ${selected.length} roles` : "Continue"}
-          <Icon icon="mdi-light:arrow-up" className="w-6 h-6 rotate-90" />
+          {selected.length > 1
+            ? `Continue with ${selected.length} roles`
+            : "Continue"}
+
+          <Icon
+            icon="mdi-light:arrow-up"
+            className="w-6 h-6 rotate-90"
+          />
         </button>
 
         <div className="flex items-center gap-2 text-(--text-primary)">
           <Icon icon="gala:secure" className="w-6 h-6" />
-          <span className="font-black">Your data is secure and private</span>
+          <span className="font-black">
+            Your data is secure and private
+          </span>
         </div>
       </div>
     </AppShell>

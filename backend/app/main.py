@@ -9,7 +9,7 @@ from handlecv import compute_gaps
 from normalize import normalize
 from models import GapResult, GapRequest
 
-from fastapi import FastAPI, HTTPException, UploadFile, status
+from fastapi import FastAPI, HTTPException, Query, UploadFile, status
 from fastapi.params import File
 from fastapi.middleware.cors import CORSMiddleware
 import boto3
@@ -105,6 +105,10 @@ async def get_gaps(gap_request: GapRequest):
     gaps = compute_gaps(cv_skills = skills, target_roles = target_roles, demand_profile = profile)
 
     return {"gaps": gaps.model_dump()}
+
+@app.get("/demand_profile")
+async def get_demand_profile(roles: list[str] = Query(...)):
+    return {role: [skill.model_dump() for skill in profile.get(role, [])] for role in roles}
 
 @app.get("/trends")
 async def get_trends():
