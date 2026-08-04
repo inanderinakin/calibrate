@@ -24,11 +24,11 @@ on:
         type: boolean
         default: true
   schedule:
-    # Fires daily; the "Determine schedule flags" step below decides whether
-    # today is actually a scrape day. cron's own day-of-month step syntax
-    # (e.g. "1-31/3") resets at every month boundary — days 31→1 are only 1
-    # day apart, not 3 — so a true "1 day scrape, 2 days off" rolling cadence
-    # is computed in shell instead, from a day count that never resets.
+    # Fires daily and scrapes every time. This ran on a 1-day-on, 2-days-off
+    # cadence until 2026-08-04; the corpus was tracking ~4,700 by the Aug 31
+    # deadline against a 5,000 floor, so it now runs every day. That costs
+    # more than the 2,000 free Actions minutes a private repo gets, which is
+    # covered by a spending limit.
     # secretcv and yenibiris are NOT on the schedule at all — manual
     # (workflow_dispatch) only. yenibiris.com blocks GitHub Actions' IP with
     # a 403.
@@ -37,7 +37,7 @@ on:
 jobs:
   scrape:
     runs-on: ubuntu-latest
-    timeout-minutes: 350
+    timeout-minutes: 180
     defaults:
       run:
         working-directory: backend/scraper
@@ -53,20 +53,12 @@ jobs:
         with:
           python-version: "3.12"
 
-      # The cron fires every day — figure out here whether today is actually
-      # one of the "1 scrape day, 2 days off" days, using a day count from a
-      # fixed epoch (never resets, unlike cron's own day-of-month step).
-      # Every other step below is gated on this for schedule runs, so a
-      # non-scrape day costs only this one cheap step.
+      # The cron fires every day and every run now scrapes. This step stays
+      # so the `if:` conditions on every step below keep resolving; it just
+      # always answers yes.
       - name: Determine schedule flags
         id: sched
-        run: |
-          days=$(( $(date -u +%s) / 86400 ))
-          if [ $((days % 3)) -eq 0 ]; then
-            echo "is_scrape_day=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "is_scrape_day=false" >> "$GITHUB_OUTPUT"
-          fi
+        run: echo "is_scrape_day=true" >> "$GITHUB_OUTPUT"
 
       - name: Install Python dependencies
         if: github.event_name != 'schedule' || steps.sched.outputs.is_scrape_day == 'true'

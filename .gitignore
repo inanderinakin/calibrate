@@ -12,8 +12,9 @@ catalog.csv
 demand_profile.json
 *.bak
 .aws-sam/
+.claude/
+backend/normalized_postings.jsonl
 
-# the Lambda package needs these and they cannot be rebuilt on a read-only filesystem
 !backend/app/normalizer/vectors_array.npz
 !backend/app/normalizer/esco_dataset/catalog.csv
 !backend/app/demand_profile.json
