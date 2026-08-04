@@ -2,6 +2,9 @@
 
 import { useMemo, useState } from "react";
 import type { TrendsPayload } from "@/lib/types";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { getTranslations } from "@/lib/translations";
+import { formatPercent } from "@/lib/turkishNumberSuffix";
 
 const RANGES = [
   { label: "30D", weeks: 4 },
@@ -12,11 +15,9 @@ const WIDTH = 720;
 const HEIGHT = 260;
 const PAD = { top: 16, right: 60, bottom: 34, left: 46 };
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-function weekLabel(week: string) {
+function weekLabel(week: string, months: readonly string[]) {
   const [, month, day] = week.split("-");
-  return `${MONTHS[Number(month) - 1]} ${Number(day)}`;
+  return `${months[Number(month) - 1]} ${Number(day)}`;
 }
 
 function axisScale(peak: number) {
@@ -40,6 +41,10 @@ export default function TrendingSkillsChart({
   data: TrendsPayload | null;
   missing?: string[];
 }) {
+  const { language } = useLanguage();
+  const translations = getTranslations(language);
+  const t = translations.trendChart;
+
   const [skill, setSkill] = useState<string | null>(null);
   const [range, setRange] = useState(RANGES[1].label);
   const [hover, setHover] = useState<number | null>(null);
@@ -63,7 +68,7 @@ export default function TrendingSkillsChart({
   const selected = skill && data?.series[skill] ? skill : busiest;
 
   if (!data || !selected) {
-    return <p className="text-(--text-secondary)">Loading market trends…</p>;
+    return <p className="text-(--text-secondary)">{t.loading}</p>;
   }
 
   const span = RANGES.find((entry) => entry.label === range)?.weeks ?? 13;
@@ -96,7 +101,7 @@ export default function TrendingSkillsChart({
 
           {badge && (
             <span className="rounded-[6px] bg-(--hover-bg) px-2 py-1 text-xs font-bold text-(--text-primary)">
-              {badge.trend} {badge.change > 0 ? "+" : ""}{Math.round(badge.change * 100)}%
+              {translations.common.trend[badge.trend]} {badge.change > 0 ? "+" : ""}{formatPercent(Math.round(badge.change * 100), language)}
             </span>
           )}
         </div>
@@ -141,7 +146,7 @@ export default function TrendingSkillsChart({
                 className="fill-(--text-muted)"
                 fontSize={12}
               >
-                {Math.round(tick * 100)}%
+                {formatPercent(Math.round(tick * 100), language)}
               </text>
             </g>
           ))}
@@ -155,7 +160,7 @@ export default function TrendingSkillsChart({
               className="fill-(--text-muted)"
               fontSize={12}
             >
-              {weekLabel(week)}
+              {weekLabel(week, translations.common.months)}
             </text>
           ))}
 
@@ -198,7 +203,7 @@ export default function TrendingSkillsChart({
             fontSize={13}
             fontWeight={700}
           >
-            {Math.round(values[values.length - 1] * 100)}%
+            {formatPercent(Math.round(values[values.length - 1] * 100), language)}
           </text>
 
           {values.map((v, i) => (
@@ -219,16 +224,16 @@ export default function TrendingSkillsChart({
             className="pointer-events-none absolute -translate-x-1/2 rounded-[10px] bg-(--card-bg) px-3 py-2 text-xs shadow-lg ring-1 ring-black/10"
             style={{ left: `${(x(hover) / WIDTH) * 100}%`, top: 0 }}
           >
-            <div className="font-bold text-(--text-primary)">Week of {weekLabel(weeks[hover])}</div>
+            <div className="font-bold text-(--text-primary)">{t.weekOf} {weekLabel(weeks[hover], translations.common.months)}</div>
             <div className="text-(--text-muted)">
-              {selected}: {Math.round(values[hover] * 100)}% of postings
+              {t.postingsShare(selected, Math.round(values[hover] * 100))}
             </div>
           </div>
         )}
       </div>
 
       <p className="text-xs text-(--text-muted)">
-        {`Share of job postings mentioning ${selected}, averaged across ${data.sources.join(" and ")} so neither board's volume dominates.`}
+        {t.shareOfPostings(selected, data.sources)}
       </p>
     </div>
   );

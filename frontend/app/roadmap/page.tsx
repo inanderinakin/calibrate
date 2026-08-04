@@ -7,8 +7,12 @@ import AppShell from "@/components/AppShell";
 import { session } from "@/lib/session";
 import type { Report } from "@/lib/types";
 import { getDisplaySkillName } from "@/lib/escoMapper";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { getTranslations } from "@/lib/translations";
 
 export default function RoadmapPage() {
+  const { language } = useLanguage();
+  const t = getTranslations(language);
   const [report, setReport] = useState<Report | null>(null);
   const [cvUploaded, setCvUploaded] = useState<boolean | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -43,19 +47,18 @@ export default function RoadmapPage() {
             />
 
             <h1 className="text-3xl font-black text-[var(--text-primary)] md:text-5xl">
-              Nothing to show yet
+              {t.common.nothingToShowYet}
             </h1>
 
             <p className="text-lg text-[var(--text-secondary)]">
-              Upload your CV and pick your target roles to see how you match
-              the market.
+              {t.common.uploadCvPrompt}
             </p>
 
             <Link
               href="/upload_cv"
               className="rounded-[20px] bg-[var(--accent)] px-8 py-3.5 text-lg font-bold text-[var(--on-accent)]"
             >
-              Upload your CV
+              {t.common.uploadYourCv}
             </Link>
           </div>
         </main>
@@ -75,19 +78,18 @@ export default function RoadmapPage() {
             />
 
             <h1 className="text-3xl font-black text-[var(--text-primary)] md:text-5xl">
-              No roadmap yet
+              {t.roadmap.noRoadmapYet}
             </h1>
 
             <p className="text-lg text-[var(--text-secondary)]">
-              Your CV has been uploaded, but your personalized roadmap has not
-              been generated yet. Pick your target roles to continue.
+              {t.roadmap.noRoadmapBody}
             </p>
 
             <Link
               href="/select_role"
               className="rounded-[20px] bg-[var(--accent)] px-8 py-3.5 text-lg font-bold text-[var(--on-accent)]"
             >
-              Select your target roles
+              {t.roadmap.selectTargetRoles}
             </Link>
           </div>
         </main>
@@ -101,16 +103,15 @@ export default function RoadmapPage() {
       <div className="p-6 md:p-10 lg:p-14 flex flex-col gap-6">
         <header>
           <h1 className="text-3xl md:text-5xl font-bold text-(--text-primary)">
-            Your Personalized Roadmap!
+            {t.roadmap.title}
           </h1>
 
           <h2 className="mt-2 text-lg font-medium text-(--text-primary)">
-            {report.target_roles.join(", ")} Career Path
+            {report.target_roles.join(", ")} {t.roadmap.careerPath}
           </h2>
 
           <p className="text-(--text-secondary) text-lg font-semibold">
-            Follow this roadmap to build the skills you need and achieve your
-            career goals.
+            {t.roadmap.subtitle}
           </p>
 
           {report.summary && (
@@ -153,7 +154,7 @@ export default function RoadmapPage() {
                   </p>
 
                   <span className="self-start rounded-[5px] bg-(--accent) px-3 py-1 text-xs font-bold text-(--on-accent)">
-                    {skill.trend}
+                    {t.common.trend[skill.trend]}
                   </span>
 
                   <div className="flex flex-col gap-2">
@@ -177,14 +178,13 @@ export default function RoadmapPage() {
                           </span>
 
                           <span className="text-xs capitalize text-(--text-muted)">
-                            {resource.type}
+                            {t.roadmap.resourceType[resource.type]}
                           </span>
                         </div>
                       ))
                     ) : (
                       <p className="text-sm text-(--text-muted)">
-                        No learning resources are available for this skill at
-                        the moment. Please check back later.
+                        {t.roadmap.noResources}
                       </p>
                     )}
 
@@ -192,7 +192,7 @@ export default function RoadmapPage() {
                       type="button"
                       className="border-2 border-(--accent-bg) rounded-lg py-2 text-(--accent-bg) font-semibold"
                     >
-                      Mark as Completed!
+                      {t.roadmap.markCompleted}
                     </button>
                   </div>
                 </div>

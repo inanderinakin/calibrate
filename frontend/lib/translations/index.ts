@@ -1,0 +1,43 @@
+import type { Language } from "@/contexts/LanguageContext";
+import { common } from "./common";
+import { sidebar } from "./sidebar";
+import { stepIndicator } from "./stepIndicator";
+import { landing } from "./landing";
+import { login } from "./login";
+import { signup } from "./signup";
+import { uploadCv } from "./uploadCv";
+import { selectRole } from "./selectRole";
+import { analyseCv } from "./analyseCv";
+import { dashboard } from "./dashboard";
+import { roadmap } from "./roadmap";
+import { profile } from "./profile";
+import { settings } from "./settings";
+import { trendChart } from "./trendChart";
+
+// Adding a new page: create lib/translations/<page>.ts exporting
+// { en: {...}, tr: {...} }, then add one import + one line below.
+// Every page still reads via getTranslations(language).<page>.xxx.
+function pick(language: Language) {
+  return {
+    common: common[language],
+    sidebar: sidebar[language],
+    stepIndicator: stepIndicator[language],
+    landing: landing[language],
+    login: login[language],
+    signup: signup[language],
+    uploadCv: uploadCv[language],
+    selectRole: selectRole[language],
+    analyseCv: analyseCv[language],
+    dashboard: dashboard[language],
+    roadmap: roadmap[language],
+    profile: profile[language],
+    settings: settings[language],
+    trendChart: trendChart[language],
+  };
+}
+
+export function getTranslations(language: Language) {
+  return pick(language);
+}
+
+export type Translations = ReturnType<typeof getTranslations>;

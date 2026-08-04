@@ -1,0 +1,24 @@
+export const uploadCv = {
+  en: {
+    title: "Upload Your CV",
+    dragDrop: "Drag & drop your CV here",
+    pdfUpTo: "PDF up to 10MB",
+    reading: "Reading your CV — this takes a few seconds…",
+    analysing: "Analysing…",
+    continue: "Continue",
+    noSkillsFound: "We couldn't read any skills from that CV. Try another file.",
+    uploadFailed: "Upload failed",
+    genericError: "Something went wrong. Please try again.",
+  },
+  tr: {
+    title: "CV'nizi Yükleyin",
+    dragDrop: "CV'nizi buraya sürükleyip bırakın",
+    pdfUpTo: "10MB'a kadar PDF",
+    reading: "CV'niz okunuyor — bu birkaç saniye sürer…",
+    analysing: "Analiz ediliyor…",
+    continue: "Devam Et",
+    noSkillsFound: "Bu CV'den herhangi bir beceri okuyamadık. Başka bir dosya deneyin.",
+    uploadFailed: "Yükleme başarısız oldu",
+    genericError: "Bir şeyler ters gitti. Lütfen tekrar deneyin.",
+  },
+};
