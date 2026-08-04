@@ -8,17 +8,17 @@ ROLE_PATTERNS = {
         "systems engineer", "sistem uzman", "network uzman", "sistem destek",
         "network destek", "siber güvenlik", "bilgi güvenliği", "cyber security",
         "information security", "network mühendisi", "ağ ve güvenlik",
-        "network güvenlik", "ağ güvenliği",
+        "network güvenlik", "ağ güvenliği", "sistem mühendis", "cyber-security"
     ],
     "ML Engineer": [
         "makine öğrenme", "machine learning", "yapay zeka mühendisi", "ai engineer",
-        "computer vision", "nlp", "derin öğrenme", "deep learning", "ai",
-        "ai specialist", "yapay zeka uzmanı",
+        "computer vision", "nlp", "derin öğrenme", "deep learning",
+        "ai specialist", "yapay zeka uzmanı"
     ],
     "Data Scientist": [
         "veri bilim", "data science", "veri mühendisi", "data engineer",
         "veri analist", "veri analiz", "data analyst", "data analytics",
-        "veri analitik", "iş zekası", "business intelligence",
+        "veri analitik", "iş zekası", "business intelligence", "data scientist"
     ],
     "Backend Engineer": ["backend", "back-end", "back end"],
     "Mobile Engineer": [
@@ -30,7 +30,7 @@ ROLE_PATTERNS = {
     "QA Engineer": [
         "test mühendis", "test uzman", "test otomasyon", "test analist",
         "test engineer", "test automation", "test specialist", "yazılım test",
-        "quality assurance", "qa", "sdet", "yazılım kalite",
+        "quality assurance", "qa", "sdet", "yazılım kalite", "quality engineer"
     ],
     "Full Stack Developer": [
         "full stack", "fullstack", "full-stack",
@@ -47,7 +47,7 @@ DEFAULT_ROLE = "Unclassified"
 GENERIC_ROLE = "Software Developer"
 
 GENERIC_PATTERNS = [
-    "software engineer", "software developer", "software specialist",
+    "software engineer", "software develop", "software specialist",
     "yazılım", "bilgisayar mühendis", "computer engineer", "programcı",
     "developer", "geliştirici"
 ]
