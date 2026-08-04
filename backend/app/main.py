@@ -28,6 +28,7 @@ origins = [
     "http://localhost",
     "http://127.0.0.1",
     "http://127.0.0.1:3000",
+    "https://main.d1nc4zzbkovnjv.amplifyapp.com",
 ]
 
 app.add_middleware(
