@@ -68,7 +68,7 @@ export default function AnalyseCvPage() {
         session.setGaps(gaps);
         setStep(3);
 
-        const reportRes = await fetch(`${API_URL}/recommendations`, {
+        const reportRes = await fetch(`${API_URL}/recommendations?language=${language}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(gaps),
