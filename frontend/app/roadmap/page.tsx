@@ -7,6 +7,7 @@ import AppShell from "@/components/AppShell";
 import { session } from "@/lib/session";
 import type { Report } from "@/lib/types";
 import { getDisplaySkillName } from "@/lib/escoMapper";
+import { getCategoryLabel } from "@/lib/skillCategories";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
 
@@ -142,7 +143,7 @@ export default function RoadmapPage() {
               >
                 <div className="bg-(--card-bg) rounded-[20px] shadow-[4px_4px_4px_rgba(0,0,0,0.2)] p-6 flex flex-col gap-5">
                   <div className="text-xs font-light text-(--text-muted)">
-                    {skill.esco_category}
+                    {getCategoryLabel(skill.esco_category, language)}
                   </div>
 
                   <p className="text-2xl font-black text-(--text-primary)">

@@ -11,6 +11,7 @@ import { API_URL } from "@/lib/api";
 import { session } from "@/lib/session";
 import type { Gap, GapResult, Trend, TrendsPayload } from "@/lib/types";
 import { getDisplaySkillName } from "@/lib/escoMapper";
+import { getCategoryLabel } from "@/lib/skillCategories";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
 
@@ -630,7 +631,7 @@ export default function DashboardPage() {
                   </p>
 
                   <p className="text-base font-black text-[var(--text-primary)]">
-                    {selected?.category ?? "—"}
+                    {selected ? getCategoryLabel(selected.category, language) : "—"}
                   </p>
                 </div>
               </div>
