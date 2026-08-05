@@ -7,7 +7,8 @@ from fastapi.concurrency import run_in_threadpool
 from agent import get_recommendations
 from handlecv import compute_gaps
 from normalize import normalize
-from models import GapResult, GapRequest
+from models import GapResult, GapRequest, NormalizedSkill
+from skills import PATTERNS, SKILL_CATEGORIES
 
 from fastapi import FastAPI, HTTPException, Query, UploadFile, status
 from fastapi.params import File
@@ -83,6 +84,13 @@ async def upload_cv(file: UploadFile = File(...)):
     lines = await run_in_threadpool(extract_cv_text, "calibrate-teamthrow", f"uploads/{safe_name}")
     candidates = extract_skill_candidates(lines)
     skills = normalize(candidates = candidates)
+    skills_set = set(skill.skill for skill in skills)
+    joined_lines = "\n".join(lines)
+
+    for term, pattern in PATTERNS.items():
+        if pattern.search(joined_lines) and term not in skills_set:
+            skills.append(NormalizedSkill(skill=term, esco_category=SKILL_CATEGORIES[term]))
+
     
     return {"filename": safe_name, "skills": skills}
 

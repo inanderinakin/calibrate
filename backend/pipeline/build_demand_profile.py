@@ -3,7 +3,7 @@ import jsonlines as jl
 from pathlib import Path
 from scraper.roles import map_to_role, DEFAULT_ROLE, GENERIC_ROLE, ROLE_PATTERNS
 from models import DemandedSkill
-from build_trends import PATTERNS
+from skills import PATTERNS, SKILL_CATEGORIES
 from collections import Counter, defaultdict
 
 demand_profile_path = Path(__file__).parent.parent / "app" / "demand_profile.json"
@@ -13,69 +13,6 @@ unclassified_role = DEFAULT_ROLE
 known_roles = set(ROLE_PATTERNS) | {GENERIC_ROLE, DEFAULT_ROLE}
 demand_floor = 0.10
 max_skills_per_role = 10
-
-
-SKILL_CATEGORIES = {
-    "Python": "computer programming",
-    "Java": "computer programming",
-    "JavaScript": "computer programming",
-    "TypeScript": "computer programming",
-    "C#": "computer programming",
-    "C++": "computer programming",
-    "Golang": "computer programming",
-    "Rust": "computer programming",
-    "PHP": "computer programming",
-    "Ruby": "computer programming",
-    "Kotlin": "computer programming",
-    "Swift": "computer programming",
-    "Scala": "computer programming",
-    "React": "software and applications development and analysis",
-    "React Native": "software and applications development and analysis",
-    "Angular": "software and applications development and analysis",
-    "Vue": "software and applications development and analysis",
-    "Next.js": "software and applications development and analysis",
-    ".NET": "software and applications development and analysis",
-    "Spring": "software and applications development and analysis",
-    "Django": "software and applications development and analysis",
-    "Flask": "software and applications development and analysis",
-    "FastAPI": "software and applications development and analysis",
-    "Node.js": "software and applications development and analysis",
-    "Laravel": "software and applications development and analysis",
-    "Android": "software and applications development and analysis",
-    "iOS": "software and applications development and analysis",
-    "Flutter": "software and applications development and analysis",
-    "SQL": "query languages",
-    "PostgreSQL": "database management systems",
-    "MySQL": "database management systems",
-    "MongoDB": "database management systems",
-    "Redis": "database management systems",
-    "Elasticsearch": "database management systems",
-    "Kafka": "data processing",
-    "Spark": "data processing",
-    "Pandas": "data processing",
-    "TensorFlow": "machine learning",
-    "PyTorch": "machine learning",
-    "scikit-learn": "machine learning",
-    "LLM": "machine learning",
-    "NLP": "machine learning",
-    "AWS": "cloud services",
-    "Azure": "cloud services",
-    "GCP": "cloud services",
-    "Docker": "containerization",
-    "Kubernetes": "containerization",
-    "Terraform": "infrastructure automation",
-    "Ansible": "infrastructure automation",
-    "Jenkins": "continuous integration",
-    "CI/CD": "continuous integration",
-    "Git": "version control",
-    "Linux": "operating systems",
-    "Grafana": "monitoring",
-    "Prometheus": "monitoring",
-    "Selenium": "software testing",
-    "Cypress": "software testing",
-    "JUnit": "software testing",
-    "Postman": "software testing",
-}
 
 def resolve_role(obj):
     stored = obj.get("role")
