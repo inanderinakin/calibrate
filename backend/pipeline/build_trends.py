@@ -2,10 +2,9 @@ import collections
 import datetime
 import json
 import math
-import re
 from pathlib import Path
-
 import jsonlines as jl
+from skills import PATTERNS, TERMS
 
 trends_path = Path(__file__).parent.parent / "app" / "trends.json"
 postings_path = Path(__file__).parent.parent / "scraper" / "postings.jsonl"
@@ -19,81 +18,6 @@ min_cell_postings = 100
 min_term_occurrences = 10
 min_week_postings = 30
 first_series_week = "2026-06-01"
-
-TERMS = {
-    "Python": ["python"],
-    "Java": ["java"],
-    "JavaScript": ["javascript"],
-    "TypeScript": ["typescript"],
-    "C#": ["c#", "csharp", "c sharp"],
-    "C++": ["c++", "cpp"],
-    "Golang": ["golang"],
-    "Rust": ["rust"],
-    "PHP": ["php"],
-    "Ruby": ["ruby"],
-    "Kotlin": ["kotlin"],
-    "Swift": ["swift"],
-    "Scala": ["scala"],
-    "React": ["react", "reactjs", "react.js"],
-    "React Native": ["react native", "react-native"],
-    "Angular": ["angular"],
-    "Vue": ["vue", "vuejs", "vue.js"],
-    "Next.js": ["next.js", "nextjs"],
-    ".NET": [".net", "dotnet"],
-    "Spring": ["spring boot", "spring"],
-    "Django": ["django"],
-    "Flask": ["flask"],
-    "FastAPI": ["fastapi"],
-    "Node.js": ["node.js", "nodejs", "node js"],
-    "Laravel": ["laravel"],
-    "SQL": ["sql"],
-    "PostgreSQL": ["postgresql", "postgres"],
-    "MySQL": ["mysql"],
-    "MongoDB": ["mongodb", "mongo"],
-    "Redis": ["redis"],
-    "Elasticsearch": ["elasticsearch", "elastic search"],
-    "Kafka": ["kafka"],
-    "Spark": ["spark"],
-    "TensorFlow": ["tensorflow"],
-    "PyTorch": ["pytorch"],
-    "scikit-learn": ["scikit-learn", "sklearn"],
-    "Pandas": ["pandas"],
-    "LLM": ["llm", "large language model"],
-    "NLP": ["nlp", "natural language processing"],
-    "AWS": ["aws", "amazon web services"],
-    "Azure": ["azure"],
-    "GCP": ["gcp", "google cloud"],
-    "Docker": ["docker"],
-    "Kubernetes": ["kubernetes", "k8s"],
-    "Terraform": ["terraform"],
-    "Jenkins": ["jenkins"],
-    "Ansible": ["ansible"],
-    "CI/CD": ["ci/cd", "cicd"],
-    "Git": ["git"],
-    "Linux": ["linux"],
-    "Grafana": ["grafana"],
-    "Prometheus": ["prometheus"],
-    "Android": ["android"],
-    "iOS": ["ios"],
-    "Flutter": ["flutter"],
-    "Selenium": ["selenium"],
-    "Cypress": ["cypress"],
-    "JUnit": ["junit"],
-    "Postman": ["postman"],
-}
-
-
-def build_pattern(aliases):
-    parts = []
-    for alias in aliases:
-        prefix = r"(?<![A-Za-z0-9_])" if alias[0].isalnum() else ""
-        suffix = r"(?![A-Za-z0-9_])" if alias[-1].isalnum() else ""
-        parts.append(prefix + re.escape(alias) + suffix)
-    return re.compile("|".join(parts), re.IGNORECASE)
-
-
-PATTERNS = {term: build_pattern(aliases) for term, aliases in TERMS.items()}
-
 
 def posted_date(obj):
     value = str(obj["date_posted"])
