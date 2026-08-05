@@ -9,12 +9,15 @@ import TrendingSkillsChart from "@/components/TrendingSkillsChart";
 import { useAuth } from "@/contexts/AuthContext";
 import { API_URL } from "@/lib/api";
 import { session } from "@/lib/session";
-import type { GapResult, TrendsPayload } from "@/lib/types";
+import type { Gap, GapResult, TrendsPayload } from "@/lib/types";
 import { getDisplaySkillName } from "@/lib/escoMapper";
 
 type Skill = {
   name: string;
-  missing: number;
+  demand: number;
+  category: string;
+  trend: string;
+  closestCvSkill: string | null;
   icon: string;
 };
 
@@ -84,18 +87,6 @@ const skillIcons: Record<string, string> = {
 
 function getSkillIcon(skill: string) {
   return skillIcons[skill] ?? "mdi:code-tags";
-}
-
-function getRoadmapData(selected: Skill | null) {
-  if (selected && selected.missing >= 70) {
-    return { difficulty: "Advanced", modules: 20, projects: 5, duration: "6–8 weeks" };
-  }
-
-  if (!selected || selected.missing >= 50) {
-    return { difficulty: "Intermediate", modules: 18, projects: 4, duration: "4–6 weeks" };
-  }
-
-  return { difficulty: "Beginner", modules: 12, projects: 3, duration: "3–4 weeks" };
 }
 
 export default function DashboardPage() {
@@ -180,28 +171,34 @@ export default function DashboardPage() {
 
   /* ---------------- MISSING SKILLS ---------------- */
 
-  const demandBySkill = new Map<string, number>();
+  const gapBySkill = new Map<string, Gap>();
 
   for (const role of roles) {
     for (const gap of gaps.gaps[role] ?? []) {
-      const percent = Math.round(gap.demand_percentage * 100);
+      const seen = gapBySkill.get(gap.skill);
 
-      demandBySkill.set(
-        gap.skill,
-        Math.max(demandBySkill.get(gap.skill) ?? 0, percent)
-      );
+      if (!seen || gap.demand_percentage > seen.demand_percentage) {
+        gapBySkill.set(gap.skill, gap);
+      }
     }
   }
 
-  const missingSkills: Skill[] = [...demandBySkill.entries()]
-    .sort((a, b) => b[1] - a[1])
+  const missingSkills: Skill[] = [...gapBySkill.values()]
+    .sort((a, b) => b.demand_percentage - a.demand_percentage)
     .slice(0, 5)
-    .map(([escoSkill, missing]) => {
-      const name = getDisplaySkillName(escoSkill);
-      return { name, missing, icon: getSkillIcon(name) };
+    .map((gap) => {
+      const name = getDisplaySkillName(gap.skill);
+      return {
+        name,
+        demand: Math.round(gap.demand_percentage * 100),
+        category: gap.esco_category,
+        trend: gap.trend,
+        closestCvSkill: gap.closest_cv_skill,
+        icon: getSkillIcon(name),
+      };
     });
 
-  const missingSkillNames = [...demandBySkill.keys()].map(getDisplaySkillName);
+  const missingSkillNames = [...gapBySkill.keys()].map(getDisplaySkillName);
 
   const selected =
     missingSkills.find((skill) => skill.name === selectedSkill) ??
@@ -212,10 +209,6 @@ export default function DashboardPage() {
 
   const selectedRoleData =
     roles.length === 1 ? gaps.matched_data[roles[0]] : null;
-
-  /* ---------------- ROADMAP DATA ---------------- */
-
-  const roadmapData = getRoadmapData(selected);
 
   /* ---------------- UI ---------------- */
 
@@ -390,7 +383,7 @@ export default function DashboardPage() {
                           <div
                             className="h-full rounded-full bg-[var(--accent-2)]"
                             style={{
-                              width: `${skill.missing}%`,
+                              width: `${skill.demand}%`,
                             }}
                           />
                         </div>
@@ -398,11 +391,11 @@ export default function DashboardPage() {
 
                       <div className="text-right">
                         <span className="text-xl font-black text-[var(--text-primary)]">
-                          {skill.missing}%
+                          {skill.demand}%
                         </span>
 
                         <p className="text-xs text-[var(--text-muted)]">
-                          Missing
+                          of postings
                         </p>
                       </div>
                     </button>
@@ -480,11 +473,11 @@ export default function DashboardPage() {
                         </h3>
 
                         <p className="text-sm text-[var(--text-muted)]">
-                          Missing Level
+                          Market demand
                         </p>
 
                         <p className="text-base font-black text-[var(--accent-2)]">
-                          {skill.missing}%
+                          {skill.demand}%
                         </p>
                       </div>
                     </div>
@@ -493,7 +486,7 @@ export default function DashboardPage() {
                       <div
                         className="h-full rounded-full bg-[var(--accent-2)]"
                         style={{
-                          width: `${skill.missing}%`,
+                          width: `${skill.demand}%`,
                         }}
                       />
                     </div>
@@ -595,11 +588,11 @@ export default function DashboardPage() {
 
                 <div>
                   <p className="text-sm text-[var(--text-muted)]">
-                    Difficulty
+                    Market demand
                   </p>
 
                   <p className="text-base font-black text-[var(--text-primary)]">
-                    {roadmapData.difficulty}
+                    {selected ? `${selected.demand}% of postings` : "—"}
                   </p>
                 </div>
               </div>
@@ -608,18 +601,18 @@ export default function DashboardPage() {
               <div className="flex items-center gap-4 px-4 py-2 md:px-6">
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#f0f0f0]">
                   <Icon
-                    icon="mdi:book-open-outline"
+                    icon="mdi:trending-up"
                     className="h-7 w-7 text-[var(--accent-2)]"
                   />
                 </div>
 
                 <div>
                   <p className="text-sm text-[var(--text-muted)]">
-                    Modules
+                    Trend
                   </p>
 
                   <p className="text-base font-black text-[var(--text-primary)]">
-                    {roadmapData.modules}
+                    {selected?.trend ?? "—"}
                   </p>
                 </div>
               </div>
@@ -628,18 +621,18 @@ export default function DashboardPage() {
               <div className="flex items-center gap-4 px-4 py-2 md:px-6">
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#f0f0f0]">
                   <Icon
-                    icon="mdi:laptop"
+                    icon="mdi:tag-outline"
                     className="h-7 w-7 text-[var(--accent-2)]"
                   />
                 </div>
 
                 <div>
                   <p className="text-sm text-[var(--text-muted)]">
-                    Projects
+                    Category
                   </p>
 
                   <p className="text-base font-black text-[var(--text-primary)]">
-                    {roadmapData.projects}
+                    {selected?.category ?? "—"}
                   </p>
                 </div>
               </div>
@@ -648,18 +641,18 @@ export default function DashboardPage() {
               <div className="flex items-center gap-4 px-4 py-2 md:px-6">
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#f0f0f0]">
                   <Icon
-                    icon="mdi:clock-outline"
+                    icon="mdi:file-account-outline"
                     className="h-7 w-7 text-[var(--accent-2)]"
                   />
                 </div>
 
                 <div>
                   <p className="text-sm text-[var(--text-muted)]">
-                    Estimated duration
+                    Closest skill on your CV
                   </p>
 
                   <p className="text-base font-black text-[var(--text-primary)]">
-                    {roadmapData.duration}
+                    {selected?.closestCvSkill ?? "None found"}
                   </p>
                 </div>
               </div>
