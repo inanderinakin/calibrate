@@ -35,14 +35,20 @@ def get_learning_resources(skill: str):
 
     return output
 
-def get_recommendations(gaps: GapResult):
+LANGUAGE_NAMES = {"tr": "Turkish", "en": "English"}
+
+def get_recommendations(gaps: GapResult, language: str = "en"):
+    language_name = LANGUAGE_NAMES.get(language, LANGUAGE_NAMES["en"])
+
     # callback handler none is to block the agent code to print the message to console.
     agent = Agent(model="global.anthropic.claude-sonnet-4-6", tools=[get_role_demand, get_learning_resources], callback_handler = None, structured_output_model = Report,
                 system_prompt = ("Only use data returned by the tools. Never invent demand figures or resources."
                                 "For each gap, get it's role demand to get its market frequency and trend, Get the learning resources for that skill, then produce a ranked list (most in-demand gaps first) of explainable recommendations."
                                 "Every recommendation must state its market-frequency reason ('X appears in 38 percent of postings…')."
                                 "Never show raw numeric scores to the user."
-                                "Rank strictly by market demand percentage, highest first"
+                                "Rank strictly by market demand percentage, highest first."
+                                f"Write the summary and every recommendation's reason in {language_name}. "
+                                "Keep skill names, resource titles, and resource URLs exactly as returned by the tools — do not translate those."
                                 ))
 
     result = agent(gaps.model_dump_json() + "Here are the student's skill gaps. For each one, produce a recommendation.")

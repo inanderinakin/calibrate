@@ -1,10 +1,18 @@
-const STEPS = [
-  { n: 1, label: "Upload CV" },
-  { n: 2, label: "Select Role" },
-  { n: 3, label: "Analyze" },
-];
+"use client";
+
+import { useLanguage } from "@/contexts/LanguageContext";
+import { getTranslations } from "@/lib/translations";
 
 export default function StepIndicator({ activeStep }: { activeStep: 1 | 2 | 3 }) {
+  const { language } = useLanguage();
+  const t = getTranslations(language);
+
+  const STEPS = [
+    { n: 1, label: t.stepIndicator.uploadCv },
+    { n: 2, label: t.stepIndicator.selectRole },
+    { n: 3, label: t.stepIndicator.analyze },
+  ];
+
   return (
     <div className="flex items-center justify-center gap-4 md:gap-10">
       {STEPS.map((step, i) => {

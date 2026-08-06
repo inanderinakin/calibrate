@@ -4,32 +4,19 @@ import Link from "next/link";
 import Image from "next/image";
 import { Icon } from "@iconify/react";
 import { useEffect, useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { getTranslations, type Translations } from "@/lib/translations";
 
-const FEATURES = [
-  {
-    title: "AI-Powered Analysis",
-    description:
-      "Advanced AI analyses your CV and highlights your strengths.",
-    icon: "solar:graph-new-up-linear",
-  },
-  {
-    title: "Personalised Guidance",
-    description: "Get tailored recommendations that match your goals.",
-    icon: "solar:map-arrow-up-linear",
-  },
-  {
-    title: "Skill Insights",
-    description: "Discover your top skills and areas for growth.",
-    icon: "solar:chart-2-linear",
-  },
-  {
-    title: "Career Pathways",
-    description: "Explore the best career paths for your profile.",
-    icon: "solar:route-linear",
-  },
+// Order matches t.landing.features in translations.ts — icons aren't
+// translatable text, so they're kept out of the language-keyed dictionary.
+const FEATURE_ICONS = [
+  "solar:graph-new-up-linear",
+  "solar:map-arrow-up-linear",
+  "solar:chart-2-linear",
+  "solar:route-linear",
 ];
 
-function IntroPage({ onContinue }: { onContinue: () => void }) {
+function IntroPage({ onContinue, t }: { onContinue: () => void; t: Translations }) {
   return (
     <main className="landing-texture min-h-screen flex items-center justify-center px-6">
       <div className="flex flex-col items-center gap-[145px] text-center">
@@ -39,7 +26,7 @@ function IntroPage({ onContinue }: { onContinue: () => void }) {
           </h1>
 
           <p className="font-black text-[var(--landing-accent)] text-2xl sm:text-3xl md:text-5xl">
-            Your AI-Powered CV analyser
+            {t.landing.tagline}
           </p>
         </div>
 
@@ -49,21 +36,21 @@ function IntroPage({ onContinue }: { onContinue: () => void }) {
             onClick={onContinue}
             className="w-full bg-[var(--landing-accent)] text-[var(--on-accent)] rounded-[32px] px-9 py-3 font-black text-2xl md:text-3xl flex items-center justify-center gap-4"
           >
-            Start Now
+            {t.landing.startNow}
             <Icon
               icon="mdi-light:arrow-up"
               className="w-7 h-7 rotate-90"
             />
           </button>
 
-          
+
         </div>
       </div>
     </main>
   );
 }
 
-function MainLandingPage() {
+function MainLandingPage({ t }: { t: Translations }) {
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
@@ -105,19 +92,19 @@ function MainLandingPage() {
               href="/login"
               className="rounded-lg bg-[var(--accent-bg)] text-[var(--accent-text)] px-4 py-1.5 text-[10px] font-medium leading-none sm:px-5 sm:py-2 sm:text-[11px]"
             >
-              Login
+              {t.landing.login}
             </Link>
 
             <Link
               href="/signup"
               className="rounded-lg border border-[var(--landing-accent)] bg-transparent px-4 py-1.5 text-[10px] font-medium leading-none text-[var(--landing-accent)] sm:px-5 sm:py-2 sm:text-[11px]"
             >
-              Sign in
+              {t.landing.signIn}
             </Link>
 
             <button
               type="button"
-              aria-label="Open menu"
+              aria-label={t.landing.openMenu}
               className="ml-0.5 flex h-7 w-7 items-center justify-center text-[var(--landing-accent)] sm:h-8 sm:w-8"
             >
               <Icon
@@ -135,18 +122,17 @@ function MainLandingPage() {
           {/* LEFT SIDE */}
           <div className="max-w-[310px]">
             <h1 className="text-[32px] font-black leading-[0.98] tracking-[-0.045em] text-[var(--landing-accent)] sm:text-[39px]">
-              Your <span className="text-[var(--accent-2)]">CV.</span>
+              {t.landing.heroLine1} <span className="text-[var(--accent-2)]">{t.landing.heroWordCv}</span>
               <br />
-              Our <span className="text-[var(--accent-2)]">AI.</span>
+              {t.landing.heroLine2} <span className="text-[var(--accent-2)]">{t.landing.heroWordAi}</span>
               <br />
               <span className="text-[var(--accent-2)]">
-                Perfect Match.
+                {t.landing.heroWordMatch}
               </span>
             </h1>
 
             <p className="mt-4 max-w-[230px] text-[11px] font-bold leading-[1.35] text-[var(--landing-accent)] sm:text-[12px]">
-              Upload your CV, discover skill gaps, get personalized learning
-              roadmaps.
+              {t.landing.heroSubtitle}
             </p>
 
           
@@ -156,7 +142,7 @@ function MainLandingPage() {
           <div className="w-full flex items-start justify-center">
             <Image
               src={workflowImage}
-              alt="Calibrate career workflow"
+              alt={t.landing.workflowImageAlt}
               width={1000}
               height={400}
               priority
@@ -167,13 +153,13 @@ function MainLandingPage() {
 
         {/* FEATURE CARDS */}
         <section className="mt-9 grid grid-cols-1 gap-1.5 sm:grid-cols-2 sm:gap-2 lg:mt-10">
-          {FEATURES.map((feature) => (
+          {t.landing.features.map((feature, i) => (
             <article
               key={feature.title}
               className="flex min-h-[54px] items-center gap-3 rounded-[5px] border border-[var(--landing-accent)] bg-[var(--card-bg)]/35 px-3 py-2 sm:min-h-[62px] sm:gap-4 sm:px-4"
             >
               <Icon
-                icon={feature.icon}
+                icon={FEATURE_ICONS[i]}
                 width={28}
                 height={28}
                 className="shrink-0 text-[var(--landing-accent)] sm:h-8 sm:w-8"
@@ -195,7 +181,7 @@ function MainLandingPage() {
         {/* FOOTER */}
         <footer className="flex flex-col items-center justify-center pt-8 pb-3 sm:pt-10">
           <p className="text-[5px] font-black tracking-wide text-[var(--landing-accent)] sm:text-[6px]">
-            TRUSTED BY PROFESSIONALS
+            {t.landing.trustedBy}
           </p>
 
           <div className="mt-0.5 flex items-center gap-1 text-[var(--landing-accent)]">
@@ -217,14 +203,17 @@ function MainLandingPage() {
 
 export default function LandingPage() {
   const [showIntro, setShowIntro] = useState(true);
+  const { language } = useLanguage();
+  const t = getTranslations(language);
 
   if (showIntro) {
     return (
       <IntroPage
         onContinue={() => setShowIntro(false)}
+        t={t}
       />
     );
   }
 
-  return <MainLandingPage />;
+  return <MainLandingPage t={t} />;
 }

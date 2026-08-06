@@ -1,0 +1,22 @@
+export const sidebar = {
+  en: {
+    cvAnalysis: "CV Analysis",
+    uploadCv: "Upload CV",
+    selectRole: "Select Role",
+    analyseCv: "Analyse CV",
+    dashboard: "Dashboard",
+    roadMap: "Road Map",
+    settings: "Settings",
+    noFieldSet: "No field set",
+  },
+  tr: {
+    cvAnalysis: "CV Analizi",
+    uploadCv: "CV Yükle",
+    selectRole: "Rol Seç",
+    analyseCv: "CV'yi Analiz Et",
+    dashboard: "Panel",
+    roadMap: "Yol Haritası",
+    settings: "Ayarlar",
+    noFieldSet: "Alan belirtilmedi",
+  },
+};

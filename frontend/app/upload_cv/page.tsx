@@ -8,9 +8,13 @@ import StepIndicator from "@/components/StepIndicator";
 import { API_URL, errorMessage } from "@/lib/api";
 import { session } from "@/lib/session";
 import type { NormalizedSkill } from "@/lib/types";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { getTranslations } from "@/lib/translations";
 
 export default function UploadCvPage() {
   const router = useRouter();
+  const { language } = useLanguage();
+  const t = getTranslations(language);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -43,7 +47,7 @@ export default function UploadCvPage() {
       const res = await fetch(`${API_URL}/upload_cv`, { method: "POST", body });
 
       if (!res.ok) {
-        throw new Error(await errorMessage(res, "Upload failed"));
+        throw new Error(await errorMessage(res, t.uploadCv.uploadFailed));
       }
 
       const data = await res.json();
@@ -51,15 +55,15 @@ export default function UploadCvPage() {
 
       const skills: NormalizedSkill[] = data.skills ?? [];
       if (skills.length === 0) {
-        throw new Error("We couldn't read any skills from that CV. Try another file.");
+        throw new Error(t.uploadCv.noSkillsFound);
       }
 
       session.setCvSkills(skills);
       router.push("/select_role");
-    } 
+    }
     catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong. Please try again.");
-    } 
+      setError(e instanceof Error ? e.message : t.uploadCv.genericError);
+    }
     finally {
       setIsUploading(false);
     }
@@ -71,7 +75,7 @@ export default function UploadCvPage() {
         <StepIndicator activeStep={1} />
 
         <h1 className="text-3xl md:text-5xl font-bold text-(--text-primary)">
-          Upload Your CV
+          {t.uploadCv.title}
         </h1>
 
         <div
@@ -81,10 +85,10 @@ export default function UploadCvPage() {
           className="w-full border-2 border-dashed border-(--pink) rounded-[20px] py-16 flex flex-col items-center gap-4 cursor-pointer bg-(--card-bg)">
           <Icon icon="mdi:file-pdf-box" className="w-20 h-20 text-(--accent-bg)" />
           <p className="font-black text-xl text-(--accent-bg)">
-            Drag &amp; drop your CV here
+            {t.uploadCv.dragDrop}
           </p>
           <p className="font-semibold text-(--accent-bg)">
-            PDF up to 10MB
+            {t.uploadCv.pdfUpTo}
           </p>
           <input
             ref={fileInputRef}
@@ -110,7 +114,7 @@ export default function UploadCvPage() {
             {isUploading && (
               <>
                 <p className="font-light text-(--text-primary)">
-                  Reading your CV — this takes a few seconds …
+                  {t.uploadCv.reading}
                 </p>
                 {/* Indeterminate: fetch cannot report upload progress, so this
                     animates rather than pretending to know a percentage. */}
@@ -130,13 +134,13 @@ export default function UploadCvPage() {
 
         <button type="button" disabled={!file || isUploading} onClick={handleContinue}
           className="bg-(--accent) text-(--on-accent) rounded-[20px] px-10 py-3.5 font-black text-xl flex items-center gap-3 disabled:opacity-40 disabled:cursor-not-allowed">
-          {isUploading ? "Analysing …" : "Continue"}
+          {isUploading ? t.uploadCv.analysing : t.uploadCv.continue}
           <Icon icon="mdi-light:arrow-up" className="w-6 h-6 rotate-90" />
         </button>
 
         <div className="flex items-center gap-2 text-(--text-primary)">
           <Icon icon="gala:secure" className="w-6 h-6" />
-          <span className="font-black">Your data is secure and private</span>
+          <span className="font-black">{t.common.secureData}</span>
         </div>
       </div>
     </AppShell>

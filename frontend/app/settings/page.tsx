@@ -1,86 +1,26 @@
 "use client";
 
-import { useEffect, useState, FormEvent } from "react";
+import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@iconify/react";
 import AppShell from "@/components/AppShell";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
-
-type Language = "en" | "tr";
-
-const translations = {
-  en: {
-    settings: "Settings",
-    subtitle: "Manage your preferences and account settings",
-
-    profileInformation: "Profile Information",
-    firstName: "First Name",
-    lastName: "Last Name",
-    email: "E-mail",
-    saveChanges: "Save Changes",
-
-    languageAppearance: "Language & Appearance",
-    language: "Language",
-    appearance: "Appearance",
-
-    english: "English",
-    turkish: "Turkish",
-
-    lightMode: "Light Mode",
-    darkMode: "Dark Mode",
-
-    logout: "Logout",
-  },
-
-  tr: {
-    settings: "Ayarlar",
-    subtitle: "Tercihlerinizi ve hesap ayarlarınızı yönetin",
-
-    profileInformation: "Profil Bilgileri",
-    firstName: "Ad",
-    lastName: "Soyad",
-    email: "E-posta",
-    saveChanges: "Değişiklikleri Kaydet",
-
-    languageAppearance: "Dil ve Görünüm",
-    language: "Dil",
-    appearance: "Görünüm",
-
-    english: "İngilizce",
-    turkish: "Türkçe",
-
-    lightMode: "Açık Mod",
-    darkMode: "Koyu Mod",
-
-    logout: "Çıkış Yap",
-  },
-};
+import { useLanguage, type Language } from "@/contexts/LanguageContext";
+import { getTranslations } from "@/lib/translations";
 
 export default function SettingsPage() {
   const router = useRouter();
 
   const { user, updateUser, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { language, setLanguage } = useLanguage();
 
   const [firstName, setFirstName] = useState(user?.firstName ?? "");
   const [lastName, setLastName] = useState(user?.lastName ?? "");
   const [email, setEmail] = useState(user?.email ?? "");
 
-  const [language, setLanguage] = useState<Language>("en");
-
-  /*
-   * Load the saved language.
-   */
-  useEffect(() => {
-    const savedLanguage = localStorage.getItem("language");
-
-    if (savedLanguage === "en" || savedLanguage === "tr") {
-      setLanguage(savedLanguage);
-    }
-  }, []);
-
-  const t = translations[language];
+  const t = getTranslations(language).settings;
 
   function handleSave(e: FormEvent) {
     e.preventDefault();
@@ -95,15 +35,7 @@ export default function SettingsPage() {
   function handleLanguageChange(
     e: React.ChangeEvent<HTMLSelectElement>
   ) {
-    const newLanguage = e.target.value as Language;
-
-    setLanguage(newLanguage);
-    localStorage.setItem("language", newLanguage);
-
-    /*
-     * Notify other components/pages that the language changed.
-     */
-    window.dispatchEvent(new Event("languagechange"));
+    setLanguage(e.target.value as Language);
   }
 
   function handleLogout() {
