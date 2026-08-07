@@ -3,10 +3,10 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --burgundy: #5b0f18;   /* sidebar + primary accent, light mode */
-  --win: #7a1f2b;        /* secondary accent, light mode (progress bars, "MATCH") */
+  --burgundy: #001D39;   /* sidebar + primary accent, light mode */
+  --win: #0A4174;        /* secondary accent, light mode (progress bars, "MATCH") */
   --creamy: #f8f1e7;     /* text-on-dark / text-on-burgundy, both modes */
-  --pink: #d8a7a7;       /* active nav item highlight, light mode */
+  --pink: #789ACA;       /* active nav item highlight, light mode */
   --dark-blue: #1b314c;  /* primary accent, dark mode */
   --bg-blue: #3c5e82;    /* card + sidebar surface, dark mode */
   --light-blue: #789aca; /* secondary accent, dark mode */
@@ -15,7 +15,7 @@
   --card-bg: rgba(255, 255, 255, 0.91);
   --sidebar-bg: var(--burgundy);
   --border-color: var(--burgundy);
-  --hover-bg: rgba(91, 15, 24, 0.06);
+  --hover-bg: rgba(0, 29, 57, 0.06);
   --input-bg: #ffffff;
 
   --text-primary: #000000;
@@ -68,7 +68,7 @@
   --landing-accent: var(--light-blue);
 
   /* Own step, not a flip of the burgundy: clears 3:1 on the blue card surface */
-  --chart-line: #f09aa8;
+  --chart-line: #789ACA;
   --chart-grid: rgba(248, 241, 231, 0.16);
 }
 
@@ -103,4 +103,204 @@ body {
   padding: 0;
   margin: 0;
   background: var(--page-bg);
+}
+
+/*
+  GLASSMORPHISM — semi-transparent white background, backdrop blur,
+  subtle light border. Base `.glass` uses the exact requested fill;
+  `.glass-card` and `.glass-input` raise opacity just enough for
+  text-heavy surfaces to stay readable while keeping the same blur.
+*/
+.glass {
+  background: rgba(255, 255, 255, 0.15);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.5);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.glass-input {
+  background: rgba(255, 255, 255, 0.85);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  backdrop-filter: blur(12px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
+  -webkit-text-fill-color: var(--text-primary);
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+.dark .glass-card {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dark .glass {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.dark .glass-input {
+  background: var(--light-blue);
+}
+
+/* keep the fields white in light mode (not blue) when the browser autofills */
+input.glass-input:-webkit-autofill,
+input.glass-input:-webkit-autofill:hover,
+input.glass-input:-webkit-autofill:focus,
+input.glass-input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
+  -webkit-text-fill-color: var(--text-primary);
+  caret-color: var(--text-primary);
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+.dark input.glass-input:-webkit-autofill,
+.dark input.glass-input:-webkit-autofill:hover,
+.dark input.glass-input:-webkit-autofill:focus,
+.dark input.glass-input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px var(--light-blue) inset;
+  -webkit-text-fill-color: var(--creamy);
+  caret-color: var(--creamy);
+}
+
+/*
+  SOFT COLOURED BOXES — solid fill for the login / signup / profile
+  containers. Light mode uses a soft baby blue; dark mode uses a soft blue.
+*/
+:root {
+  --soft-box-bg: #789ACA;
+}
+
+.dark {
+  --soft-box-bg: var(--bg-blue);
+}
+
+.soft-box {
+  background: var(--soft-box-bg);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+.dark .soft-box {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+/*
+  HOVER ANIMATION FOR ALL BUTTONS — lifts + brightens on hover and
+  presses on active, in both light and dark mode. framer-motion buttons
+  keep their own inline whileHover transforms; plain buttons get this.
+  `.btn-hover` applies the same treatment to links styled as buttons.
+*/
+button:not(:disabled) {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    filter 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+button:not(:disabled):hover {
+  transform: translateY(-2px) skewX(-4deg);
+  filter: brightness(1.06);
+}
+
+button:not(:disabled):active {
+  transform: translateY(0) scale(0.96) skewX(0deg);
+}
+
+.btn-hover {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    filter 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.btn-hover:hover {
+  transform: translateY(-2px) skewX(-4deg);
+  filter: brightness(1.06);
+}
+
+.btn-hover:active {
+  transform: translateY(0) scale(0.96) skewX(0deg);
+}
+
+/*
+  LIGHTWEIGHT CSS ANIMATIONS used for micro-effects and ambient motion
+  alongside framer-motion. All disabled under prefers-reduced-motion.
+*/
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float-y {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+@keyframes glow-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease-out both;
+}
+
+.animate-float-y {
+  animation: float-y 6s ease-in-out infinite;
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-up,
+  .animate-float-y,
+  .animate-glow-pulse {
+    animation: none;
+  }
+
+  button:not(:disabled),
+  .btn-hover {
+    transition: none;
+  }
+
+  button:not(:disabled):hover,
+  .btn-hover:hover,
+  button:not(:disabled):active,
+  .btn-hover:active {
+    transform: none;
+  }
 }

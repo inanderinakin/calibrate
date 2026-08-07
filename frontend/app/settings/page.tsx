@@ -3,6 +3,7 @@
 import { useEffect, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@iconify/react";
+import { motion } from "framer-motion";
 import AppShell from "@/components/AppShell";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -116,9 +117,13 @@ export default function SettingsPage() {
   }
 
   return (
-    <AppShell>
-      <div className="p-6 md:p-10 lg:p-14 flex flex-col gap-6 max-w-4xl">
-        <header>
+    <AppShell backHref="/dashboard">
+      <div className="flex flex-col gap-6 max-w-4xl">
+        <motion.header
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
           <h1 className="text-3xl md:text-5xl font-bold text-[var(--text-primary)]">
             {t.settings}
           </h1>
@@ -126,11 +131,17 @@ export default function SettingsPage() {
           <p className="text-[var(--text-primary)] mt-2">
             {t.subtitle}
           </p>
-        </header>
+        </motion.header>
 
-        <form onSubmit={handleSave} className="flex flex-col gap-6">
+        <motion.form
+          onSubmit={handleSave}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="flex flex-col gap-6"
+        >
           {/* Profile information */}
-          <div className="bg-[var(--card-bg)] rounded-[30px] shadow-lg p-6 md:p-9 flex flex-col gap-6">
+          <div className="glass-card rounded-[30px] shadow-lg p-6 md:p-9 flex flex-col gap-6">
             <h2 className="text-2xl font-medium text-(--accent-bg)">
               {t.profileInformation}
             </h2>
@@ -144,7 +155,7 @@ export default function SettingsPage() {
                 <input
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="border-2 border-(--accent-bg) rounded-[20px] px-4 py-3 bg-transparent text-[var(--text-primary)]"
+                  className="glass-input border-2 border-(--accent-bg) rounded-[20px] px-4 py-3 text-[var(--text-primary)] outline-none"
                 />
               </label>
 
@@ -156,7 +167,7 @@ export default function SettingsPage() {
                 <input
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="border-2 border-(--accent-bg) rounded-[20px] px-4 py-3 bg-transparent text-[var(--text-primary)]"
+                  className="glass-input border-2 border-(--accent-bg) rounded-[20px] px-4 py-3 text-[var(--text-primary)] outline-none"
                 />
               </label>
             </div>
@@ -170,20 +181,22 @@ export default function SettingsPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="border-2 border-(--accent-bg) rounded-[20px] px-4 py-3 bg-transparent text-[var(--text-primary)]"
+                className="glass-input border-2 border-(--accent-bg) rounded-[20px] px-4 py-3 text-[var(--text-primary)] outline-none"
               />
             </label>
 
-            <button
+            <motion.button
               type="submit"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
               className="self-start bg-[var(--accent)] text-[var(--on-accent)] rounded-[20px] px-6 py-2.5 font-medium"
             >
               {t.saveChanges}
-            </button>
+            </motion.button>
           </div>
 
           {/* Language & Appearance */}
-          <div className="bg-[var(--card-bg)] rounded-[30px] shadow-lg p-6 md:p-9 flex flex-col gap-4">
+          <div className="glass-card rounded-[30px] shadow-lg p-6 md:p-9 flex flex-col gap-4">
             <h2 className="text-2xl font-medium text-(--accent-bg)">
               {t.languageAppearance}
             </h2>
@@ -199,7 +212,7 @@ export default function SettingsPage() {
                   <select
                     value={language}
                     onChange={handleLanguageChange}
-                    className="w-full bg-transparent outline-none cursor-pointer text-(--accent-bg)"
+                    className="w-full bg-transparent outline-none cursor-pointer text-(--accent-bg) appearance-none"
                   >
                     <option value="en">
                       {t.english}
@@ -242,12 +255,14 @@ export default function SettingsPage() {
               </div>
             </div>
           </div>
-        </form>
+        </motion.form>
 
         {/* Logout */}
-        <button
+        <motion.button
           type="button"
           onClick={handleLogout}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.97 }}
           className="self-end bg-[var(--accent)] text-[var(--on-accent)] rounded-[20px] px-8 py-2.5 font-medium flex items-center gap-2"
         >
           <Icon
@@ -256,7 +271,7 @@ export default function SettingsPage() {
           />
 
           {t.logout}
-        </button>
+        </motion.button>
       </div>
     </AppShell>
   );

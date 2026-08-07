@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
 import { Icon } from "@iconify/react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -19,6 +20,8 @@ const NAV_ITEMS = [
   { label: "Road Map", href: "/roadmap", icon: "solar:routing-2-linear" },
   { label: "Settings", href: "/settings", icon: "solar:settings-linear" },
 ];
+
+const MotionLink = motion.create(Link);
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -61,15 +64,17 @@ export default function Sidebar() {
             {CV_FLOW.map((item) => {
               const isActive = pathname === item.href;
               return (
-                <Link
+                <MotionLink
                   key={item.href}
                   href={item.href}
-                  className={`text-sm font-semibold py-1 ${
+                  whileHover={{ x: 3 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                  className={`text-sm font-semibold py-1 inline-block ${
                     isActive ? "text-[var(--nav-active)]" : "text-[var(--creamy)]/80 hover:text-[var(--nav-active)]"
                   }`}
                 >
                   {item.label}
-                </Link>
+                </MotionLink>
               );
             })}
           </div>
@@ -78,9 +83,12 @@ export default function Sidebar() {
           {NAV_ITEMS.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
             return (
-              <Link
+              <MotionLink
                 key={item.href}
                 href={item.href}
+                whileHover={{ scale: 1.03, x: 2 }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
                 className={`
                   flex items-center gap-3 rounded-lg px-3 py-2.5
                   justify-center md:justify-start
@@ -89,15 +97,18 @@ export default function Sidebar() {
               >
                 <Icon icon={item.icon} className="w-6 h-6 shrink-0" />
                 <span className="hidden md:inline text-lg font-black">{item.label}</span>
-              </Link>
+              </MotionLink>
             );
           })}
         </nav>
       </div>
 
       {/* Bottom: profile summary, driven entirely by AuthContext */}
-      <Link
+      <MotionLink
         href="/profile"
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        transition={{ type: "spring", stiffness: 400, damping: 25 }}
         className="
           flex items-center gap-3 px-3 py-4 mx-2 mb-2
           justify-center md:justify-start
@@ -110,7 +121,7 @@ export default function Sidebar() {
             {user?.studyField ?? "No field set"}
           </span>
         </div>
-      </Link>
+      </MotionLink>
     </aside>
   );
 }

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Icon } from "@iconify/react";
+import { motion } from "framer-motion";
 import AppShell from "@/components/AppShell";
 import StepIndicator from "@/components/StepIndicator";
 import { API_URL, errorMessage } from "@/lib/api";
@@ -33,6 +34,7 @@ export default function AnalyseCvPage() {
   const [error, setError] = useState<string | null>(null);
   const [cvUploaded, setCvUploaded] = useState<boolean | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     const cvSkills = session.getCvSkills();
@@ -111,14 +113,37 @@ export default function AnalyseCvPage() {
   }, [loaded, cvUploaded]);
 
   /*
+   * Drive the loading bar from 0% in 25% increments, mirroring the
+   * generation roadmap: 0 -> 25 -> 50 -> 75 -> 100. The bar is initialised
+   * to 0% when the page first appears, climbs to 50% via the two steps that
+   * are already satisfied, then +25% each time the analysis advances.
+   */
+  useEffect(() => {
+    if (!loaded || cvUploaded === null || !cvUploaded || error) return;
+
+    setProgress(0);
+
+    const timers = [
+      setTimeout(() => setProgress((current) => Math.max(current, 25)), 500),
+      setTimeout(() => setProgress((current) => Math.max(current, 50)), 1400),
+    ];
+
+    return () => timers.forEach(clearTimeout);
+  }, [loaded, cvUploaded, error]);
+
+  useEffect(() => {
+    if (step >= 3) setProgress((current) => Math.max(current, 75));
+  }, [step]);
+
+  useEffect(() => {
+    if (step >= CHECKLIST.length) setProgress(100);
+  }, [step]);
+
+  /*
    * Loading state while checking whether a CV exists.
    */
   if (!loaded || cvUploaded === null) {
-    return (
-      <AppShell>
-        <main className="page-texture min-h-screen px-6 py-10 md:px-10 lg:px-14" />
-      </AppShell>
-    );
+    return <AppShell backHref="/select_role" />;
   }
 
   /*
@@ -126,67 +151,77 @@ export default function AnalyseCvPage() {
    */
   if (!cvUploaded) {
     return (
-      <AppShell>
-        <main className="page-texture min-h-screen px-6 py-10 md:px-10 lg:px-14">
-          <div className="mx-auto flex max-w-3xl flex-col items-start gap-5 rounded-[30px] bg-[var(--card-bg)] p-8 shadow-lg">
-            <Icon
-              icon="mdi:file-search-outline"
-              className="h-14 w-14 text-[var(--accent-2)]"
-            />
+      <AppShell backHref="/select_role">
+        <div className="mx-auto flex max-w-3xl flex-col items-start gap-5 rounded-[30px] glass-card p-8 shadow-lg">
+          <Icon
+            icon="mdi:file-search-outline"
+            className="h-14 w-14 text-[var(--accent-2)]"
+          />
 
-            <h1 className="text-3xl font-black text-[var(--text-primary)] md:text-5xl">
-              Nothing to show yet
-            </h1>
+          <h1 className="text-3xl font-black text-[var(--text-primary)] md:text-5xl">
+            Nothing to show yet
+          </h1>
 
-            <p className="text-lg text-[var(--text-secondary)]">
-              Upload your CV and pick your target roles to see how you match
-              the market.
-            </p>
+          <p className="text-lg text-[var(--text-secondary)]">
+            Upload your CV and pick your target roles to see how you match
+            the market.
+          </p>
 
-            <Link
-              href="/upload_cv"
-              className="rounded-[20px] bg-[var(--accent)] px-8 py-3.5 text-lg font-bold text-[var(--on-accent)]"
-            >
-              Upload your CV
-            </Link>
-          </div>
-        </main>
+          <Link
+            href="/upload_cv"
+            className="btn-hover rounded-[20px] bg-[var(--accent)] px-8 py-3.5 text-lg font-bold text-[var(--on-accent)]"
+          >
+            Upload your CV
+          </Link>
+        </div>
       </AppShell>
     );
   }
 
   const done = step >= CHECKLIST.length;
-  const progress = Math.round((step / CHECKLIST.length) * 100);
 
   return (
-    <AppShell>
-      <div className="p-6 md:p-10 lg:p-14 flex flex-col items-center gap-8 max-w-4xl mx-auto text-center">
+    <AppShell backHref="/select_role">
+      <div className="flex flex-col items-center gap-8 max-w-4xl mx-auto text-center">
         <StepIndicator activeStep={3} />
 
-        <h1 className="text-3xl md:text-5xl font-bold text-(--accent-2)">
+        <motion.h1
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="text-3xl md:text-5xl font-bold text-(--accent-2)"
+        >
           {error
             ? "We hit a problem"
             : done
               ? "Analysis Complete !"
               : "Analyzing your CV ..."}
-        </h1>
+        </motion.h1>
 
-        <p className="text-(--text-primary) max-w-xl">
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.15 }}
+          className="text-(--text-primary) max-w-xl"
+        >
           {error
             ? "Your CV was uploaded, but we couldn't finish the analysis."
             : done
               ? "Your personalised insights are ready."
               : "Our AI is carefully analyzing your CV and preparing your personalised insights."}
-        </p>
+        </motion.p>
 
-        <div className="bg-(--card-bg) rounded-[23px] shadow-lg p-8 w-full flex flex-col gap-6 text-left">
+        <div className="glass-card rounded-[23px] shadow-lg p-8 w-full flex flex-col gap-6 text-left">
           {CHECKLIST.map((item, i) => {
             const isDone = i < step;
             const isActive = i === step && !error;
 
             return (
-              <div
+              <motion.div
                 key={item.title}
+                initial={{ opacity: 0, x: -16 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.08, duration: 0.4 }}
                 className="flex items-start gap-4"
               >
                 {isDone ? (
@@ -212,25 +247,32 @@ export default function AnalyseCvPage() {
                     {item.note}
                   </p>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>
 
         {error ? (
-          <p className="w-full rounded-[20px] border-2 border-(--accent-2) p-4 text-left font-semibold text-(--text-primary)">
+          <p className="glass-card w-full rounded-[20px] border-2 border-(--accent-2) p-4 text-left font-semibold text-(--text-primary)">
             {error}
           </p>
         ) : (
           <div className="w-full flex flex-col items-center gap-4">
-            <span className="text-4xl font-black text-(--accent-bg)">
-              {progress} %
-            </span>
+            <motion.span
+              key={progress}
+              initial={{ scale: 0.9, opacity: 0.5 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="text-4xl font-black text-(--accent-bg)"
+            >
+              {Math.round(progress)} %
+            </motion.span>
 
             <div className="w-full h-2.5 rounded-full bg-(--hover-bg) overflow-hidden">
-              <div
-                className="h-full rounded-full bg-(--accent) transition-all"
-                style={{ width: `${progress}%` }}
+              <motion.div
+                className="h-full rounded-full bg-(--accent)"
+                initial={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
               />
             </div>
 
@@ -246,7 +288,7 @@ export default function AnalyseCvPage() {
           {error ? (
             <Link
               href="/upload_cv"
-              className="bg-(--accent) text-(--on-accent) rounded-[20px] px-8 py-3.5 font-bold text-lg flex items-center gap-3"
+              className="btn-hover bg-(--accent) text-(--on-accent) rounded-[20px] px-8 py-3.5 font-bold text-lg flex items-center gap-3"
             >
               Start over
               <Icon
@@ -255,10 +297,12 @@ export default function AnalyseCvPage() {
               />
             </Link>
           ) : (
-            <button
+            <motion.button
               type="button"
               disabled={!done}
               onClick={() => router.push("/dashboard")}
+              whileHover={done ? { scale: 1.03 } : undefined}
+              whileTap={done ? { scale: 0.97 } : undefined}
               className="bg-(--accent) text-(--on-accent) rounded-[20px] px-8 py-3.5 font-bold text-lg flex items-center gap-3 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Continue to Dashboard
@@ -266,13 +310,13 @@ export default function AnalyseCvPage() {
                 icon="mdi-light:arrow-up"
                 className="w-6 h-6 rotate-90"
               />
-            </button>
+            </motion.button>
           )}
 
           {done && (
             <Link
               href="/profile"
-              className="border-2 border-(--accent-bg) text-(--accent-bg) rounded-[20px] px-8 py-3.5 font-bold text-lg flex items-center gap-3"
+              className="btn-hover border-2 border-(--accent-bg) text-(--accent-bg) rounded-[20px] px-8 py-3.5 font-bold text-lg flex items-center gap-3"
             >
               Check Profile Settings
               <Icon
