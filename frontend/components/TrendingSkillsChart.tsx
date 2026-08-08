@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { TrendsPayload } from "@/lib/types";
 
 const RANGES = [
@@ -19,14 +19,16 @@ function weekLabel(week: string) {
   return `${MONTHS[Number(month) - 1]} ${Number(day)}`;
 }
 
-function axisScale(peak: number) {
+function axisScale(values: number[]) {
+  const peak = Math.max(0, ...values);
   const step = [0.01, 0.02, 0.05, 0.1, 0.2].find((candidate) => peak / candidate <= 5) ?? 0.25;
   const max = Math.max(step, Math.ceil(peak / step) * step);
+
   const ticks = [];
   for (let value = 0; value <= max + 1e-9; value += step) {
     ticks.push(Number(value.toFixed(4)));
   }
-  return { max, ticks };
+  return { min: 0, max, ticks };
 }
 
 function bareName(value: string) {
@@ -36,45 +38,126 @@ function bareName(value: string) {
 export default function TrendingSkillsChart({
   data,
   missing,
+  focus,
+  roles,
 }: {
   data: TrendsPayload | null;
   missing?: string[];
+  focus?: string | null;
+  roles?: string[];
 }) {
   const [skill, setSkill] = useState<string | null>(null);
   const [range, setRange] = useState(RANGES[1].label);
   const [hover, setHover] = useState<number | null>(null);
+  const [shown, setShown] = useState<number[]>([]);
+  const [bounds, setBounds] = useState<{ min: number; max: number } | null>(null);
+  const shownRef = useRef<number[]>([]);
+  const boundsRef = useRef<{ min: number; max: number } | null>(null);
+
+  const role = roles?.find((name) => data?.roles?.[name]) ?? null;
+
+  const view = useMemo(() => {
+    const entry = role ? data?.roles?.[role] : null;
+    if (entry) return entry;
+    return data ? { weeks: data.weeks, series: data.series } : null;
+  }, [data, role]);
 
   const skills = useMemo(() => {
-    if (!data) return [];
-    const all = Object.keys(data.series).sort();
+    if (!view) return [];
+    const all = Object.keys(view.series).sort();
     if (!missing?.length) return all;
 
     const wanted = new Set(missing.map(bareName));
     const yours = all.filter((term) => wanted.has(bareName(term)));
     return yours.length ? yours : all;
-  }, [data, missing]);
+  }, [view, missing]);
 
   const busiest = useMemo(() => {
-    if (!data) return null;
-    const latest = (term: string) => data.series[term]?.[data.series[term].length - 1] ?? 0;
+    if (!view) return null;
+    const latest = (term: string) => view.series[term]?.[view.series[term].length - 1] ?? 0;
     return [...skills].sort((a, b) => latest(b) - latest(a))[0] ?? null;
-  }, [data, skills]);
+  }, [view, skills]);
 
-  const selected = skill && data?.series[skill] ? skill : busiest;
+  const focusKey = useMemo(() => {
+    if (!focus) return null;
+    const wanted = bareName(focus);
+    return skills.find((term) => bareName(term) === wanted) ?? null;
+  }, [focus, skills]);
 
-  if (!data || !selected) {
+  useEffect(() => {
+    if (focusKey) setSkill(focusKey);
+  }, [focusKey]);
+
+  const selected = skill && view?.series[skill] ? skill : busiest;
+  const span = RANGES.find((entry) => entry.label === range)?.weeks ?? 13;
+
+  const actual = useMemo(
+    () => (view && selected ? view.series[selected].slice(-span) : []),
+    [view, selected, span]
+  );
+
+  useEffect(() => {
+    if (actual.length === 0) return;
+
+    const from = shownRef.current;
+    const to = axisScale(actual);
+    const fromBounds = boundsRef.current ?? to;
+
+    const snap =
+      from.length !== actual.length ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (snap) {
+      shownRef.current = actual;
+      boundsRef.current = to;
+      setShown(actual);
+      setBounds(to);
+      return;
+    }
+
+    const start = performance.now();
+    let frame = 0;
+
+    const step = (now: number) => {
+      const t = Math.min(1, (now - start) / 450);
+      const eased = 1 - Math.pow(1 - t, 3);
+
+      const next = from.map((v, i) => v + (actual[i] - v) * eased);
+      const nextBounds = {
+        min: fromBounds.min + (to.min - fromBounds.min) * eased,
+        max: fromBounds.max + (to.max - fromBounds.max) * eased,
+      };
+
+      shownRef.current = next;
+      boundsRef.current = nextBounds;
+      setShown(next);
+      setBounds(nextBounds);
+
+      if (t < 1) frame = requestAnimationFrame(step);
+    };
+
+    frame = requestAnimationFrame(step);
+
+    return () => cancelAnimationFrame(frame);
+  }, [actual]);
+
+  if (!data || !view || !selected) {
     return <p className="text-(--text-secondary)">Loading market trends…</p>;
   }
 
-  const span = RANGES.find((entry) => entry.label === range)?.weeks ?? 13;
-  const weeks = data.weeks.slice(-span);
-  const values = data.series[selected].slice(-span);
+  const weeks = view.weeks.slice(-span);
+  const values = shown.length === actual.length ? shown : actual;
 
-  const { max, ticks } = axisScale(Math.max(...values));
+  const scale = axisScale(actual);
+  const axis = bounds ?? scale;
+  const ticks = scale.ticks.filter(
+    (tick) => tick >= axis.min - 1e-9 && tick <= axis.max + 1e-9
+  );
   const innerW = WIDTH - PAD.left - PAD.right;
   const innerH = HEIGHT - PAD.top - PAD.bottom;
   const x = (i: number) => PAD.left + (values.length === 1 ? innerW / 2 : (innerW * i) / (values.length - 1));
-  const y = (v: number) => PAD.top + innerH - (v / max) * innerH;
+  const y = (v: number) =>
+    PAD.top + innerH - ((v - axis.min) / (axis.max - axis.min)) * innerH;
 
   const points = values.map((v, i) => `${x(i)},${y(v)}`).join(" ");
   const active = hover ?? values.length - 1;
@@ -198,7 +281,7 @@ export default function TrendingSkillsChart({
             fontSize={13}
             fontWeight={700}
           >
-            {Math.round(values[values.length - 1] * 100)}%
+            {(actual[actual.length - 1] * 100).toFixed(1)}%
           </text>
 
           {values.map((v, i) => (
@@ -221,14 +304,16 @@ export default function TrendingSkillsChart({
           >
             <div className="font-bold text-(--text-primary)">Week of {weekLabel(weeks[hover])}</div>
             <div className="text-(--text-muted)">
-              {selected}: {Math.round(values[hover] * 100)}% of postings
+              {(actual[hover] * 100).toFixed(1)}% of {role ?? "all"} postings mentioned {selected}
             </div>
           </div>
         )}
       </div>
 
       <p className="text-xs text-(--text-muted)">
-        {`Share of job postings mentioning ${selected}, averaged across ${data.sources.join(" and ")} so neither board's volume dominates.`}
+        {role
+          ? `Share of ${role} postings that mention ${selected}, counted over everything scraped up to each week. The line settles as the sample grows, so treat the slope as our estimate firming up rather than the market moving. The last point is the ${selected} figure shown above.`
+          : `Share of all job postings that mention ${selected}, across every role.`}
       </p>
     </div>
   );

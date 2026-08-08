@@ -5,6 +5,7 @@ import math
 from pathlib import Path
 import jsonlines as jl
 from skills import PATTERNS, TERMS
+from scraper.roles import map_to_role, DEFAULT_ROLE, GENERIC_ROLE, ROLE_PATTERNS
 
 trends_path = Path(__file__).parent.parent / "app" / "trends.json"
 postings_path = Path(__file__).parent.parent / "scraper" / "postings.jsonl"
@@ -16,8 +17,11 @@ directional_floor = 0.075
 z_score = 2.0
 min_cell_postings = 100
 min_term_occurrences = 10
-min_week_postings = 30
+window_days = 28
+min_window_postings = 120
 first_series_week = "2026-06-01"
+min_role_postings = 50
+known_roles = set(ROLE_PATTERNS) | {GENERIC_ROLE, DEFAULT_ROLE}
 
 def posted_date(obj):
     value = str(obj["date_posted"])
@@ -51,42 +55,58 @@ def count_terms():
     return postings_per_cell, term_counts
 
 
-def posted_week(obj):
-    day = datetime.date.fromisoformat(posted_date(obj))
-    return (day - datetime.timedelta(days=day.weekday())).isoformat()
-
-
 def build_series(sources):
-    postings_per_week = collections.defaultdict(collections.Counter)
+    postings_per_day = collections.defaultdict(collections.Counter)
     term_counts = collections.defaultdict(lambda: collections.defaultdict(collections.Counter))
+    last_day = None
 
     with jl.open(postings_path) as reader:
         for obj in reader:
             try:
-                week = posted_week(obj)
+                day = datetime.date.fromisoformat(posted_date(obj))
             except ValueError:
-                continue
-            if week < first_series_week:
                 continue
 
             source = obj["source"]
-            postings_per_week[week][source] += 1
+            postings_per_day[day][source] += 1
+            if last_day is None or day > last_day:
+                last_day = day
+
             description = obj.get("description_text") or ""
             for term, pattern in PATTERNS.items():
                 if pattern.search(description):
-                    term_counts[term][week][source] += 1
+                    term_counts[term][day][source] += 1
 
-    weeks = [
-        week for week in sorted(postings_per_week)
-        if all(postings_per_week[week][source] >= min_week_postings for source in sources)
-    ]
+    if last_day is None:
+        return [], {}
+
+    def window_of(anchor):
+        end = anchor + datetime.timedelta(days=6)
+        return [end - datetime.timedelta(days=offset) for offset in range(window_days)]
+
+    def totals(days, source):
+        return sum(postings_per_day[day][source] for day in days)
+
+    first_anchor = datetime.date.fromisoformat(first_series_week)
+    last_anchor = last_day - datetime.timedelta(days=last_day.weekday())
+
+    weeks = []
+    windows = {}
+    anchor = first_anchor
+    while anchor <= last_anchor:
+        days = window_of(anchor)
+        if all(totals(days, source) >= min_window_postings for source in sources):
+            weeks.append(anchor.isoformat())
+            windows[anchor.isoformat()] = days
+        anchor += datetime.timedelta(days=7)
 
     series = {}
     for term in TERMS:
         values = []
         for week in weeks:
+            days = windows[week]
             shares = [
-                term_counts[term][week][source] / postings_per_week[week][source]
+                sum(term_counts[term][day][source] for day in days) / totals(days, source)
                 for source in sources
             ]
             values.append(round(sum(shares) / len(shares), 4))
@@ -94,6 +114,83 @@ def build_series(sources):
             series[term] = values
 
     return weeks, series
+
+
+def resolve_role(obj):
+    stored = obj.get("role")
+    if stored in known_roles:
+        return stored
+    return map_to_role(obj["title"], obj.get("description_text"))
+
+
+def build_role_series():
+    postings_per_day = collections.defaultdict(collections.Counter)
+    term_counts = collections.defaultdict(lambda: collections.defaultdict(collections.Counter))
+    last_day = None
+
+    with jl.open(postings_path) as reader:
+        for obj in reader:
+            try:
+                day = datetime.date.fromisoformat(posted_date(obj))
+            except ValueError:
+                continue
+
+            role = resolve_role(obj)
+            if role == DEFAULT_ROLE:
+                continue
+
+            postings_per_day[role][day] += 1
+            if last_day is None or day > last_day:
+                last_day = day
+
+            description = obj.get("description_text") or ""
+            for term, pattern in PATTERNS.items():
+                if pattern.search(description):
+                    term_counts[role][term][day] += 1
+
+    if last_day is None:
+        return {}
+
+    first_anchor = datetime.date.fromisoformat(first_series_week)
+    last_anchor = last_day - datetime.timedelta(days=last_day.weekday())
+
+    anchors = []
+    anchor = first_anchor
+    while anchor <= last_anchor:
+        anchors.append(anchor)
+        anchor += datetime.timedelta(days=7)
+
+    roles = {}
+    for role in postings_per_day:
+        weeks = []
+        totals = []
+        for anchor in anchors:
+            end = anchor + datetime.timedelta(days=6)
+            total = sum(
+                count for day, count in postings_per_day[role].items() if day <= end
+            )
+            if total < min_role_postings:
+                continue
+            weeks.append(anchor.isoformat())
+            totals.append((end, total))
+
+        if not weeks:
+            continue
+
+        series = {}
+        for term in TERMS:
+            counted = term_counts[role].get(term)
+            if not counted:
+                continue
+            values = [
+                round(sum(k for day, k in counted.items() if day <= end) / total, 4)
+                for end, total in totals
+            ]
+            series[term] = values
+
+        roles[role] = {"weeks": weeks, "series": series}
+
+    return roles
 
 
 def measure(old_count, old_total, new_count, new_total):
@@ -177,6 +274,7 @@ def build_trends():
     results.sort(key=lambda entry: entry["change"], reverse=True)
 
     weeks, series = build_series(usable)
+    roles = build_role_series()
 
     output = {
         "baseline_month": baseline_month,
@@ -185,6 +283,7 @@ def build_trends():
         "skills": results,
         "weeks": weeks,
         "series": series,
+        "roles": roles,
     }
 
     with open(trends_path, "w", encoding="utf-8") as f:
@@ -193,6 +292,7 @@ def build_trends():
     counts = collections.Counter((entry["confidence"], entry["trend"]) for entry in results)
     print(f"{len(results)} terms reported from {len(usable)} sources: {dict(counts)}")
     print(f"{len(series)} terms charted across {len(weeks)} weeks")
+    print(f"{len(roles)} roles charted: " + ", ".join(f"{r} ({len(v['weeks'])}w)" for r, v in sorted(roles.items())))
 
 
 if __name__ == "__main__":

@@ -14,12 +14,23 @@ export default function UploadCvPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [skillCount, setSkillCount] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   function handleFile(f: File | null) {
     if (!f) return;
     setError(null);
+    setSkillCount(null);
     setFile(f);
+  }
+
+  function handleRemove() {
+    setFile(null);
+    setSkillCount(null);
+    setError(null);
+    session.setCvSkills([]);
+
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   function handleInputChange(e: ChangeEvent<HTMLInputElement>) {
@@ -55,8 +66,8 @@ export default function UploadCvPage() {
       }
 
       session.setCvSkills(skills);
-      router.push("/select_role");
-    } 
+      setSkillCount(skills.length);
+    }
     catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong. Please try again.");
     } 
@@ -105,19 +116,35 @@ export default function UploadCvPage() {
                   {(file.size / 1024 / 1024).toFixed(2)} MB
                 </p>
               </div>
+              <button
+                type="button"
+                onClick={handleRemove}
+                disabled={isUploading}
+                aria-label="Remove this CV"
+                title="Remove this CV"
+                className="shrink-0 rounded-full p-2 text-(--text-secondary) hover:bg-(--hover-bg) hover:text-(--text-primary) disabled:opacity-40 disabled:cursor-not-allowed">
+                <Icon icon="mdi:trash-can-outline" className="w-6 h-6" />
+              </button>
             </div>
 
             {isUploading && (
               <>
                 <p className="font-light text-(--text-primary)">
-                  Reading your CV — this takes a few seconds …
+                  Reading and analyzing your CV. This takes a few seconds…
                 </p>
-                {/* Indeterminate: fetch cannot report upload progress, so this
-                    animates rather than pretending to know a percentage. */}
                 <div className="h-2.5 rounded-full bg-(--hover-bg) overflow-hidden">
-                  <div className="h-full w-1/3 rounded-full bg-(--accent) animate-pulse" />
+                  <div className="h-full w-1/3 rounded-full bg-(--accent) animate-indeterminate" />
                 </div>
               </>
+            )}
+
+            {skillCount !== null && (
+              <div className="flex items-center gap-2 text-(--text-primary)">
+                <Icon icon="mdi:check-circle-outline" className="w-6 h-6 shrink-0" />
+                <p className="font-semibold">
+                  CV read — we found {skillCount} skills.
+                </p>
+              </div>
             )}
           </div>
         )}
@@ -128,9 +155,10 @@ export default function UploadCvPage() {
           </p>
         )}
 
-        <button type="button" disabled={!file || isUploading} onClick={handleContinue}
+        <button type="button" disabled={!file || isUploading}
+          onClick={skillCount !== null ? () => router.push("/select_role") : handleContinue}
           className="bg-(--accent) text-(--on-accent) rounded-[20px] px-10 py-3.5 font-black text-xl flex items-center gap-3 disabled:opacity-40 disabled:cursor-not-allowed">
-          {isUploading ? "Analysing …" : "Continue"}
+          {isUploading ? "Analysing …" : skillCount !== null ? "Select a Role" : "Continue"}
           <Icon icon="mdi-light:arrow-up" className="w-6 h-6 rotate-90" />
         </button>
 

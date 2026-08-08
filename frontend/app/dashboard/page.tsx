@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Icon } from "@iconify/react";
 import AppShell from "@/components/AppShell";
 import TrendingSkillsChart from "@/components/TrendingSkillsChart";
+import { ChartSkeleton, DashboardSkeleton } from "@/components/Skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { API_URL } from "@/lib/api";
 import { session } from "@/lib/session";
@@ -114,7 +115,7 @@ export default function DashboardPage() {
   if (!loaded) {
     return (
       <AppShell>
-        <div className="page-texture min-h-screen p-6 md:p-10 lg:p-14" />
+        <DashboardSkeleton />
       </AppShell>
     );
   }
@@ -395,7 +396,7 @@ export default function DashboardPage() {
                         </span>
 
                         <p className="text-xs text-[var(--text-muted)]">
-                          of postings
+                          in your roles
                         </p>
                       </div>
                     </button>
@@ -473,7 +474,7 @@ export default function DashboardPage() {
                         </h3>
 
                         <p className="text-sm text-[var(--text-muted)]">
-                          Market demand
+                          Demand in your roles
                         </p>
 
                         <p className="text-base font-black text-[var(--accent-2)]">
@@ -541,9 +542,9 @@ export default function DashboardPage() {
 
             <div className="mb-5 flex items-center gap-2">
               <h2 className="text-2xl font-black text-[var(--text-primary)]">
-                Market Trends
+                Demand in your roles
               </h2>
-              <span title="Weekly share of job postings mentioning each skill, averaged across job boards.">
+              <span title="Share of postings for your target roles mentioning each skill, counted over everything scraped up to each week.">
                 <Icon
                   icon="mdi:information-outline"
                   className="h-5 w-5 text-[var(--text-muted)]"
@@ -555,8 +556,15 @@ export default function DashboardPage() {
               <p className="text-[var(--text-secondary)]">
                 Market trends are unavailable right now.
               </p>
+            ) : !trends ? (
+              <ChartSkeleton />
             ) : (
-              <TrendingSkillsChart data={trends} missing={missingSkillNames} />
+              <TrendingSkillsChart
+                data={trends}
+                missing={missingSkillNames}
+                focus={selectedSkill}
+                roles={roles}
+              />
             )}
           </section>
 
@@ -592,7 +600,7 @@ export default function DashboardPage() {
                   </p>
 
                   <p className="text-base font-black text-[var(--text-primary)]">
-                    {selected ? `${selected.demand}% of postings` : "—"}
+                    {selected ? `${selected.demand}% in your roles` : "—"}
                   </p>
                 </div>
               </div>
@@ -659,11 +667,9 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          {/* PROFILE + ROADMAP */}
-          <section className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-3">
-
-            {/* PROFILE SUMMARY */}
-            <div className="rounded-[20px] bg-[var(--card-bg)] p-5 shadow-[0_5px_20px_rgba(0,0,0,0.08)] lg:col-span-2">
+          {/* PROFILE SUMMARY */}
+          <section className="mt-5">
+            <div className="rounded-[20px] bg-[var(--card-bg)] p-5 shadow-[0_5px_20px_rgba(0,0,0,0.08)]">
 
               <div className="mb-4 flex items-center gap-3">
                 <Icon
@@ -713,34 +719,7 @@ export default function DashboardPage() {
                   </a>
                 </div>
               </div>
-
-              <Link
-                href="/profile"
-                className="mt-4 flex items-center justify-center gap-2 rounded-[18px] border-2 border-[var(--accent-bg)] py-2.5 text-center font-black text-[var(--accent-bg)]"
-              >
-                View full profile
-
-                <Icon
-                  icon="weui:arrow-outlined"
-                  className="h-4 w-4 rotate-90"
-                />
-              </Link>
             </div>
-
-            {/* QUICK ROADMAP */}
-            <Link
-              href="/roadmap"
-              className="flex items-center justify-between rounded-[20px] bg-[var(--accent)] px-6 py-5 shadow-lg transition hover:scale-[1.01]"
-            >
-              <span className="text-xl font-black text-[var(--on-accent)]">
-                Get your Roadmap !
-              </span>
-
-              <Icon
-                icon="mdi-light:arrow-up"
-                className="h-9 w-9 rotate-90 text-[var(--on-accent)]"
-              />
-            </Link>
           </section>
 
           {/* GENERATE BUTTON */}
