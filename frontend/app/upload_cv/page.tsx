@@ -22,12 +22,31 @@ export default function UploadCvPage() {
 
   function handleFile(f: File | null) {
     if (!f) return;
+
+    // Validate DOCX format using MIME type and file extension fallback
+    const isValidDocx =
+      f.type ===
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+      f.name.toLowerCase().endsWith(".docx");
+
+    // Validate PDF format using MIME type and file extension fallback
+    const isValidPdf =
+      f.type === "application/pdf" ||
+      f.name.toLowerCase().endsWith(".pdf");
+
+    if (!isValidDocx && !isValidPdf) {
+      setError("Please upload a valid PDF or DOCX file.");
+      return;
+    }
+
     setError(null);
     setFile(f);
   }
 
   function handleInputChange(e: ChangeEvent<HTMLInputElement>) {
     handleFile(e.target.files?.[0] ?? null);
+    // Reset input value to allow selecting the same file consecutively
+    e.target.value = "";
   }
 
   function handleDrop(e: React.DragEvent<HTMLDivElement>) {
@@ -90,10 +109,11 @@ export default function UploadCvPage() {
           <p className="font-semibold text-(--accent-bg)">
             {t.uploadCv.pdfUpTo}
           </p>
+          {/* File input supporting both PDF and DOCX formats */}
           <input
             ref={fileInputRef}
             type="file"
-            accept=".pdf"
+            accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             onChange={handleInputChange}
             className="hidden"
           />
@@ -116,8 +136,6 @@ export default function UploadCvPage() {
                 <p className="font-light text-(--text-primary)">
                   {t.uploadCv.reading}
                 </p>
-                {/* Indeterminate: fetch cannot report upload progress, so this
-                    animates rather than pretending to know a percentage. */}
                 <div className="h-2.5 rounded-full bg-(--hover-bg) overflow-hidden">
                   <div className="h-full w-1/3 rounded-full bg-(--accent) animate-pulse" />
                 </div>
