@@ -3,10 +3,14 @@
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { getTranslations } from "@/lib/translations";
 
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
+  const { language } = useLanguage();
+  const t = getTranslations(language);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -27,13 +31,13 @@ export default function LoginPage() {
         className="w-full max-w-md flex flex-col gap-4"
       >
         <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
-          Log in
+          {t.login.title}
         </h1>
 
         <input
           required
           type="email"
-          placeholder="Email"
+          placeholder={t.login.email}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="rounded-lg border border-[var(--border-color)] px-4 py-2.5 bg-[var(--input-bg)] text-[var(--text-primary)]"
@@ -42,7 +46,7 @@ export default function LoginPage() {
         <input
           required
           type="password"
-          placeholder="Password"
+          placeholder={t.login.password}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="rounded-lg border border-[var(--border-color)] px-4 py-2.5 bg-[var(--input-bg)] text-[var(--text-primary)]"
@@ -52,7 +56,7 @@ export default function LoginPage() {
           type="submit"
           className="rounded-lg bg-[var(--accent-bg)] text-[var(--accent-text)] py-2.5 font-medium mt-2"
         >
-          Log in
+          {t.login.submit}
         </button>
       </form>
     </main>

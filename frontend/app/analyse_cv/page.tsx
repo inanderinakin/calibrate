@@ -8,25 +8,14 @@ import AppShell from "@/components/AppShell";
 import StepIndicator from "@/components/StepIndicator";
 import { API_URL, errorMessage } from "@/lib/api";
 import { session } from "@/lib/session";
-
-const CHECKLIST = [
-  { title: "Reading CV", note: "Successfully read your document" },
-  {
-    title: "Extracting Skills",
-    note: "Identifying your key skills and experience",
-  },
-  {
-    title: "Comparing with job market",
-    note: "Analysing market trends and in-demand skills",
-  },
-  {
-    title: "Generating Roadmap",
-    note: "Creating your personalised career roadmap",
-  },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
+import { getTranslations } from "@/lib/translations";
 
 export default function AnalyseCvPage() {
   const router = useRouter();
+  const { language } = useLanguage();
+  const t = getTranslations(language);
+  const CHECKLIST = t.analyseCv.checklist;
   const started = useRef(false);
 
   const [step, setStep] = useState(2);
@@ -69,7 +58,7 @@ export default function AnalyseCvPage() {
           throw new Error(
             await errorMessage(
               gapsRes,
-              "We couldn't compare your CV with the market"
+              t.analyseCv.gapsError
             )
           );
         }
@@ -79,7 +68,7 @@ export default function AnalyseCvPage() {
         session.setGaps(gaps);
         setStep(3);
 
-        const reportRes = await fetch(`${API_URL}/recommendations`, {
+        const reportRes = await fetch(`${API_URL}/recommendations?language=${language}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(gaps),
@@ -89,7 +78,7 @@ export default function AnalyseCvPage() {
           throw new Error(
             await errorMessage(
               reportRes,
-              "We couldn't build your roadmap"
+              t.analyseCv.roadmapError
             )
           );
         }
@@ -102,7 +91,7 @@ export default function AnalyseCvPage() {
         setError(
           e instanceof Error
             ? e.message
-            : "Something went wrong. Please try again."
+            : t.analyseCv.genericError
         );
       }
     }
@@ -135,19 +124,18 @@ export default function AnalyseCvPage() {
             />
 
             <h1 className="text-3xl font-black text-[var(--text-primary)] md:text-5xl">
-              Nothing to show yet
+              {t.common.nothingToShowYet}
             </h1>
 
             <p className="text-lg text-[var(--text-secondary)]">
-              Upload your CV and pick your target roles to see how you match
-              the market.
+              {t.common.uploadCvPrompt}
             </p>
 
             <Link
               href="/upload_cv"
               className="rounded-[20px] bg-[var(--accent)] px-8 py-3.5 text-lg font-bold text-[var(--on-accent)]"
             >
-              Upload your CV
+              {t.common.uploadYourCv}
             </Link>
           </div>
         </main>
@@ -164,18 +152,18 @@ export default function AnalyseCvPage() {
 
         <h1 className="text-3xl md:text-5xl font-bold text-(--accent-2)">
           {error
-            ? "We hit a problem"
+            ? t.analyseCv.titleError
             : done
-              ? "Analysis Complete !"
-              : "Analyzing your CV ..."}
+              ? t.analyseCv.titleDone
+              : t.analyseCv.titleInProgress}
         </h1>
 
         <p className="text-(--text-primary) max-w-xl">
           {error
-            ? "Your CV was uploaded, but we couldn't finish the analysis."
+            ? t.analyseCv.subtitleError
             : done
-              ? "Your personalised insights are ready."
-              : "Our AI is carefully analyzing your CV and preparing your personalised insights."}
+              ? t.analyseCv.subtitleDone
+              : t.analyseCv.subtitleInProgress}
         </p>
 
         <div className="bg-(--card-bg) rounded-[23px] shadow-lg p-8 w-full flex flex-col gap-6 text-left">
@@ -224,14 +212,14 @@ export default function AnalyseCvPage() {
           <div className="w-full flex flex-col items-center gap-4">
             <div
               role="progressbar"
-              aria-label="Analysing your CV"
+              aria-label={t.analyseCv.titleInProgress}
               className="w-full h-3 rounded-full bg-[var(--accent-bg)]/20 overflow-hidden"
             >
               <div className="h-full w-1/3 rounded-full bg-(--accent-bg) animate-indeterminate" />
             </div>
 
             <p className="text-(--text-primary) font-light">
-              this may take a few moments ...
+              {t.analyseCv.waitNote}
             </p>
           </div>
         )}
@@ -242,7 +230,7 @@ export default function AnalyseCvPage() {
               href="/upload_cv"
               className="bg-(--accent) text-(--on-accent) rounded-[20px] px-8 py-3.5 font-bold text-lg flex items-center gap-3"
             >
-              Start over
+              {t.analyseCv.startOver}
               <Icon
                 icon="mdi-light:arrow-up"
                 className="w-6 h-6 rotate-90"
@@ -255,7 +243,7 @@ export default function AnalyseCvPage() {
               onClick={() => router.push("/dashboard")}
               className="bg-(--accent) text-(--on-accent) rounded-[20px] px-8 py-3.5 font-bold text-lg flex items-center gap-3 disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              Continue to Dashboard
+              {t.analyseCv.continueToDashboard}
               <Icon
                 icon="mdi-light:arrow-up"
                 className="w-6 h-6 rotate-90"
@@ -268,7 +256,7 @@ export default function AnalyseCvPage() {
               href="/profile"
               className="border-2 border-(--accent-bg) text-(--accent-bg) rounded-[20px] px-8 py-3.5 font-bold text-lg flex items-center gap-3"
             >
-              Check Profile Settings
+              {t.analyseCv.checkProfileSettings}
               <Icon
                 icon="solar:settings-linear"
                 className="w-6 h-6"
@@ -280,7 +268,7 @@ export default function AnalyseCvPage() {
         <div className="flex items-center gap-2 text-(--text-primary)">
           <Icon icon="gala:secure" className="w-6 h-6" />
           <span className="font-black">
-            Your data is secure and private
+            {t.common.secureData}
           </span>
         </div>
       </div>

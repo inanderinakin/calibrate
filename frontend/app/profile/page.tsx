@@ -3,16 +3,20 @@
 import { Icon } from "@iconify/react";
 import AppShell from "@/components/AppShell";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { getTranslations } from "@/lib/translations";
 export default function ProfilePage() {
   const { user } = useAuth();
+  const { language } = useLanguage();
+  const t = getTranslations(language);
 
   return (
     <AppShell>
       <div className="p-6 md:p-10 lg:p-14 flex flex-col gap-6">
         <header>
-          <h1 className="text-3xl md:text-5xl font-bold text-[var(--text-primary)]">Profile</h1>
+          <h1 className="text-3xl md:text-5xl font-bold text-[var(--text-primary)]">{t.profile.title}</h1>
           <p className="text-[var(--text-primary)] mt-2">
-            Manage your Account and view achievements
+            {t.profile.subtitle}
           </p>
         </header>
 
@@ -23,14 +27,14 @@ export default function ProfilePage() {
 
           <div className="flex-1 flex flex-col gap-6 w-full">
             <h2 className="text-3xl md:text-4xl font-bold text-(--accent-bg)">
-              {user ? `${user.firstName} ${user.lastName}` : "Guest"}
+              {user ? `${user.firstName} ${user.lastName}` : t.profile.guest}
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="flex items-center gap-3">
                 <Icon icon="mynaui:mail-solid" className="w-9 h-9 text-(--accent-bg) shrink-0" />
                 <div>
-                  <p className="font-bold text-(--accent-bg)">Email</p>
+                  <p className="font-bold text-(--accent-bg)">{t.profile.email}</p>
                   <a
                     href={`mailto:${user?.email ?? ""}`}
                     className="text-(--accent-bg) underline"
@@ -43,7 +47,7 @@ export default function ProfilePage() {
               <div className="flex items-center gap-3">
                 <Icon icon="weui:location-outlined" className="w-9 h-9 text-(--accent-bg) shrink-0" />
                 <div>
-                  <p className="font-bold text-(--accent-bg)">Location</p>
+                  <p className="font-bold text-(--accent-bg)">{t.profile.location}</p>
                   <p className="text-(--accent-bg)">Algeria</p>
                 </div>
               </div>
@@ -51,7 +55,7 @@ export default function ProfilePage() {
               <div className="flex items-center gap-3">
                 <Icon icon="solar:calendar-outline" className="w-9 h-9 text-(--accent-bg) shrink-0" />
                 <div>
-                  <p className="font-bold text-(--accent-bg)">Joined</p>
+                  <p className="font-bold text-(--accent-bg)">{t.profile.joined}</p>
                   {/* TODO: replace with real signup date once the backend exists */}
                   <p className="text-(--accent-bg)">—</p>
                 </div>
@@ -60,7 +64,7 @@ export default function ProfilePage() {
               <div className="flex items-center gap-3">
                 <Icon icon="solar:cup-bold" className="w-9 h-9 text-(--accent-bg) shrink-0" />
                 <div>
-                  <p className="font-bold text-(--accent-bg)">Achievements</p>
+                  <p className="font-bold text-(--accent-bg)">{t.profile.achievements}</p>
                   {/* TODO: replace with real progress once the backend exists */}
                   <p className="text-(--accent-bg)">—</p>
                 </div>
@@ -71,7 +75,7 @@ export default function ProfilePage() {
               type="button"
               className="self-start bg-[var(--accent)] text-[var(--on-accent)] rounded-[20px] px-8 py-3 font-medium"
             >
-              Edit Profile
+              {t.profile.editProfile}
             </button>
           </div>
         </div>

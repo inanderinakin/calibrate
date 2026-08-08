@@ -8,9 +8,13 @@ import StepIndicator from "@/components/StepIndicator";
 import { API_URL, errorMessage } from "@/lib/api";
 import { session } from "@/lib/session";
 import type { NormalizedSkill } from "@/lib/types";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { getTranslations } from "@/lib/translations";
 
 export default function UploadCvPage() {
   const router = useRouter();
+  const { language } = useLanguage();
+  const t = getTranslations(language);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -19,6 +23,23 @@ export default function UploadCvPage() {
 
   function handleFile(f: File | null) {
     if (!f) return;
+
+    // Validate DOCX format using MIME type and file extension fallback
+    const isValidDocx =
+      f.type ===
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+      f.name.toLowerCase().endsWith(".docx");
+
+    // Validate PDF format using MIME type and file extension fallback
+    const isValidPdf =
+      f.type === "application/pdf" ||
+      f.name.toLowerCase().endsWith(".pdf");
+
+    if (!isValidDocx && !isValidPdf) {
+      setError("Please upload a valid PDF or DOCX file.");
+      return;
+    }
+
     setError(null);
     setSkillCount(null);
     setFile(f);
@@ -35,6 +56,8 @@ export default function UploadCvPage() {
 
   function handleInputChange(e: ChangeEvent<HTMLInputElement>) {
     handleFile(e.target.files?.[0] ?? null);
+    // Reset input value to allow selecting the same file consecutively
+    e.target.value = "";
   }
 
   function handleDrop(e: React.DragEvent<HTMLDivElement>) {
@@ -54,7 +77,7 @@ export default function UploadCvPage() {
       const res = await fetch(`${API_URL}/upload_cv`, { method: "POST", body });
 
       if (!res.ok) {
-        throw new Error(await errorMessage(res, "Upload failed"));
+        throw new Error(await errorMessage(res, t.uploadCv.uploadFailed));
       }
 
       const data = await res.json();
@@ -62,15 +85,15 @@ export default function UploadCvPage() {
 
       const skills: NormalizedSkill[] = data.skills ?? [];
       if (skills.length === 0) {
-        throw new Error("We couldn't read any skills from that CV. Try another file.");
+        throw new Error(t.uploadCv.noSkillsFound);
       }
 
       session.setCvSkills(skills);
       setSkillCount(skills.length);
     }
     catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong. Please try again.");
-    } 
+      setError(e instanceof Error ? e.message : t.uploadCv.genericError);
+    }
     finally {
       setIsUploading(false);
     }
@@ -82,7 +105,7 @@ export default function UploadCvPage() {
         <StepIndicator activeStep={1} />
 
         <h1 className="text-3xl md:text-5xl font-bold text-(--text-primary)">
-          Upload Your CV
+          {t.uploadCv.title}
         </h1>
 
         <div
@@ -92,15 +115,16 @@ export default function UploadCvPage() {
           className="w-full border-2 border-dashed border-(--pink) rounded-[20px] py-16 flex flex-col items-center gap-4 cursor-pointer bg-(--card-bg)">
           <Icon icon="mdi:file-pdf-box" className="w-20 h-20 text-(--accent-bg)" />
           <p className="font-black text-xl text-(--accent-bg)">
-            Drag &amp; drop your CV here
+            {t.uploadCv.dragDrop}
           </p>
           <p className="font-semibold text-(--accent-bg)">
-            PDF up to 10MB
+            {t.uploadCv.pdfUpTo}
           </p>
+          {/* File input supporting both PDF and DOCX formats */}
           <input
             ref={fileInputRef}
             type="file"
-            accept=".pdf"
+            accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             onChange={handleInputChange}
             className="hidden"
           />
@@ -120,8 +144,8 @@ export default function UploadCvPage() {
                 type="button"
                 onClick={handleRemove}
                 disabled={isUploading}
-                aria-label="Remove this CV"
-                title="Remove this CV"
+                aria-label={t.uploadCv.removeCv}
+                title={t.uploadCv.removeCv}
                 className="shrink-0 rounded-full p-2 text-(--text-secondary) hover:bg-(--hover-bg) hover:text-(--text-primary) disabled:opacity-40 disabled:cursor-not-allowed">
                 <Icon icon="mdi:trash-can-outline" className="w-6 h-6" />
               </button>
@@ -130,7 +154,7 @@ export default function UploadCvPage() {
             {isUploading && (
               <>
                 <p className="font-light text-(--text-primary)">
-                  Reading and analyzing your CV. This takes a few seconds…
+                  {t.uploadCv.reading}
                 </p>
                 <div className="h-2.5 rounded-full bg-(--hover-bg) overflow-hidden">
                   <div className="h-full w-1/3 rounded-full bg-(--accent) animate-indeterminate" />
@@ -142,7 +166,7 @@ export default function UploadCvPage() {
               <div className="flex items-center gap-2 text-(--text-primary)">
                 <Icon icon="mdi:check-circle-outline" className="w-6 h-6 shrink-0" />
                 <p className="font-semibold">
-                  CV read — we found {skillCount} skills.
+                  {t.uploadCv.cvRead(skillCount)}
                 </p>
               </div>
             )}
@@ -158,13 +182,13 @@ export default function UploadCvPage() {
         <button type="button" disabled={!file || isUploading}
           onClick={skillCount !== null ? () => router.push("/select_role") : handleContinue}
           className="bg-(--accent) text-(--on-accent) rounded-[20px] px-10 py-3.5 font-black text-xl flex items-center gap-3 disabled:opacity-40 disabled:cursor-not-allowed">
-          {isUploading ? "Analysing …" : skillCount !== null ? "Select a Role" : "Continue"}
+          {isUploading ? t.uploadCv.analysing : skillCount !== null ? t.uploadCv.selectRole : t.uploadCv.continue}
           <Icon icon="mdi-light:arrow-up" className="w-6 h-6 rotate-90" />
         </button>
 
         <div className="flex items-center gap-2 text-(--text-primary)">
           <Icon icon="gala:secure" className="w-6 h-6" />
-          <span className="font-black">Your data is secure and private</span>
+          <span className="font-black">{t.common.secureData}</span>
         </div>
       </div>
     </AppShell>

@@ -10,14 +10,17 @@ import { ChartSkeleton, DashboardSkeleton } from "@/components/Skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { API_URL } from "@/lib/api";
 import { session } from "@/lib/session";
-import type { Gap, GapResult, TrendsPayload } from "@/lib/types";
+import type { Gap, GapResult, Trend, TrendsPayload } from "@/lib/types";
 import { getDisplaySkillName } from "@/lib/escoMapper";
+import { getCategoryLabel } from "@/lib/skillCategories";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { getTranslations } from "@/lib/translations";
 
 type Skill = {
   name: string;
   demand: number;
   category: string;
-  trend: string;
+  trend: Trend;
   closestCvSkill: string | null;
   icon: string;
 };
@@ -93,6 +96,8 @@ function getSkillIcon(skill: string) {
 export default function DashboardPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const { language } = useLanguage();
+  const t = getTranslations(language);
 
   const [gaps, setGaps] = useState<GapResult | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -131,19 +136,18 @@ export default function DashboardPage() {
             />
 
             <h1 className="text-3xl font-black text-(--text-primary) md:text-5xl">
-              Nothing to show yet
+              {t.common.nothingToShowYet}
             </h1>
 
             <p className="text-lg text-[var(--text-secondary)]">
-              Upload your CV and pick your target roles to see how you match
-              the market.
+              {t.common.uploadCvPrompt}
             </p>
 
             <Link
               href="/upload_cv"
               className="rounded-[20px] bg-[var(--accent)] px-8 py-3.5 text-lg font-bold text-[var(--on-accent)]"
             >
-              Upload your CV
+              {t.common.uploadYourCv}
             </Link>
           </div>
         </main>
@@ -221,13 +225,12 @@ export default function DashboardPage() {
           {/* HEADER */}
           <header className="mb-5">
             <h1 className="text-4xl font-black tracking-[-0.04em] text-(--text-primary) md:text-5xl lg:text-6xl">
-              Welcome back
-              {user?.firstName ? `, ${user.firstName}` : ""} !
+              {t.dashboard.welcomeBack}
+              {user?.firstName ? `, ${user.firstName}` : ""}!
             </h1>
 
             <p className="mt-1 text-lg text-(--text-muted) md:text-xl">
-              Here&apos;s how you match{" "}
-              {roles.length > 0 ? roles.join(", ") : "your target role"}.
+              {t.dashboard.matchSubtitle(roles.length > 0 ? roles.join(", ") : t.dashboard.yourTargetRole)}
             </p>
           </header>
 
@@ -256,7 +259,7 @@ export default function DashboardPage() {
                     </span>
 
                     <span className="mt-1 text-2xl font-black text-[var(--accent-2)]">
-                      MATCH
+                      {t.dashboard.match}
                     </span>
                   </div>
                 </div>
@@ -265,14 +268,12 @@ export default function DashboardPage() {
                 <div className="flex flex-col justify-center">
                   <h2 className="text-2xl font-black text-[var(--text-primary)]">
                     {matchPercent >= 60
-                      ? "Strong Match"
-                      : "Room to Grow"}
+                      ? t.dashboard.strongMatch
+                      : t.dashboard.roomToGrow}
                   </h2>
 
                   <p className="mt-2 max-w-[250px] text-lg leading-snug text-[var(--text-secondary)]">
-                    Your profile matches
-                    <br />
-                    {matchPercent}% of the selected role.
+                    {t.dashboard.matchesRole(matchPercent)}
                   </p>
 
                   <div className="mt-4 flex w-fit items-center gap-2 rounded-xl bg-[var(--hover-bg)] px-3 py-2 text-sm font-semibold text-[var(--accent-2)]">
@@ -286,12 +287,12 @@ export default function DashboardPage() {
                     />
 
                     {matchPercent >= 60
-                      ? "You’re on the right track!"
-                      : "There’s room to grow."}
+                      ? t.dashboard.onTrack
+                      : t.dashboard.roomToGrowShort}
                   </div>
 
                   <p className="mt-3 text-xs text-[var(--text-muted)]">
-                    You have {matched} of the {total} demanded skills.
+                    {t.dashboard.demandedSkillsCount(matched, total)}
                   </p>
 
                   {/* ROLE BREAKDOWN */}
@@ -332,7 +333,7 @@ export default function DashboardPage() {
                   />
 
                   <h2 className="text-2xl font-black text-[var(--text-primary)]">
-                    Missing Skills
+                    {t.dashboard.missingSkills}
                   </h2>
                 </div>
 
@@ -340,7 +341,7 @@ export default function DashboardPage() {
                   type="button"
                   className="flex items-center gap-2 rounded-lg border border-black/15 px-4 py-2 text-sm font-medium text-[var(--accent-2)]"
                 >
-                  Why these skills
+                  {t.dashboard.whyTheseSkills}
                   <Icon
                     icon="mdi:information-outline"
                     className="h-5 w-5"
@@ -350,8 +351,7 @@ export default function DashboardPage() {
 
               {missingSkills.length === 0 ? (
                 <p className="text-[var(--text-muted)]">
-                  No gaps found! Your CV covers everything these roles ask
-                  for.
+                  {t.dashboard.noGapsFound}
                 </p>
               ) : (
                 <div className="space-y-4">
@@ -396,7 +396,7 @@ export default function DashboardPage() {
                         </span>
 
                         <p className="text-xs text-[var(--text-muted)]">
-                          in your roles
+                          {t.dashboard.inYourRoles}
                         </p>
                       </div>
                     </button>
@@ -405,8 +405,7 @@ export default function DashboardPage() {
               )}
 
               <p className="mt-5 text-xs text-[var(--text-muted)]">
-                Percentages show how often each skill appears in job postings
-                for these roles.
+                {t.dashboard.percentagesNote}
               </p>
             </div>
           </section>
@@ -422,11 +421,11 @@ export default function DashboardPage() {
 
               <div>
                 <h2 className="text-2xl font-black text-[var(--text-primary)]">
-                  Choose your learning focus
+                  {t.dashboard.chooseLearningFocus}
                 </h2>
 
                 <p className="mt-1 text-base text-[var(--text-secondary)]">
-                  Select one skill to generate a personalized roadmap.
+                  {t.dashboard.selectSkillPrompt}
                 </p>
               </div>
             </div>
@@ -474,7 +473,7 @@ export default function DashboardPage() {
                         </h3>
 
                         <p className="text-sm text-[var(--text-muted)]">
-                          Demand in your roles
+                          {t.dashboard.demandInYourRoles}
                         </p>
 
                         <p className="text-base font-black text-[var(--accent-2)]">
@@ -523,15 +522,15 @@ export default function DashboardPage() {
                 />
 
                 <h3 className="mt-2 text-lg font-black leading-tight text-[var(--text-primary)]">
-                  Complete Career
-                  <br />
-                  Roadmap
+                  {t.dashboard.completeCareerRoadmap.split("\n").map((line, i) => (
+                    <span key={i}>{i > 0 && <br />}{line}</span>
+                  ))}
                 </h3>
 
                 <p className="mt-1 text-sm text-[var(--text-muted)]">
-                  All missing skills
-                  <br />
-                  in one plan
+                  {t.dashboard.allMissingSkillsPlan.split("\n").map((line, i) => (
+                    <span key={i}>{i > 0 && <br />}{line}</span>
+                  ))}
                 </p>
               </button>
             </div>
@@ -542,9 +541,9 @@ export default function DashboardPage() {
 
             <div className="mb-5 flex items-center gap-2">
               <h2 className="text-2xl font-black text-[var(--text-primary)]">
-                Demand in your roles
+                {t.dashboard.demandInYourRoles}
               </h2>
-              <span title="Share of postings for your target roles mentioning each skill, counted over everything scraped up to each week.">
+              <span title={t.dashboard.demandInYourRolesInfo}>
                 <Icon
                   icon="mdi:information-outline"
                   className="h-5 w-5 text-[var(--text-muted)]"
@@ -554,7 +553,7 @@ export default function DashboardPage() {
 
             {trendsFailed ? (
               <p className="text-[var(--text-secondary)]">
-                Market trends are unavailable right now.
+                {t.dashboard.marketTrendsUnavailable}
               </p>
             ) : !trends ? (
               <ChartSkeleton />
@@ -578,8 +577,8 @@ export default function DashboardPage() {
               />
 
               <h2 className="text-xl font-black text-[var(--text-primary)]">
-                Roadmap preview for{" "}
-                {selected?.name ?? "Complete Career"}
+                {t.dashboard.roadmapPreviewFor}{" "}
+                {selected?.name ?? t.dashboard.completeCareer}
               </h2>
             </div>
 
@@ -596,11 +595,11 @@ export default function DashboardPage() {
 
                 <div>
                   <p className="text-sm text-[var(--text-muted)]">
-                    Market demand
+                    {t.dashboard.marketDemand}
                   </p>
 
                   <p className="text-base font-black text-[var(--text-primary)]">
-                    {selected ? `${selected.demand}% in your roles` : "—"}
+                    {selected ? t.dashboard.demandInYourRolesValue(selected.demand) : "—"}
                   </p>
                 </div>
               </div>
@@ -616,11 +615,11 @@ export default function DashboardPage() {
 
                 <div>
                   <p className="text-sm text-[var(--text-muted)]">
-                    Trend
+                    {t.dashboard.trendLabel}
                   </p>
 
                   <p className="text-base font-black text-[var(--text-primary)]">
-                    {selected?.trend ?? "—"}
+                    {selected ? t.common.trend[selected.trend] : "—"}
                   </p>
                 </div>
               </div>
@@ -636,11 +635,11 @@ export default function DashboardPage() {
 
                 <div>
                   <p className="text-sm text-[var(--text-muted)]">
-                    Category
+                    {t.dashboard.category}
                   </p>
 
                   <p className="text-base font-black text-[var(--text-primary)]">
-                    {selected?.category ?? "—"}
+                    {selected ? getCategoryLabel(selected.category, language) : "—"}
                   </p>
                 </div>
               </div>
@@ -656,11 +655,11 @@ export default function DashboardPage() {
 
                 <div>
                   <p className="text-sm text-[var(--text-muted)]">
-                    Closest skill on your CV
+                    {t.dashboard.closestSkillOnCv}
                   </p>
 
                   <p className="text-base font-black text-[var(--text-primary)]">
-                    {selected?.closestCvSkill ?? "None found"}
+                    {selected?.closestCvSkill ?? t.dashboard.noneFound}
                   </p>
                 </div>
               </div>
@@ -678,7 +677,7 @@ export default function DashboardPage() {
                 />
 
                 <h2 className="text-xl font-black text-[var(--text-primary)]">
-                  Profile Summary
+                  {t.dashboard.profileSummary}
                 </h2>
               </div>
 
@@ -692,11 +691,11 @@ export default function DashboardPage() {
                   />
 
                   <span className="text-sm font-black text-[var(--on-accent)]">
-                    Current Role
+                    {t.dashboard.currentRole}
                   </span>
 
                   <span className="text-xs font-light text-[var(--on-accent)]">
-                    {user?.studyField ?? "Not set"}
+                    {user?.studyField ?? t.dashboard.notSet}
                   </span>
                 </div>
 
@@ -708,7 +707,7 @@ export default function DashboardPage() {
                   />
 
                   <span className="text-sm font-black text-[var(--on-accent)]">
-                    E-mail
+                    {t.dashboard.email}
                   </span>
 
                   <a
@@ -734,7 +733,7 @@ export default function DashboardPage() {
                 className="h-6 w-6"
               />
 
-              Generate Personalized Roadmap
+              {t.dashboard.generateRoadmap}
 
               <Icon
                 icon="mdi:arrow-right"
