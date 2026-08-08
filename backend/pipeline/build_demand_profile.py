@@ -76,8 +76,7 @@ def new_trends():
         trends_json = json.load(trends_json_file)
         skills = trends_json['skills']
         for skill in skills:
-            if skill['confidence'] == 'confirmed':
-                skill_name_to_trend[skill['skill']] = skill['trend']
+            skill_name_to_trend[skill['skill']] = skill['trend']  
     return skill_name_to_trend
 
 
