@@ -3,8 +3,13 @@ import { turkishNumberSuffix } from "@/lib/turkishNumberSuffix";
 export const dashboard = {
   en: {
     ofPostings: "of postings",
+    inYourRoles: "in your roles",
     marketDemand: "Market demand",
+    demandInYourRoles: "Demand in your roles",
+    demandInYourRolesInfo:
+      "Share of postings for your target roles mentioning each skill, counted over everything scraped up to each week.",
     marketDemandValue: (pct: number) => `${pct}% of postings`,
+    demandInYourRolesValue: (pct: number) => `${pct}% in your roles`,
     trendLabel: "Trend",
     category: "Category",
     closestSkillOnCv: "Closest skill on your CV",
@@ -42,8 +47,13 @@ export const dashboard = {
   },
   tr: {
     ofPostings: "ilanlarda",
+    inYourRoles: "rollerinizde",
     marketDemand: "Piyasa talebi",
+    demandInYourRoles: "Rollerinizdeki talep",
+    demandInYourRolesInfo:
+      "Hedef rollerinize ait ilanların her beceriyi içerme oranı, her haftaya kadar taranan tüm ilanlar üzerinden hesaplandı.",
     marketDemandValue: (pct: number) => `İlanların %${pct}'${turkishNumberSuffix(pct)}`,
+    demandInYourRolesValue: (pct: number) => `Rollerinizdeki ilanların %${pct}'${turkishNumberSuffix(pct)}`,
     trendLabel: "Trend",
     category: "Kategori",
     closestSkillOnCv: "CV'nizdeki en yakın beceri",

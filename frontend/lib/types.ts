@@ -76,6 +76,11 @@ export interface TrendSkill {
   sources: Record<string, TrendSource>;
 }
 
+export interface RoleTrend {
+  weeks: string[];
+  series: Record<string, number[]>;
+}
+
 export interface TrendsPayload {
   baseline_month: string;
   recent_month: string;
@@ -83,4 +88,5 @@ export interface TrendsPayload {
   skills: TrendSkill[];
   weeks: string[];
   series: Record<string, number[]>;
+  roles?: Record<string, RoleTrend>;
 }

@@ -104,3 +104,34 @@ body {
   margin: 0;
   background: var(--page-bg);
 }
+
+@keyframes indeterminate {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}
+
+.animate-indeterminate {
+  animation: indeterminate 1.15s ease-in-out infinite;
+}
+
+@keyframes spin-ccw {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+.animate-spin-ccw {
+  animation: spin-ccw 1s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-indeterminate {
+    animation: none;
+    width: 100%;
+    opacity: 0.6;
+  }
+}

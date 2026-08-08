@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Icon } from "@iconify/react";
 import AppShell from "@/components/AppShell";
 import TrendingSkillsChart from "@/components/TrendingSkillsChart";
+import { ChartSkeleton, DashboardSkeleton } from "@/components/Skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { API_URL } from "@/lib/api";
 import { session } from "@/lib/session";
@@ -119,7 +120,7 @@ export default function DashboardPage() {
   if (!loaded) {
     return (
       <AppShell>
-        <div className="page-texture min-h-screen p-6 md:p-10 lg:p-14" />
+        <DashboardSkeleton />
       </AppShell>
     );
   }
@@ -395,7 +396,7 @@ export default function DashboardPage() {
                         </span>
 
                         <p className="text-xs text-[var(--text-muted)]">
-                          {t.dashboard.ofPostings}
+                          {t.dashboard.inYourRoles}
                         </p>
                       </div>
                     </button>
@@ -472,7 +473,7 @@ export default function DashboardPage() {
                         </h3>
 
                         <p className="text-sm text-[var(--text-muted)]">
-                          {t.dashboard.marketDemand}
+                          {t.dashboard.demandInYourRoles}
                         </p>
 
                         <p className="text-base font-black text-[var(--accent-2)]">
@@ -540,9 +541,9 @@ export default function DashboardPage() {
 
             <div className="mb-5 flex items-center gap-2">
               <h2 className="text-2xl font-black text-[var(--text-primary)]">
-                {t.dashboard.marketTrends}
+                {t.dashboard.demandInYourRoles}
               </h2>
-              <span title={t.dashboard.marketTrendsInfo}>
+              <span title={t.dashboard.demandInYourRolesInfo}>
                 <Icon
                   icon="mdi:information-outline"
                   className="h-5 w-5 text-[var(--text-muted)]"
@@ -554,8 +555,15 @@ export default function DashboardPage() {
               <p className="text-[var(--text-secondary)]">
                 {t.dashboard.marketTrendsUnavailable}
               </p>
+            ) : !trends ? (
+              <ChartSkeleton />
             ) : (
-              <TrendingSkillsChart data={trends} missing={missingSkillNames} />
+              <TrendingSkillsChart
+                data={trends}
+                missing={missingSkillNames}
+                focus={selectedSkill}
+                roles={roles}
+              />
             )}
           </section>
 
@@ -591,7 +599,7 @@ export default function DashboardPage() {
                   </p>
 
                   <p className="text-base font-black text-[var(--text-primary)]">
-                    {selected ? t.dashboard.marketDemandValue(selected.demand) : "—"}
+                    {selected ? t.dashboard.demandInYourRolesValue(selected.demand) : "—"}
                   </p>
                 </div>
               </div>
@@ -658,11 +666,9 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          {/* PROFILE + ROADMAP */}
-          <section className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-3">
-
-            {/* PROFILE SUMMARY */}
-            <div className="rounded-[20px] bg-[var(--card-bg)] p-5 shadow-[0_5px_20px_rgba(0,0,0,0.08)] lg:col-span-2">
+          {/* PROFILE SUMMARY */}
+          <section className="mt-5">
+            <div className="rounded-[20px] bg-[var(--card-bg)] p-5 shadow-[0_5px_20px_rgba(0,0,0,0.08)]">
 
               <div className="mb-4 flex items-center gap-3">
                 <Icon
@@ -712,34 +718,7 @@ export default function DashboardPage() {
                   </a>
                 </div>
               </div>
-
-              <Link
-                href="/profile"
-                className="mt-4 flex items-center justify-center gap-2 rounded-[18px] border-2 border-[var(--accent-bg)] py-2.5 text-center font-black text-[var(--accent-bg)]"
-              >
-                {t.dashboard.viewFullProfile}
-
-                <Icon
-                  icon="weui:arrow-outlined"
-                  className="h-4 w-4 rotate-90"
-                />
-              </Link>
             </div>
-
-            {/* QUICK ROADMAP */}
-            <Link
-              href="/roadmap"
-              className="flex items-center justify-between rounded-[20px] bg-[var(--accent)] px-6 py-5 shadow-lg transition hover:scale-[1.01]"
-            >
-              <span className="text-xl font-black text-[var(--on-accent)]">
-                {t.dashboard.getYourRoadmap}
-              </span>
-
-              <Icon
-                icon="mdi-light:arrow-up"
-                className="h-9 w-9 rotate-90 text-[var(--on-accent)]"
-              />
-            </Link>
           </section>
 
           {/* GENERATE BUTTON */}

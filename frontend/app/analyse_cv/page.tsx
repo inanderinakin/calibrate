@@ -144,7 +144,6 @@ export default function AnalyseCvPage() {
   }
 
   const done = step >= CHECKLIST.length;
-  const progress = Math.round((step / CHECKLIST.length) * 100);
 
   return (
     <AppShell>
@@ -186,7 +185,7 @@ export default function AnalyseCvPage() {
                   <Icon
                     icon="cuida:loading-left-outline"
                     className={`w-9 h-9 text-(--accent-bg) shrink-0 ${
-                      isActive ? "animate-spin" : "opacity-30"
+                      isActive ? "animate-spin-ccw" : "opacity-30"
                     }`}
                   />
                 )}
@@ -209,24 +208,19 @@ export default function AnalyseCvPage() {
           <p className="w-full rounded-[20px] border-2 border-(--accent-2) p-4 text-left font-semibold text-(--text-primary)">
             {error}
           </p>
-        ) : (
+        ) : !done && (
           <div className="w-full flex flex-col items-center gap-4">
-            <span className="text-4xl font-black text-(--accent-bg)">
-              {progress} %
-            </span>
-
-            <div className="w-full h-2.5 rounded-full bg-(--hover-bg) overflow-hidden">
-              <div
-                className="h-full rounded-full bg-(--accent) transition-all"
-                style={{ width: `${progress}%` }}
-              />
+            <div
+              role="progressbar"
+              aria-label={t.analyseCv.titleInProgress}
+              className="w-full h-3 rounded-full bg-[var(--accent-bg)]/20 overflow-hidden"
+            >
+              <div className="h-full w-1/3 rounded-full bg-(--accent-bg) animate-indeterminate" />
             </div>
 
-            {!done && (
-              <p className="text-(--text-primary) font-light">
-                {t.analyseCv.waitNote}
-              </p>
-            )}
+            <p className="text-(--text-primary) font-light">
+              {t.analyseCv.waitNote}
+            </p>
           </div>
         )}
 
