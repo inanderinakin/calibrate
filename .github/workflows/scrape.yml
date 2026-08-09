@@ -120,6 +120,8 @@ jobs:
           aws s3 cp s3://calibrate-teamthrow/scraper-data/postings.jsonl scraper/postings.jsonl
           python pipeline/build_trends.py
           python pipeline/build_demand_profile.py
+          aws s3 cp app/trends.json s3://calibrate-teamthrow/pipeline-data/trends.json
+          aws s3 cp app/demand_profile.json s3://calibrate-teamthrow/pipeline-data/demand_profile.json
         working-directory: backend
         env:
           PYTHONPATH: app:.
