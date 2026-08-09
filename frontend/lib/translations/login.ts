@@ -4,11 +4,13 @@ export const login = {
     email: "Email",
     password: "Password",
     submit: "Log in",
+    orContinueWith: "or continue with",
   },
   tr: {
     title: "Giriş Yap",
     email: "E-posta",
     password: "Şifre",
     submit: "Giriş Yap",
+    orContinueWith: "veya şununla devam et",
   },
 };

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Icon } from "@iconify/react";
+import { motion } from "framer-motion";
 import AppShell from "@/components/AppShell";
 import StepIndicator from "@/components/StepIndicator";
 import { API_URL, errorMessage } from "@/lib/api";
@@ -103,11 +104,7 @@ export default function AnalyseCvPage() {
    * Loading state while checking whether a CV exists.
    */
   if (!loaded || cvUploaded === null) {
-    return (
-      <AppShell>
-        <main className="page-texture min-h-screen px-6 py-10 md:px-10 lg:px-14" />
-      </AppShell>
-    );
+    return <AppShell backHref="/select_role" />;
   }
 
   /*
@@ -115,30 +112,28 @@ export default function AnalyseCvPage() {
    */
   if (!cvUploaded) {
     return (
-      <AppShell>
-        <main className="page-texture min-h-screen px-6 py-10 md:px-10 lg:px-14">
-          <div className="mx-auto flex max-w-3xl flex-col items-start gap-5 rounded-[30px] bg-[var(--card-bg)] p-8 shadow-lg">
-            <Icon
-              icon="mdi:file-search-outline"
-              className="h-14 w-14 text-[var(--accent-2)]"
-            />
+      <AppShell backHref="/select_role">
+        <div className="mx-auto flex max-w-3xl flex-col items-start gap-5 rounded-[30px] glass-card p-8 shadow-lg">
+          <Icon
+            icon="mdi:file-search-outline"
+            className="h-14 w-14 text-[var(--accent-2)]"
+          />
 
-            <h1 className="text-3xl font-black text-[var(--text-primary)] md:text-5xl">
-              {t.common.nothingToShowYet}
-            </h1>
+          <h1 className="text-3xl font-black text-[var(--text-primary)] md:text-5xl">
+            {t.common.nothingToShowYet}
+          </h1>
 
-            <p className="text-lg text-[var(--text-secondary)]">
-              {t.common.uploadCvPrompt}
-            </p>
+          <p className="text-lg text-[var(--text-secondary)]">
+            {t.common.uploadCvPrompt}
+          </p>
 
-            <Link
-              href="/upload_cv"
-              className="rounded-[20px] bg-[var(--accent)] px-8 py-3.5 text-lg font-bold text-[var(--on-accent)]"
-            >
-              {t.common.uploadYourCv}
-            </Link>
-          </div>
-        </main>
+          <Link
+            href="/upload_cv"
+            className="btn-hover rounded-[20px] bg-[var(--accent)] px-8 py-3.5 text-lg font-bold text-[var(--on-accent)]"
+          >
+            {t.common.uploadYourCv}
+          </Link>
+        </div>
       </AppShell>
     );
   }
@@ -146,34 +141,47 @@ export default function AnalyseCvPage() {
   const done = step >= CHECKLIST.length;
 
   return (
-    <AppShell>
-      <div className="p-6 md:p-10 lg:p-14 flex flex-col items-center gap-8 max-w-4xl mx-auto text-center">
+    <AppShell backHref="/select_role">
+      <div className="flex flex-col items-center gap-8 max-w-4xl mx-auto text-center">
         <StepIndicator activeStep={3} />
 
-        <h1 className="text-3xl md:text-5xl font-bold text-(--accent-2)">
+        <motion.h1
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="text-3xl md:text-5xl font-bold text-(--accent-2)"
+        >
           {error
             ? t.analyseCv.titleError
             : done
               ? t.analyseCv.titleDone
               : t.analyseCv.titleInProgress}
-        </h1>
+        </motion.h1>
 
-        <p className="text-(--text-primary) max-w-xl">
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.15 }}
+          className="text-(--text-primary) max-w-xl"
+        >
           {error
             ? t.analyseCv.subtitleError
             : done
               ? t.analyseCv.subtitleDone
               : t.analyseCv.subtitleInProgress}
-        </p>
+        </motion.p>
 
-        <div className="bg-(--card-bg) rounded-[23px] shadow-lg p-8 w-full flex flex-col gap-6 text-left">
+        <div className="glass-card rounded-[23px] shadow-lg p-8 w-full flex flex-col gap-6 text-left">
           {CHECKLIST.map((item, i) => {
             const isDone = i < step;
             const isActive = i === step && !error;
 
             return (
-              <div
+              <motion.div
                 key={item.title}
+                initial={{ opacity: 0, x: -16 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.08, duration: 0.4 }}
                 className="flex items-start gap-4"
               >
                 {isDone ? (
@@ -199,13 +207,13 @@ export default function AnalyseCvPage() {
                     {item.note}
                   </p>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>
 
         {error ? (
-          <p className="w-full rounded-[20px] border-2 border-(--accent-2) p-4 text-left font-semibold text-(--text-primary)">
+          <p className="glass-card w-full rounded-[20px] border-2 border-(--accent-2) p-4 text-left font-semibold text-(--text-primary)">
             {error}
           </p>
         ) : !done && (
@@ -228,7 +236,7 @@ export default function AnalyseCvPage() {
           {error ? (
             <Link
               href="/upload_cv"
-              className="bg-(--accent) text-(--on-accent) rounded-[20px] px-8 py-3.5 font-bold text-lg flex items-center gap-3"
+              className="btn-hover bg-(--accent) text-(--on-accent) rounded-[20px] px-8 py-3.5 font-bold text-lg flex items-center gap-3"
             >
               {t.analyseCv.startOver}
               <Icon
@@ -237,10 +245,12 @@ export default function AnalyseCvPage() {
               />
             </Link>
           ) : (
-            <button
+            <motion.button
               type="button"
               disabled={!done}
               onClick={() => router.push("/dashboard")}
+              whileHover={done ? { scale: 1.03 } : undefined}
+              whileTap={done ? { scale: 0.97 } : undefined}
               className="bg-(--accent) text-(--on-accent) rounded-[20px] px-8 py-3.5 font-bold text-lg flex items-center gap-3 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {t.analyseCv.continueToDashboard}
@@ -248,13 +258,13 @@ export default function AnalyseCvPage() {
                 icon="mdi-light:arrow-up"
                 className="w-6 h-6 rotate-90"
               />
-            </button>
+            </motion.button>
           )}
 
           {done && (
             <Link
               href="/profile"
-              className="border-2 border-(--accent-bg) text-(--accent-bg) rounded-[20px] px-8 py-3.5 font-bold text-lg flex items-center gap-3"
+              className="btn-hover border-2 border-(--accent-bg) text-(--accent-bg) rounded-[20px] px-8 py-3.5 font-bold text-lg flex items-center gap-3"
             >
               {t.analyseCv.checkProfileSettings}
               <Icon

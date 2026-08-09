@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Icon } from "@iconify/react";
+import { motion } from "framer-motion";
 import AppShell from "@/components/AppShell";
 import { session } from "@/lib/session";
 import type { Report } from "@/lib/types";
@@ -17,6 +18,19 @@ export default function RoadmapPage() {
   const [report, setReport] = useState<Report | null>(null);
   const [cvUploaded, setCvUploaded] = useState<boolean | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [completed, setCompleted] = useState<Set<string>>(new Set());
+
+  function toggleCompleted(skill: string) {
+    setCompleted((current) => {
+      const next = new Set(current);
+      if (next.has(skill)) {
+        next.delete(skill);
+      } else {
+        next.add(skill);
+      }
+      return next;
+    });
+  }
 
   useEffect(() => {
     const skills = session.getCvSkills();
@@ -29,40 +43,34 @@ export default function RoadmapPage() {
 
   // Avoid rendering the wrong state before checking the session.
   if (!loaded || cvUploaded === null) {
-    return (
-      <AppShell>
-        <main className="page-texture min-h-screen px-6 py-10 md:px-10 lg:px-14" />
-      </AppShell>
-    );
+    return <AppShell backHref="/dashboard" />;
   }
 
   // No CV uploaded
   if (!cvUploaded) {
     return (
-      <AppShell>
-        <main className="page-texture min-h-screen px-6 py-10 md:px-10 lg:px-14">
-          <div className="mx-auto flex max-w-3xl flex-col items-start gap-5 rounded-[30px] bg-[var(--card-bg)] p-8 shadow-lg">
-            <Icon
-              icon="mdi:file-search-outline"
-              className="h-14 w-14 text-[var(--accent-2)]"
-            />
+      <AppShell backHref="/dashboard">
+        <div className="mx-auto flex max-w-3xl flex-col items-start gap-5 rounded-[30px] glass-card p-8 shadow-lg">
+          <Icon
+            icon="mdi:file-search-outline"
+            className="h-14 w-14 text-[var(--accent-2)]"
+          />
 
-            <h1 className="text-3xl font-black text-[var(--text-primary)] md:text-5xl">
-              {t.common.nothingToShowYet}
-            </h1>
+          <h1 className="text-3xl font-black text-[var(--text-primary)] md:text-5xl">
+            {t.common.nothingToShowYet}
+          </h1>
 
-            <p className="text-lg text-[var(--text-secondary)]">
-              {t.common.uploadCvPrompt}
-            </p>
+          <p className="text-lg text-[var(--text-secondary)]">
+            {t.common.uploadCvPrompt}
+          </p>
 
-            <Link
-              href="/upload_cv"
-              className="rounded-[20px] bg-[var(--accent)] px-8 py-3.5 text-lg font-bold text-[var(--on-accent)]"
-            >
-              {t.common.uploadYourCv}
-            </Link>
-          </div>
-        </main>
+          <Link
+            href="/upload_cv"
+            className="btn-hover rounded-[20px] bg-[var(--accent)] px-8 py-3.5 text-lg font-bold text-[var(--on-accent)]"
+          >
+            {t.common.uploadYourCv}
+          </Link>
+        </div>
       </AppShell>
     );
   }
@@ -70,13 +78,12 @@ export default function RoadmapPage() {
   // CV exists, but no roadmap has been generated yet.
   if (!report) {
     return (
-      <AppShell>
-        <main className="page-texture min-h-screen px-6 py-10 md:px-10 lg:px-14">
-          <div className="mx-auto flex max-w-3xl flex-col items-start gap-5 rounded-[30px] bg-[var(--card-bg)] p-8 shadow-lg">
-            <Icon
-              icon="mdi:map-outline"
-              className="h-14 w-14 text-[var(--accent-2)]"
-            />
+      <AppShell backHref="/dashboard">
+        <div className="mx-auto flex max-w-3xl flex-col items-start gap-5 rounded-[30px] glass-card p-8 shadow-lg">
+          <Icon
+            icon="mdi:map-outline"
+            className="h-14 w-14 text-[var(--accent-2)]"
+          />
 
             <h1 className="text-3xl font-black text-[var(--text-primary)] md:text-5xl">
               {t.roadmap.noRoadmapYet}
@@ -88,21 +95,24 @@ export default function RoadmapPage() {
 
             <Link
               href="/select_role"
-              className="rounded-[20px] bg-[var(--accent)] px-8 py-3.5 text-lg font-bold text-[var(--on-accent)]"
+              className="btn-hover rounded-[20px] bg-[var(--accent)] px-8 py-3.5 text-lg font-bold text-[var(--on-accent)]"
             >
               {t.roadmap.selectTargetRoles}
             </Link>
-          </div>
-        </main>
+        </div>
       </AppShell>
     );
   }
 
   // CV + roadmap exist → show roadmap.
   return (
-    <AppShell>
-      <div className="p-6 md:p-10 lg:p-14 flex flex-col gap-6">
-        <header>
+    <AppShell backHref="/dashboard">
+      <div className="flex flex-col gap-6">
+        <motion.header
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
           <h1 className="text-3xl md:text-5xl font-bold text-(--text-primary)">
             {t.roadmap.title}
           </h1>
@@ -120,7 +130,7 @@ export default function RoadmapPage() {
               {report.summary}
             </p>
           )}
-        </header>
+        </motion.header>
 
         <div className="relative flex flex-col gap-10">
           <div
@@ -129,7 +139,14 @@ export default function RoadmapPage() {
           />
 
           {report.recommendations.map((skill, index) => (
-            <div key={skill.skill} className="relative">
+            <motion.div
+              key={skill.skill}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.5 }}
+              className="relative"
+            >
               <div className="absolute left-5 top-8 z-10 flex size-11 -translate-x-1/2 items-center justify-center rounded-full bg-(--accent-bg) text-lg font-semibold text-(--accent-text) md:top-1/2 md:left-1/2 md:-translate-y-1/2">
                 {skill.rank}
               </div>
@@ -141,7 +158,11 @@ export default function RoadmapPage() {
                     : "ml-16 md:ml-auto md:w-1/2 md:pl-10"
                 }
               >
-                <div className="bg-(--card-bg) rounded-[20px] shadow-[4px_4px_4px_rgba(0,0,0,0.2)] p-6 flex flex-col gap-5">
+                <motion.div
+                  whileHover={{ y: -4 }}
+                  transition={{ type: "spring", stiffness: 260, damping: 24 }}
+                  className="glass-card rounded-[20px] shadow-[4px_4px_4px_rgba(0,0,0,0.2)] p-6 flex flex-col gap-5"
+                >
                   <div className="text-xs font-light text-(--text-muted)">
                     {getCategoryLabel(skill.esco_category, language)}
                   </div>
@@ -189,16 +210,28 @@ export default function RoadmapPage() {
                       </p>
                     )}
 
-                    <button
+                    <motion.button
                       type="button"
-                      className="border-2 border-(--accent-bg) rounded-lg py-2 text-(--accent-bg) font-semibold"
+                      onClick={() => toggleCompleted(skill.skill)}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.97 }}
+                      className={`rounded-lg py-2 font-semibold transition-colors flex items-center justify-center gap-2 ${
+                        completed.has(skill.skill)
+                          ? "bg-[var(--accent)] text-[var(--on-accent)]"
+                          : "border-2 border-(--accent-bg) text-(--accent-bg)"
+                      }`}
                     >
-                      {t.roadmap.markCompleted}
-                    </button>
+                      {completed.has(skill.skill) && (
+                        <Icon icon="lets-icons:check-fill" className="w-5 h-5" />
+                      )}
+                      {completed.has(skill.skill)
+                        ? t.roadmap.completed
+                        : t.roadmap.markCompleted}
+                    </motion.button>
                   </div>
-                </div>
+                </motion.div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>

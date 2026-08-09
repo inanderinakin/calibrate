@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Icon } from "@iconify/react";
+import { motion } from "framer-motion";
 import AppShell from "@/components/AppShell";
 import TrendingSkillsChart from "@/components/TrendingSkillsChart";
 import { ChartSkeleton, DashboardSkeleton } from "@/components/Skeleton";
@@ -104,6 +105,7 @@ export default function DashboardPage() {
   const [trends, setTrends] = useState<TrendsPayload | null>(null);
   const [trendsFailed, setTrendsFailed] = useState(false);
   const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
+  const [focusSkills, setFocusSkills] = useState<string[]>([]);
 
   useEffect(() => {
     setGaps(session.getGaps());
@@ -119,7 +121,7 @@ export default function DashboardPage() {
 
   if (!loaded) {
     return (
-      <AppShell>
+      <AppShell backHref="/analyse_cv">
         <DashboardSkeleton />
       </AppShell>
     );
@@ -127,30 +129,28 @@ export default function DashboardPage() {
 
   if (!gaps) {
     return (
-      <AppShell>
-        <main className="page-texture min-h-screen px-6 py-10 md:px-10 lg:px-14">
-          <div className="mx-auto flex max-w-3xl flex-col items-start gap-5 rounded-[30px] bg-(--card-bg) p-8 shadow-lg">
-            <Icon
-              icon="mdi:file-search-outline"
-              className="h-14 w-14 text-(--accent-2)"
-            />
+      <AppShell backHref="/analyse_cv">
+        <div className="mx-auto flex max-w-3xl flex-col items-start gap-5 rounded-[30px] bg-(--card-bg) p-8 shadow-lg">
+          <Icon
+            icon="mdi:file-search-outline"
+            className="h-14 w-14 text-(--accent-2)"
+          />
 
-            <h1 className="text-3xl font-black text-(--text-primary) md:text-5xl">
-              {t.common.nothingToShowYet}
-            </h1>
+          <h1 className="text-3xl font-black text-(--text-primary) md:text-5xl">
+            {t.common.nothingToShowYet}
+          </h1>
 
-            <p className="text-lg text-[var(--text-secondary)]">
-              {t.common.uploadCvPrompt}
-            </p>
+          <p className="text-lg text-[var(--text-secondary)]">
+            {t.common.uploadCvPrompt}
+          </p>
 
-            <Link
-              href="/upload_cv"
-              className="rounded-[20px] bg-[var(--accent)] px-8 py-3.5 text-lg font-bold text-[var(--on-accent)]"
-            >
-              {t.common.uploadYourCv}
-            </Link>
-          </div>
-        </main>
+          <Link
+            href="/upload_cv"
+            className="btn-hover rounded-[20px] bg-[var(--accent)] px-8 py-3.5 text-lg font-bold text-[var(--on-accent)]"
+          >
+            {t.common.uploadYourCv}
+          </Link>
+        </div>
       </AppShell>
     );
   }
@@ -210,6 +210,15 @@ export default function DashboardPage() {
     missingSkills[0] ??
     null;
 
+  function toggleFocusSkill(name: string) {
+    setFocusSkills((current) =>
+      current.includes(name)
+        ? current.filter((skill) => skill !== name)
+        : [...current, name]
+    );
+    setSelectedSkill(name);
+  }
+
   /* ---------------- SELECTED ROLE MATCH ---------------- */
 
   const selectedRoleData =
@@ -218,12 +227,16 @@ export default function DashboardPage() {
   /* ---------------- UI ---------------- */
 
   return (
-    <AppShell>
-      <main className="page-texture min-h-screen overflow-x-hidden px-5 py-6 md:px-8 md:py-8 lg:px-10 lg:py-9">
-        <div className="mx-auto max-w-[1500px]">
+    <AppShell backHref="/analyse_cv">
+      <div className="mx-auto max-w-[1500px]">
 
           {/* HEADER */}
-          <header className="mb-5">
+          <motion.header
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="mb-5"
+          >
             <h1 className="text-4xl font-black tracking-[-0.04em] text-(--text-primary) md:text-5xl lg:text-6xl">
               {t.dashboard.welcomeBack}
               {user?.firstName ? `, ${user.firstName}` : ""}!
@@ -232,17 +245,28 @@ export default function DashboardPage() {
             <p className="mt-1 text-lg text-(--text-muted) md:text-xl">
               {t.dashboard.matchSubtitle(roles.length > 0 ? roles.join(", ") : t.dashboard.yourTargetRole)}
             </p>
-          </header>
+          </motion.header>
 
           {/* TOP SECTION */}
-          <section className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_1.3fr]">
+          <motion.section
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.15 }}
+            transition={{ duration: 0.5 }}
+            className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_1.3fr]"
+          >
 
             {/* MATCH CARD */}
-            <div className="rounded-[20px] border border-black/5 bg-[var(--card-bg)] p-7 shadow-[0_5px_20px_rgba(0,0,0,0.08)]">
+            <div className="glass-card rounded-[20px] p-7">
               <div className="flex h-full flex-col justify-center gap-5 md:flex-row md:items-center md:gap-8">
 
                 {/* MATCH CIRCLE */}
-                <div className="relative mx-auto flex h-[220px] w-[220px] shrink-0 items-center justify-center rounded-full bg-[#dedede]">
+                <motion.div
+                  initial={{ scale: 0.85, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.6, ease: "easeOut" }}
+                  className="relative mx-auto flex h-[220px] w-[220px] shrink-0 items-center justify-center rounded-full bg-[#dedede]"
+                >
                   <div
                     className="absolute inset-0 rounded-full"
                     style={{
@@ -262,7 +286,7 @@ export default function DashboardPage() {
                       {t.dashboard.match}
                     </span>
                   </div>
-                </div>
+                </motion.div>
 
                 {/* MATCH INFO */}
                 <div className="flex flex-col justify-center">
@@ -323,7 +347,7 @@ export default function DashboardPage() {
             </div>
 
             {/* MISSING SKILLS */}
-            <div className="rounded-[20px] border border-black/5 bg-[var(--card-bg)] p-6 shadow-[0_5px_20px_rgba(0,0,0,0.08)]">
+            <div className="glass-card rounded-[20px] p-6">
 
               <div className="mb-5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -360,7 +384,7 @@ export default function DashboardPage() {
                       key={skill.name}
                       type="button"
                       onClick={() => setSelectedSkill(skill.name)}
-                      className={`grid w-full grid-cols-[58px_1fr_65px] items-center gap-3 rounded-xl text-left transition ${
+                      className={`grid w-full grid-cols-[58px_1fr_65px] items-center gap-3 rounded-xl text-left transition hover:text-[var(--pink)] dark:hover:text-[var(--light-blue)] hover:bg-(--hover-bg) ${
                         selectedSkill === skill.name
                           ? "scale-[1.01]"
                           : ""
@@ -408,10 +432,15 @@ export default function DashboardPage() {
                 {t.dashboard.percentagesNote}
               </p>
             </div>
-          </section>
+          </motion.section>
 
           {/* LEARNING FOCUS */}
-          <section className="mt-5 rounded-[20px] border border-black/5 bg-[var(--card-bg)] p-6 shadow-[0_5px_20px_rgba(0,0,0,0.08)]">
+          <motion.section
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.15 }}
+            transition={{ duration: 0.5 }}
+            className="mt-5 glass-card rounded-[20px] p-6">
 
             <div className="mb-5 flex items-start gap-3">
               <Icon
@@ -434,13 +463,13 @@ export default function DashboardPage() {
 
               {/* SKILLS */}
               {missingSkills.map((skill) => {
-                const isSelected = selectedSkill === skill.name;
+                const isSelected = focusSkills.includes(skill.name);
 
                 return (
                   <button
                     key={skill.name}
                     type="button"
-                    onClick={() => setSelectedSkill(skill.name)}
+                    onClick={() => toggleFocusSkill(skill.name)}
                     className={`relative rounded-[16px] border-2 p-4 text-left transition ${
                       isSelected
                         ? "border-[var(--accent-2)]"
@@ -497,21 +526,24 @@ export default function DashboardPage() {
               {/* COMPLETE ROADMAP */}
               <button
                 type="button"
-                onClick={() => setSelectedSkill(null)}
+                onClick={() => {
+                  setFocusSkills([]);
+                  setSelectedSkill(null);
+                }}
                 className={`relative rounded-[16px] border-2 border-dashed p-4 text-left transition ${
-                  selectedSkill === null
+                  focusSkills.length === 0
                     ? "border-[var(--accent-2)]"
                     : "border-black/15 hover:border-[var(--accent-2)]/50"
                 }`}
               >
                 <div
                   className={`absolute right-4 top-4 flex h-6 w-6 items-center justify-center rounded-full border-2 ${
-                    selectedSkill === null
+                    focusSkills.length === 0
                       ? "border-[var(--accent-2)]"
                       : "border-black/30"
                   }`}
                 >
-                  {selectedSkill === null && (
+                  {focusSkills.length === 0 && (
                     <div className="h-3 w-3 rounded-full bg-[var(--accent-2)]" />
                   )}
                 </div>
@@ -534,10 +566,15 @@ export default function DashboardPage() {
                 </p>
               </button>
             </div>
-          </section>
+          </motion.section>
 
           {/* MARKET TRENDS */}
-          <section className="mt-5 rounded-[20px] border border-black/5 bg-[var(--card-bg)] p-6 shadow-[0_5px_20px_rgba(0,0,0,0.08)]">
+          <motion.section
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.15 }}
+            transition={{ duration: 0.5 }}
+            className="mt-5 glass-card rounded-[20px] p-6">
 
             <div className="mb-5 flex items-center gap-2">
               <h2 className="text-2xl font-black text-[var(--text-primary)]">
@@ -565,10 +602,15 @@ export default function DashboardPage() {
                 roles={roles}
               />
             )}
-          </section>
+          </motion.section>
 
           {/* ROADMAP PREVIEW */}
-          <section className="mt-5 rounded-[20px] border border-black/5 bg-[var(--card-bg)] p-6 shadow-[0_5px_20px_rgba(0,0,0,0.08)]">
+          <motion.section
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.15 }}
+            transition={{ duration: 0.5 }}
+            className="mt-5 glass-card rounded-[20px] p-6">
 
             <div className="mb-5 flex items-center gap-3">
               <Icon
@@ -664,11 +706,17 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
-          </section>
+          </motion.section>
 
           {/* PROFILE SUMMARY */}
-          <section className="mt-5">
-            <div className="rounded-[20px] bg-[var(--card-bg)] p-5 shadow-[0_5px_20px_rgba(0,0,0,0.08)]">
+          <motion.section
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.15 }}
+            transition={{ duration: 0.5 }}
+            className="mt-5"
+          >
+            <div className="glass-card rounded-[20px] p-5 w-full">
 
               <div className="mb-4 flex items-center gap-3">
                 <Icon
@@ -719,13 +767,15 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
-          </section>
+          </motion.section>
 
           {/* GENERATE BUTTON */}
           <div className="flex justify-center py-6">
-            <button
+            <motion.button
               type="button"
               onClick={() => router.push("/roadmap")}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
               className="flex min-w-[390px] items-center justify-center gap-4 rounded-[18px] bg-[var(--accent-2)] px-10 py-4 text-xl font-black text-[var(--on-accent)] shadow-[0_5px_12px_rgba(0,0,0,0.2)] transition hover:scale-[1.01] active:scale-[0.99]"
             >
               <Icon
@@ -739,10 +789,9 @@ export default function DashboardPage() {
                 icon="mdi:arrow-right"
                 className="h-7 w-7"
               />
-            </button>
+            </motion.button>
           </div>
         </div>
-      </main>
     </AppShell>
   );
 }
