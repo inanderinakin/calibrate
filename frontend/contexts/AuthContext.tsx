@@ -13,6 +13,7 @@ export interface AuthUser {
   lastName: string;
   email: string;
   studyField: string;
+  joinedAt?: string;
 }
 
 interface AuthContextValue {
@@ -22,10 +23,24 @@ interface AuthContextValue {
   logout: () => void;
   updateUser: (partial: Partial<AuthUser>) => void;
 }
-
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 const STORAGE_KEY = "calibrate_auth_user";
+const PROFILE_KEY = "calibrate_profile";
+
+function readProfile(): AuthUser | null {
+  if (typeof window === "undefined") return null;
+
+  const raw = window.localStorage.getItem(PROFILE_KEY);
+  if (!raw) return null;
+
+  try {
+    return JSON.parse(raw) as AuthUser;
+  } catch {
+    window.localStorage.removeItem(PROFILE_KEY);
+    return null;
+  }
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -49,16 +64,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(next);
     if (next) {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      window.localStorage.setItem(PROFILE_KEY, JSON.stringify(next));
     } else {
+      // Logout clears the session, but keeps the saved profile so the
+      // account information survives a logout.
       window.localStorage.removeItem(STORAGE_KEY);
     }
   };
 
-  const login = (newUser: AuthUser) => persist(newUser);
+  const login = (newUser: AuthUser) => {
+    const saved = readProfile();
+
+    const merged: AuthUser = {
+      ...saved,
+      ...newUser,
+      ...(newUser.firstName ? {} : { firstName: saved?.firstName ?? "" }),
+      ...(newUser.lastName ? {} : { lastName: saved?.lastName ?? "" }),
+      ...(newUser.studyField ? {} : { studyField: saved?.studyField ?? "" }),
+      joinedAt: newUser.joinedAt ?? saved?.joinedAt ?? new Date().toISOString(),
+    };
+
+    persist(merged);
+  };
+
   const logout = () => persist(null);
+
   const updateUser = (partial: Partial<AuthUser>) => {
-    if (!user) return;
-    persist({ ...user, ...partial });
+    const base = user ?? readProfile();
+    if (!base) return;
+    persist({ ...base, ...partial });
   };
 
   // Avoid a flash of "logged out" UI while we check localStorage.

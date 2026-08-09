@@ -2,9 +2,11 @@
 
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
+import BackButton from "@/components/BackButton";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -30,28 +32,41 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-4 bg-[var(--page-bg)]">
-      <form
+    <main className="min-h-screen flex flex-col bg-[var(--page-bg)] p-6 md:p-10 lg:p-14">
+      <div className="mb-6 flex justify-start">
+        <BackButton fallbackHref="/" />
+      </div>
+
+      <div className="flex flex-1 items-center justify-center">
+        <motion.form
         onSubmit={handleSubmit}
-        className="w-full max-w-md flex flex-col gap-4"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="glass-card w-full max-w-md flex flex-col gap-4 rounded-[24px] p-8"
       >
-        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
+        <motion.h1
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.15 }}
+          className="text-2xl font-semibold text-[var(--text-primary)]"
+        >
           {t.signup.title}
-        </h1>
+        </motion.h1>
 
         <input
           required
           placeholder={t.signup.firstName}
           value={firstName}
           onChange={(e) => setFirstName(e.target.value)}
-          className="rounded-lg border border-[var(--border-color)] px-4 py-2.5 bg-[var(--input-bg)] text-[var(--text-primary)]"
+          className="glass-input rounded-lg border border-[var(--border-color)] px-4 py-2.5 text-[var(--text-primary)] outline-none focus:border-[var(--accent-2)]"
         />
         <input
           required
           placeholder={t.signup.lastName}
           value={lastName}
           onChange={(e) => setLastName(e.target.value)}
-          className="rounded-lg border border-[var(--border-color)] px-4 py-2.5 bg-[var(--input-bg)] text-[var(--text-primary)]"
+          className="glass-input rounded-lg border border-[var(--border-color)] px-4 py-2.5 text-[var(--text-primary)] outline-none focus:border-[var(--accent-2)]"
         />
         <input
           required
@@ -59,23 +74,26 @@ export default function SignupPage() {
           placeholder={t.signup.email}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="rounded-lg border border-[var(--border-color)] px-4 py-2.5 bg-[var(--input-bg)] text-[var(--text-primary)]"
+          className="glass-input rounded-lg border border-[var(--border-color)] px-4 py-2.5 text-[var(--text-primary)] outline-none focus:border-[var(--accent-2)]"
         />
         <input
           required
           placeholder={t.signup.fieldOfStudy}
           value={studyField}
           onChange={(e) => setStudyField(e.target.value)}
-          className="rounded-lg border border-[var(--border-color)] px-4 py-2.5 bg-[var(--input-bg)] text-[var(--text-primary)]"
+          className="glass-input rounded-lg border border-[var(--border-color)] px-4 py-2.5 text-[var(--text-primary)] outline-none focus:border-[var(--accent-2)]"
         />
 
-        <button
+        <motion.button
           type="submit"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.97 }}
           className="rounded-lg bg-[var(--accent-bg)] text-[var(--accent-text)] py-2.5 font-medium mt-2"
         >
           {t.signup.submit}
-        </button>
-      </form>
+        </motion.button>
+        </motion.form>
+      </div>
     </main>
   );
 }

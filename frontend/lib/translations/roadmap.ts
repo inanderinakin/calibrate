@@ -8,6 +8,7 @@ export const roadmap = {
     subtitle: "Follow this roadmap to build the skills you need and achieve your career goals.",
     noResources: "No learning resources are available for this skill at the moment. Please check back later.",
     markCompleted: "Mark as Completed!",
+    completed: "Completed!",
     resourceType: {
       documentation: "documentation",
       video: "video",
@@ -23,6 +24,7 @@ export const roadmap = {
     subtitle: "İhtiyacınız olan becerileri geliştirmek ve kariyer hedeflerinize ulaşmak için bu yol haritasını takip edin.",
     noResources: "Bu beceri için şu anda öğrenme kaynağı bulunmuyor. Lütfen daha sonra tekrar kontrol edin.",
     markCompleted: "Tamamlandı Olarak İşaretle!",
+    completed: "Tamamlandı!",
     resourceType: {
       documentation: "dokümantasyon",
       video: "video",
