@@ -4,7 +4,7 @@ import json
 import math
 from pathlib import Path
 import jsonlines as jl
-from skills import PATTERNS, TERMS
+from skills import PATTERNS
 from scraper.roles import map_to_role, DEFAULT_ROLE, GENERIC_ROLE, ROLE_PATTERNS
 
 trends_path = Path(__file__).parent.parent / "app" / "trends.json"
@@ -101,7 +101,7 @@ def build_series(sources):
         anchor += datetime.timedelta(days=7)
 
     series = {}
-    for term in TERMS:
+    for term in PATTERNS:
         values = []
         for week in weeks:
             days = windows[week]
@@ -178,7 +178,7 @@ def build_role_series():
             continue
 
         series = {}
-        for term in TERMS:
+        for term in PATTERNS:
             counted = term_counts[role].get(term)
             if not counted:
                 continue
@@ -233,7 +233,7 @@ def build_trends():
     ]
 
     results = []
-    for term in TERMS:
+    for term in PATTERNS:
         per_source = {}
         for source in usable:
             old_total = postings_per_cell[(source, baseline_month)]
