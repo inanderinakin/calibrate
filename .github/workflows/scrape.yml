@@ -117,6 +117,7 @@ jobs:
       - name: Generate trend and demand data
         if: (github.event_name == 'workflow_dispatch' || steps.sched.outputs.is_scrape_day == 'true') && !cancelled()
         run: |
+          aws s3 cp s3://calibrate-teamthrow/scraper-data/postings.jsonl scraper/postings.jsonl
           python pipeline/build_trends.py
           python pipeline/build_demand_profile.py
         working-directory: backend
