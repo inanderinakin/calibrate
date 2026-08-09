@@ -24,14 +24,6 @@ on:
         type: boolean
         default: true
   schedule:
-    # Fires daily and scrapes every time. This ran on a 1-day-on, 2-days-off
-    # cadence until 2026-08-04; the corpus was tracking ~4,700 by the Aug 31
-    # deadline against a 5,000 floor, so it now runs every day. That costs
-    # more than the 2,000 free Actions minutes a private repo gets, which is
-    # covered by a spending limit.
-    # secretcv and yenibiris are NOT on the schedule at all — manual
-    # (workflow_dispatch) only. yenibiris.com blocks GitHub Actions' IP with
-    # a 403.
     - cron: "0 3 * * *"
 
 jobs:
@@ -53,16 +45,13 @@ jobs:
         with:
           python-version: "3.12"
 
-      # The cron fires every day and every run now scrapes. This step stays
-      # so the `if:` conditions on every step below keep resolving; it just
-      # always answers yes.
       - name: Determine schedule flags
         id: sched
         run: echo "is_scrape_day=true" >> "$GITHUB_OUTPUT"
 
       - name: Install Python dependencies
         if: github.event_name != 'schedule' || steps.sched.outputs.is_scrape_day == 'true'
-        run: pip install playwright beautifulsoup4 boto3 requests linkedin-jobs-scraper
+        run: pip install playwright beautifulsoup4 boto3 requests linkedin-jobs-scraper==5.0.2 jsonlines pydantic
 
       - name: Install Playwright browsers
         if: (github.event_name == 'schedule' && steps.sched.outputs.is_scrape_day == 'true') || inputs.run_kariyer == true
@@ -81,7 +70,6 @@ jobs:
             xvfb-run -a python -c "import kariyer_scraper as s; s.SOURCES = s.SOURCES[:2]; s.MAX_PAGES_PER_SOURCE = 1; s.main()"
           fi
 
-      # NOT on the schedule at all anymore — manual (workflow_dispatch) only.
       - name: Run secretcv.com scraper
         if: inputs.run_secretcv == true
         run: |
@@ -91,9 +79,6 @@ jobs:
             python -c "import secretcv_scraper as s; s.SOURCES = s.SOURCES[:2]; s.MAX_PAGES_PER_SOURCE = 1; s.main()"
           fi
 
-      # NOT included on the `schedule` trigger — yenibiris.com 403s GitHub
-      # Actions' IP, so the automatic weekly run skips it until that's
-      # resolved. Still runnable manually (e.g. from a different runner/IP).
       - name: Run yenibiris.com scraper
         if: github.event_name == 'workflow_dispatch' && inputs.run_yenibiris == true
         run: |
@@ -123,17 +108,17 @@ jobs:
           else
             python -c "import linkedin_scraper as s; s.SOURCES = s.SOURCES[:2]; s.MAX_RESULTS_PER_SOURCE = 5; s.main()"
           fi
-
-      # Dated, immutable copy of the corpus as it stood after this run — the
-      # live postings.jsonl gets overwritten every run, so without this we
-      # have no trend history at all. Server-side S3 copy, runs once after
-      # every scraper above has finished (not inside sync_to_s3(), which
-      # runs once per scraper and would produce four partial snapshots).
-      # Skipped on non-scrape schedule days — nothing changed in S3, so a
-      # snapshot would just be a redundant copy of the previous one.
       - name: Archive dated snapshot
         if: (github.event_name == 'workflow_dispatch' || steps.sched.outputs.is_scrape_day == 'true') && !cancelled()
         run: |
           aws s3 cp \
             s3://calibrate-teamthrow/scraper-data/postings.jsonl \
             s3://calibrate-teamthrow/scraper-data/snapshots/postings_$(date -u +%F).jsonl
+      - name: Generate trend and demand data
+        if: (github.event_name == 'workflow_dispatch' || steps.sched.outputs.is_scrape_day == 'true') && !cancelled()
+        run: |
+          python pipeline/build_trends.py
+          python pipeline/build_demand_profile.py
+        working-directory: backend
+        env:
+          PYTHONPATH: app:.
