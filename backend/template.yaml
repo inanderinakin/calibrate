@@ -17,11 +17,17 @@ Resources:
         - x86_64
       FunctionUrlConfig:
         AuthType: NONE
+      Environment:
+        Variables:
+          USER_TABLE: !Ref UserDataTable
       Policies:
         - S3FullAccessPolicy:
             BucketName: calibrate-teamthrow
 
         - TextractPolicy: {} 
+
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserDataTable
 
         - Statement:
             - Effect: Allow
@@ -32,6 +38,12 @@ Resources:
                 - !Sub "arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/global.anthropic.claude-sonnet-4-6"
                 - "arn:aws:bedrock:*::foundation-model/anthropic.claude-sonnet-4-6*"
                 - "arn:aws:bedrock:*::foundation-model/cohere.embed-multilingual-v3"
+  UserDataTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: userId
+        Type: String
 
 Outputs:
   FunctionUrl:
