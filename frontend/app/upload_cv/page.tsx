@@ -9,9 +9,13 @@ import StepIndicator from "@/components/StepIndicator";
 import { uploadCv } from "@/lib/api";
 import { session } from "@/lib/session";
 import type { NormalizedSkill } from "@/lib/types";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { getTranslations } from "@/lib/translations";
 
 export default function UploadCvPage() {
   const router = useRouter();
+  const { language } = useLanguage();
+  const t = getTranslations(language);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -64,9 +68,7 @@ export default function UploadCvPage() {
     const skills: NormalizedSkill[] = data.skills ?? [];
 
     if (skills.length === 0) {
-      throw new Error(
-        "We couldn't read any skills from that CV. Try another file."
-      );
+      throw new Error(t.uploadCv.noSkillsFound);
     }
 
     clearInterval(timer);
@@ -98,7 +100,7 @@ export default function UploadCvPage() {
           transition={{ duration: 0.5 }}
           className="text-3xl md:text-5xl font-bold text-(--text-primary)"
         >
-          Upload Your CV
+          {t.uploadCv.title}
         </motion.h1>
 
         <motion.div
@@ -112,10 +114,10 @@ export default function UploadCvPage() {
         >
           <Icon icon="mdi:file-pdf-box" className="w-20 h-20 text-(--accent-bg)" />
           <p className="font-black text-xl text-(--accent-bg)">
-            Drag &amp; drop your CV here
+            {t.uploadCv.dragDrop}
           </p>
           <p className="font-semibold text-(--accent-bg)">
-            PDF up to 10MB
+            {t.uploadCv.pdfUpTo}
           </p>
           <input
             ref={fileInputRef}
@@ -159,7 +161,7 @@ export default function UploadCvPage() {
             {isUploading && (
               <>
                 <p className="font-light text-(--text-primary)">
-                  Reading your CV — this takes a few seconds …
+                  {t.uploadCv.reading}
                 </p>
                 <div className="flex items-center gap-3">
                   <div className="h-2.5 flex-1 rounded-full bg-(--hover-bg) overflow-hidden">
@@ -193,13 +195,13 @@ export default function UploadCvPage() {
           whileTap={file && !isUploading ? { scale: 0.97 } : undefined}
           className="bg-(--accent) text-(--on-accent) rounded-[20px] px-10 py-3.5 font-black text-xl flex items-center gap-3 disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          {isUploading ? "Analysing …" : "Continue"}
+          {isUploading ? t.uploadCv.analysing : t.uploadCv.continue}
           <Icon icon="mdi-light:arrow-up" className="w-6 h-6 rotate-90" />
         </motion.button>
 
         <div className="flex items-center gap-2 text-(--text-primary)">
           <Icon icon="gala:secure" className="w-6 h-6" />
-          <span className="font-black">Your data is secure and private</span>
+          <span className="font-black">{t.common.secureData}</span>
         </div>
       </div>
     </AppShell>

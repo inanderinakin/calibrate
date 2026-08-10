@@ -5,10 +5,14 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import BackButton from "@/components/BackButton";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { getTranslations } from "@/lib/translations";
 
 export default function SignupPage() {
   const router = useRouter();
   const { login } = useAuth();
+  const { language } = useLanguage();
+  const t = getTranslations(language);
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -47,19 +51,19 @@ export default function SignupPage() {
           transition={{ delay: 0.15 }}
           className="text-2xl font-semibold text-[var(--text-primary)]"
         >
-          Create your account
+          {t.signup.title}
         </motion.h1>
 
         <input
           required
-          placeholder="First name"
+          placeholder={t.signup.firstName}
           value={firstName}
           onChange={(e) => setFirstName(e.target.value)}
           className="glass-input rounded-lg border border-[var(--border-color)] px-4 py-2.5 text-[var(--text-primary)] outline-none focus:border-[var(--accent-2)]"
         />
         <input
           required
-          placeholder="Last name"
+          placeholder={t.signup.lastName}
           value={lastName}
           onChange={(e) => setLastName(e.target.value)}
           className="glass-input rounded-lg border border-[var(--border-color)] px-4 py-2.5 text-[var(--text-primary)] outline-none focus:border-[var(--accent-2)]"
@@ -67,14 +71,14 @@ export default function SignupPage() {
         <input
           required
           type="email"
-          placeholder="Email"
+          placeholder={t.signup.email}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="glass-input rounded-lg border border-[var(--border-color)] px-4 py-2.5 text-[var(--text-primary)] outline-none focus:border-[var(--accent-2)]"
         />
         <input
           required
-          placeholder="Field of study"
+          placeholder={t.signup.fieldOfStudy}
           value={studyField}
           onChange={(e) => setStudyField(e.target.value)}
           className="glass-input rounded-lg border border-[var(--border-color)] px-4 py-2.5 text-[var(--text-primary)] outline-none focus:border-[var(--accent-2)]"
@@ -86,7 +90,7 @@ export default function SignupPage() {
           whileTap={{ scale: 0.97 }}
           className="rounded-lg bg-[var(--accent-bg)] text-[var(--accent-text)] py-2.5 font-medium mt-2"
         >
-          Sign up
+          {t.signup.submit}
         </motion.button>
         </motion.form>
       </div>

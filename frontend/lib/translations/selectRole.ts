@@ -1,0 +1,36 @@
+export const selectRole = {
+  en: {
+    title: "Select Your Target Roles",
+    subtitle: "Pick every role you're aiming for — we'll build one roadmap covering all of them.",
+    continue: "Continue",
+    continueWithRoles: (n: number) => `Continue with ${n} roles`,
+    roles: {
+      backend: { title: "Backend Developer", description: "Build robust server-side applications and APIs." },
+      "data-scientist": { title: "Data Scientist", description: "Analyze data and derive insights to drive decisions." },
+      "ml-engineer": { title: "ML Engineer", description: "Build and deploy machine learning models." },
+      "full-stack": { title: "Full Stack Developer", description: "Work across the stack to build end-to-end solutions." },
+      frontend: { title: "Frontend Developer", description: "Create responsive and interactive user interfaces." },
+      devops: { title: "DevOps Engineer", description: "Automate, deploy and manage secure systems." },
+      mobile: { title: "Mobile Developer", description: "Build native and cross-platform mobile applications." },
+      qa: { title: "QA Engineer", description: "Test, automate and safeguard product quality." },
+      software: { title: "Software Developer", description: "Build and ship software across a broad range of projects." },
+    },
+  },
+  tr: {
+    title: "Hedef Rollerinizi Seçin",
+    subtitle: "Hedeflediğiniz her rolü seçin — hepsini kapsayan tek bir yol haritası oluşturacağız.",
+    continue: "Devam Et",
+    continueWithRoles: (n: number) => `${n} rol ile devam et`,
+    roles: {
+      backend: { title: "Backend Geliştirici", description: "Sağlam sunucu taraflı uygulamalar ve API'ler geliştirin." },
+      "data-scientist": { title: "Veri Bilimci", description: "Kararları yönlendirmek için verileri analiz edin ve içgörüler çıkarın." },
+      "ml-engineer": { title: "ML Mühendisi", description: "Makine öğrenmesi modelleri geliştirin ve devreye alın." },
+      "full-stack": { title: "Full Stack Geliştirici", description: "Uçtan uca çözümler geliştirmek için yığının tamamında çalışın." },
+      frontend: { title: "Frontend Geliştirici", description: "Duyarlı ve etkileşimli kullanıcı arayüzleri oluşturun." },
+      devops: { title: "DevOps Mühendisi", description: "Güvenli sistemleri otomatikleştirin, devreye alın ve yönetin." },
+      mobile: { title: "Mobil Geliştirici", description: "Yerel ve çapraz platform mobil uygulamalar geliştirin." },
+      qa: { title: "QA Mühendisi", description: "Ürün kalitesini test edin, otomatikleştirin ve güvence altına alın." },
+      software: { title: "Yazılım Geliştirici", description: "Geniş bir proje yelpazesinde yazılım geliştirin ve yayınlayın." },
+    },
+  },
+};

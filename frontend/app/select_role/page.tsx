@@ -7,75 +7,27 @@ import { motion } from "framer-motion";
 import AppShell from "@/components/AppShell";
 import StepIndicator from "@/components/StepIndicator";
 import { session } from "@/lib/session";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { getTranslations } from "@/lib/translations";
 
+// title/description come from t.selectRole.roles[id] at render time — this
+// stays a plain language-independent const.
 const ROLES = [
-  {
-    id: "backend",
-    apiName: "Backend Engineer",
-    title: "Backend Developer",
-    description: "Build robust server-side applications and APIs.",
-    icon: "tabler:code",
-  },
-  {
-    id: "data-scientist",
-    apiName: "Data Scientist",
-    title: "Data Scientist",
-    description: "Analyze data and derive insights to drive decisions.",
-    icon: "fluent:data-pie-20-regular",
-  },
-  {
-    id: "ml-engineer",
-    apiName: "ML Engineer",
-    title: "ML Engineer",
-    description: "Build and deploy machine learning models.",
-    icon: "mdi:brain",
-  },
-  {
-    id: "full-stack",
-    apiName: "Full Stack Developer",
-    title: "Full Stack Developer",
-    description: "Work across the stack to build end-to-end solutions.",
-    icon: "ri:stack-fill",
-  },
-  {
-    id: "frontend",
-    apiName: "Frontend Engineer",
-    title: "Frontend Developer",
-    description: "Create responsive and interactive user interfaces.",
-    icon: "game-icons:pc",
-  },
-  {
-    id: "devops",
-    apiName: "DevOps",
-    title: "DevOps Engineer",
-    description: "Automate, deploy and manage secure systems.",
-    icon: "mdi:cloud",
-  },
-  {
-    id: "mobile",
-    apiName: "Mobile Engineer",
-    title: "Mobile Developer",
-    description: "Build native and cross-platform mobile applications.",
-    icon: "mdi:cellphone",
-  },
-  {
-    id: "qa",
-    apiName: "QA Engineer",
-    title: "QA Engineer",
-    description: "Test, automate and safeguard product quality.",
-    icon: "mdi:bug-check",
-  },
-  {
-    id: "software",
-    apiName: "Software Developer",
-    title: "Software Developer",
-    description: "Build and ship software across a broad range of projects.",
-    icon: "mdi:laptop",
-  },
-];
+  { id: "backend", apiName: "Backend Engineer", icon: "tabler:code" },
+  { id: "data-scientist", apiName: "Data Scientist", icon: "fluent:data-pie-20-regular" },
+  { id: "ml-engineer", apiName: "ML Engineer", icon: "mdi:brain" },
+  { id: "full-stack", apiName: "Full Stack Developer", icon: "ri:stack-fill" },
+  { id: "frontend", apiName: "Frontend Engineer", icon: "game-icons:pc" },
+  { id: "devops", apiName: "DevOps", icon: "mdi:cloud" },
+  { id: "mobile", apiName: "Mobile Engineer", icon: "mdi:cellphone" },
+  { id: "qa", apiName: "QA Engineer", icon: "mdi:bug-check" },
+  { id: "software", apiName: "Software Developer", icon: "mdi:laptop" },
+] as const;
 
 export default function SelectRolePage() {
   const router = useRouter();
+  const { language } = useLanguage();
+  const t = getTranslations(language);
 
   const [selected, setSelected] = useState<string[]>([]);
   const [cvUploaded, setCvUploaded] = useState<boolean | null>(null);
@@ -117,12 +69,11 @@ export default function SelectRolePage() {
           />
 
           <h1 className="text-3xl font-black text-[var(--text-primary)] md:text-5xl">
-            Nothing to show yet
+            {t.common.nothingToShowYet}
           </h1>
 
           <p className="text-lg text-[var(--text-secondary)]">
-            Upload your CV and pick your target roles to see how you match
-            the market.
+            {t.common.uploadCvPrompt}
           </p>
 
           <button
@@ -130,7 +81,7 @@ export default function SelectRolePage() {
             onClick={() => router.push("/upload_cv")}
             className="btn-hover rounded-[20px] bg-[var(--accent)] px-8 py-3.5 text-lg font-bold text-[var(--on-accent)]"
           >
-            Upload your CV
+            {t.common.uploadYourCv}
           </button>
         </div>
       </AppShell>
@@ -149,7 +100,7 @@ export default function SelectRolePage() {
           transition={{ duration: 0.5 }}
           className="text-3xl md:text-5xl font-bold text-(--accent-2)"
         >
-          Select Your Target Roles
+          {t.selectRole.title}
         </motion.h1>
 
         <motion.p
@@ -158,8 +109,7 @@ export default function SelectRolePage() {
           transition={{ delay: 0.15 }}
           className="text-(--text-primary)"
         >
-          Pick every role you&apos;re aiming for — we&apos;ll build one roadmap
-          covering all of them.
+          {t.selectRole.subtitle}
         </motion.p>
 
         <motion.div
@@ -173,6 +123,7 @@ export default function SelectRolePage() {
         >
           {ROLES.map((role) => {
             const isSelected = selected.includes(role.apiName);
+            const label = t.selectRole.roles[role.id];
 
             return (
               <motion.button
@@ -201,11 +152,11 @@ export default function SelectRolePage() {
 
                 <div>
                   <p className="font-black text-lg text-(--text-primary)">
-                    {role.title}
+                    {label.title}
                   </p>
 
                   <p className="font-light text-(--text-primary)">
-                    {role.description}
+                    {label.description}
                   </p>
                 </div>
 
@@ -229,8 +180,8 @@ export default function SelectRolePage() {
           className="bg-(--accent) text-(--on-accent) rounded-[20px] px-10 py-3.5 font-black text-xl flex items-center gap-3 disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {selected.length > 1
-            ? `Continue with ${selected.length} roles`
-            : "Continue"}
+            ? t.selectRole.continueWithRoles(selected.length)
+            : t.selectRole.continue}
 
           <Icon
             icon="mdi-light:arrow-up"
@@ -241,7 +192,7 @@ export default function SelectRolePage() {
         <div className="flex items-center gap-2 text-(--text-primary)">
           <Icon icon="gala:secure" className="w-6 h-6" />
           <span className="font-black">
-            Your data is secure and private
+            {t.common.secureData}
           </span>
         </div>
       </div>

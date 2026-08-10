@@ -5,27 +5,31 @@ import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { Icon } from "@iconify/react";
 import { useAuth } from "@/contexts/AuthContext";
-
-// Matches the Figma structure exactly: "CV Analysis" is a group that expands
-// into the 3-step flow (Upload CV / Select Role / Analyse CV); Dashboard,
-// Road Map and Settings are flat items below it.
-const CV_FLOW = [
-  { label: "Upload CV", href: "/upload_cv", icon: "pepicons-pencil:cv" },
-  { label: "Select Role", href: "/select_role", icon: "ant-design:select-outlined" },
-  { label: "Analyse CV", href: "/analyse_cv", icon: "hugeicons:chart-analysis" },
-];
-
-const NAV_ITEMS = [
-  { label: "Dashboard", href: "/dashboard", icon: "solar:widget-2-linear" },
-  { label: "Road Map", href: "/roadmap", icon: "solar:routing-2-linear" },
-  { label: "Settings", href: "/settings", icon: "solar:settings-linear" },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
+import { getTranslations } from "@/lib/translations";
 
 const MotionLink = motion.create(Link);
 
 export default function Sidebar() {
   const pathname = usePathname();
   const { user } = useAuth();
+  const { language } = useLanguage();
+  const t = getTranslations(language);
+
+  // Matches the Figma structure exactly: "CV Analysis" is a group that expands
+  // into the 3-step flow (Upload CV / Select Role / Analyse CV); Dashboard,
+  // Road Map and Settings are flat items below it.
+  const CV_FLOW = [
+    { label: t.sidebar.uploadCv, href: "/upload_cv", icon: "pepicons-pencil:cv" },
+    { label: t.sidebar.selectRole, href: "/select_role", icon: "ant-design:select-outlined" },
+    { label: t.sidebar.analyseCv, href: "/analyse_cv", icon: "hugeicons:chart-analysis" },
+  ];
+
+  const NAV_ITEMS = [
+    { label: t.sidebar.dashboard, href: "/dashboard", icon: "solar:widget-2-linear" },
+    { label: t.sidebar.roadMap, href: "/roadmap", icon: "solar:routing-2-linear" },
+    { label: t.sidebar.settings, href: "/settings", icon: "solar:settings-linear" },
+  ];
 
   const cvFlowActive = CV_FLOW.some(
     (item) => pathname === item.href || pathname.startsWith(item.href + "/")
@@ -58,7 +62,7 @@ export default function Sidebar() {
             `}
           >
             <Icon icon="hugeicons:chart-analysis" className="w-6 h-6 shrink-0" />
-            <span className="hidden md:inline text-lg font-black">CV Analysis</span>
+            <span className="hidden md:inline text-lg font-black">{t.sidebar.cvAnalysis}</span>
           </div>
           <div className="hidden md:flex flex-col gap-1 pl-9 pb-2">
             {CV_FLOW.map((item) => {
@@ -116,9 +120,9 @@ export default function Sidebar() {
       >
         <Icon icon="iconamoon:profile-circle-bold" className="w-10 h-10 shrink-0" />
         <div className="hidden md:flex md:flex-col md:min-w-0">
-          <span className="text-lg font-bold truncate">{user?.firstName ?? "Guest"}</span>
+          <span className="text-lg font-bold truncate">{user?.firstName ?? t.profile.guest}</span>
           <span className="text-[10px] font-light truncate">
-            {user?.studyField ?? "No field set"}
+            {user?.studyField ?? t.sidebar.noFieldSet}
           </span>
         </div>
       </MotionLink>

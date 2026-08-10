@@ -6,10 +6,14 @@ import { motion } from "framer-motion";
 import { Icon } from "@iconify/react";
 import { useAuth } from "@/contexts/AuthContext";
 import BackButton from "@/components/BackButton";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { getTranslations } from "@/lib/translations";
 
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
+  const { language } = useLanguage();
+  const t = getTranslations(language);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -62,13 +66,13 @@ export default function LoginPage() {
           transition={{ delay: 0.15 }}
           className="text-2xl font-semibold text-[var(--text-primary)]"
         >
-          Log in
+          {t.login.title}
         </motion.h1>
 
         <input
           required
           type="email"
-          placeholder="Email"
+          placeholder={t.login.email}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="glass-input rounded-lg border border-[var(--border-color)] px-4 py-2.5 text-[var(--text-primary)] outline-none focus:border-[var(--accent-2)]"
@@ -77,7 +81,7 @@ export default function LoginPage() {
         <input
           required
           type="password"
-          placeholder="Password"
+          placeholder={t.login.password}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="glass-input rounded-lg border border-[var(--border-color)] px-4 py-2.5 text-[var(--text-primary)] outline-none focus:border-[var(--accent-2)]"
@@ -89,13 +93,13 @@ export default function LoginPage() {
           whileTap={{ scale: 0.97 }}
           className="rounded-lg bg-[var(--accent-bg)] text-[var(--accent-text)] py-2.5 font-medium mt-2"
         >
-          Log in
+          {t.login.submit}
         </motion.button>
 
         <div className="flex items-center gap-3 mt-1">
           <div className="h-px flex-1 bg-[var(--text-muted)]" />
           <span className="text-sm font-medium text-[var(--text-muted)]">
-            or continue with
+            {t.login.orContinueWith}
           </span>
           <div className="h-px flex-1 bg-[var(--text-muted)]" />
         </div>
@@ -109,7 +113,7 @@ export default function LoginPage() {
             className="flex items-center justify-center gap-2 rounded-lg border border-[var(--border-color)] bg-[var(--card-bg)] px-4 py-2.5 font-medium text-[var(--text-primary)]"
           >
             <Icon icon="flat-color-icons:google" className="h-5 w-5" />
-            Google
+            {t.login.google}
           </motion.button>
 
           <motion.button
@@ -120,7 +124,7 @@ export default function LoginPage() {
             className="flex items-center justify-center gap-2 rounded-lg border border-[var(--border-color)] bg-[var(--card-bg)] px-4 py-2.5 font-medium text-[var(--text-primary)]"
           >
             <Icon icon="mdi:github" className="h-5 w-5" />
-            GitHub
+            {t.login.github}
           </motion.button>
         </div>
         </motion.form>
