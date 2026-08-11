@@ -10,8 +10,8 @@ from scraper.roles import map_to_role, DEFAULT_ROLE, GENERIC_ROLE, ROLE_PATTERNS
 trends_path = Path(__file__).parent.parent / "app" / "trends.json"
 postings_path = Path(__file__).parent.parent / "scraper" / "postings.jsonl"
 
-baseline_month = "2026-06"
-recent_month = "2026-07"
+baseline_label = "baseline"
+recent_label = "recent"
 change_threshold = 0.15
 directional_floor = 0.075
 z_score = 2.0
@@ -19,7 +19,6 @@ min_cell_postings = 100
 min_term_occurrences = 10
 window_days = 28
 min_window_postings = 120
-first_series_week = "2026-06-01"
 min_role_postings = 50
 known_roles = set(ROLE_PATTERNS) | {GENERIC_ROLE, DEFAULT_ROLE}
 
@@ -31,21 +30,42 @@ def posted_date(obj):
     return f"{year}-{month}-{day}"
 
 
-def posted_month(obj):
-    return posted_date(obj)[:7]
+def posted_day(obj):
+    return datetime.datetime.strptime(posted_date(obj), "%Y-%m-%d").date()
 
 
-def count_terms():
+def window_bounds():
+    newest = datetime.date.min
+
+    with jl.open(postings_path) as reader:
+        for obj in reader:
+            day = posted_day(obj)
+            if day > newest:
+                newest = day
+
+    recent_start = newest - datetime.timedelta(days=window_days - 1)
+    baseline_end = recent_start - datetime.timedelta(days=1)
+    baseline_start = baseline_end - datetime.timedelta(days=window_days - 1)
+
+    return baseline_start, baseline_end, recent_start, newest
+
+
+def count_terms(baseline_start, baseline_end, recent_start, recent_end):
     postings_per_cell = collections.Counter()
     term_counts = collections.defaultdict(collections.Counter)
 
     with jl.open(postings_path) as reader:
         for obj in reader:
-            month = posted_month(obj)
-            if month not in (baseline_month, recent_month):
+            day = posted_day(obj)
+
+            if recent_start <= day <= recent_end:
+                window = recent_label
+            elif baseline_start <= day <= baseline_end:
+                window = baseline_label
+            else:
                 continue
 
-            cell = (obj["source"], month)
+            cell = (obj["source"], window)
             postings_per_cell[cell] += 1
             description = obj.get("description_text") or ""
             for term, pattern in PATTERNS.items():
@@ -58,19 +78,19 @@ def count_terms():
 def build_series(sources):
     postings_per_day = collections.defaultdict(collections.Counter)
     term_counts = collections.defaultdict(lambda: collections.defaultdict(collections.Counter))
+    first_day = None
     last_day = None
 
     with jl.open(postings_path) as reader:
         for obj in reader:
-            try:
-                day = datetime.date.fromisoformat(posted_date(obj))
-            except ValueError:
-                continue
+            day = posted_day(obj)
 
             source = obj["source"]
             postings_per_day[day][source] += 1
             if last_day is None or day > last_day:
                 last_day = day
+            if first_day is None or day < first_day:
+                first_day = day
 
             description = obj.get("description_text") or ""
             for term, pattern in PATTERNS.items():
@@ -87,18 +107,24 @@ def build_series(sources):
     def totals(days, source):
         return sum(postings_per_day[day][source] for day in days)
 
-    first_anchor = datetime.date.fromisoformat(first_series_week)
+    first_anchor = first_day - datetime.timedelta(days=first_day.weekday())
     last_anchor = last_day - datetime.timedelta(days=last_day.weekday())
 
-    weeks = []
+    passing = []
     windows = {}
     anchor = first_anchor
     while anchor <= last_anchor:
         days = window_of(anchor)
         if all(totals(days, source) >= min_window_postings for source in sources):
-            weeks.append(anchor.isoformat())
+            passing.append(anchor)
             windows[anchor.isoformat()] = days
         anchor += datetime.timedelta(days=7)
+
+    weeks = []
+    for anchor in reversed(passing):
+        if weeks and datetime.date.fromisoformat(weeks[0]) - anchor != datetime.timedelta(days=7):
+            break
+        weeks.insert(0, anchor.isoformat())
 
     series = {}
     for term in PATTERNS:
@@ -126,14 +152,12 @@ def resolve_role(obj):
 def build_role_series():
     postings_per_day = collections.defaultdict(collections.Counter)
     term_counts = collections.defaultdict(lambda: collections.defaultdict(collections.Counter))
+    first_day = None
     last_day = None
 
     with jl.open(postings_path) as reader:
         for obj in reader:
-            try:
-                day = datetime.date.fromisoformat(posted_date(obj))
-            except ValueError:
-                continue
+            day = posted_day(obj)
 
             role = resolve_role(obj)
             if role == DEFAULT_ROLE:
@@ -142,6 +166,8 @@ def build_role_series():
             postings_per_day[role][day] += 1
             if last_day is None or day > last_day:
                 last_day = day
+            if first_day is None or day < first_day:
+                first_day = day
 
             description = obj.get("description_text") or ""
             for term, pattern in PATTERNS.items():
@@ -151,7 +177,7 @@ def build_role_series():
     if last_day is None:
         return {}
 
-    first_anchor = datetime.date.fromisoformat(first_series_week)
+    first_anchor = first_day - datetime.timedelta(days=first_day.weekday())
     last_anchor = last_day - datetime.timedelta(days=last_day.weekday())
 
     anchors = []
@@ -221,25 +247,26 @@ def measure(old_count, old_total, new_count, new_total):
 
 
 def build_trends():
-    postings_per_cell, term_counts = count_terms()
+    baseline_start, baseline_end, recent_start, recent_end = window_bounds()
+    postings_per_cell, term_counts = count_terms(baseline_start, baseline_end, recent_start, recent_end)
     sources = sorted({
-        source for (source, month), total in postings_per_cell.items()
+        source for (source, window), total in postings_per_cell.items()
         if total >= min_cell_postings
     })
     usable = [
         source for source in sources
-        if postings_per_cell[(source, baseline_month)] >= min_cell_postings
-        and postings_per_cell[(source, recent_month)] >= min_cell_postings
+        if postings_per_cell[(source, baseline_label)] >= min_cell_postings
+        and postings_per_cell[(source, recent_label)] >= min_cell_postings
     ]
 
     results = []
     for term in PATTERNS:
         per_source = {}
         for source in usable:
-            old_total = postings_per_cell[(source, baseline_month)]
-            new_total = postings_per_cell[(source, recent_month)]
-            old_count = term_counts[term][(source, baseline_month)]
-            new_count = term_counts[term][(source, recent_month)]
+            old_total = postings_per_cell[(source, baseline_label)]
+            new_total = postings_per_cell[(source, recent_label)]
+            old_count = term_counts[term][(source, baseline_label)]
+            new_count = term_counts[term][(source, recent_label)]
             if old_count < min_term_occurrences or new_count < min_term_occurrences:
                 continue
             per_source[source] = measure(old_count, old_total, new_count, new_total)
@@ -277,8 +304,8 @@ def build_trends():
     roles = build_role_series()
 
     output = {
-        "baseline_month": baseline_month,
-        "recent_month": recent_month,
+        "baseline_window": {"start": baseline_start.isoformat(), "end": baseline_end.isoformat()},
+        "recent_window": {"start": recent_start.isoformat(), "end": recent_end.isoformat()},
         "sources": usable,
         "skills": results,
         "weeks": weeks,
@@ -290,6 +317,7 @@ def build_trends():
         f.write(json.dumps(output, ensure_ascii=False))
 
     counts = collections.Counter((entry["confidence"], entry["trend"]) for entry in results)
+    print(f"baseline {baseline_start} -> {baseline_end}, recent {recent_start} -> {recent_end}")
     print(f"{len(results)} terms reported from {len(usable)} sources: {dict(counts)}")
     print(f"{len(series)} terms charted across {len(weeks)} weeks")
     print(f"{len(roles)} roles charted: " + ", ".join(f"{r} ({len(v['weeks'])}w)" for r, v in sorted(roles.items())))
