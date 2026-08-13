@@ -94,6 +94,22 @@ CATEGORIES = {
         "JUnit": ["junit"],
         "Postman": ["postman"],
     },
+    "enterprise resource planning": {
+        "SAP": ["sap"],
+        "ABAP": ["abap"],
+        "Netsis": ["netsis"],
+        "Logo": ["logo yazılım", "logo tiger", "logo go3"],
+    },
+    "IT support": {
+        "Active Directory": ["active directory"],
+        "Windows Server": ["windows server"],
+        "ITIL": ["itil"],
+        "ServiceNow": ["servicenow", "service now"],
+        "Zendesk": ["zendesk"],
+        "Microsoft 365": ["microsoft 365", "office 365", "m365"],
+        "Jira": ["jira"],
+        "SCCM": ["sccm"],
+    },
 }
 
 

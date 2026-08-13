@@ -23,6 +23,8 @@ const CATEGORY_LABELS_TR: Record<string, string> = {
   "monitoring": "İzleme",
   "software testing": "Yazılım Testi",
   "programming languages": "Programlama Dilleri",
+  "enterprise resource planning": "Kurumsal Kaynak Planlama",
+  "it support": "IT Desteği",
 };
 
 export function getCategoryLabel(category: string, language: Language): string {

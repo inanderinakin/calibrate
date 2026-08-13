@@ -22,6 +22,8 @@ const ROLES = [
   { id: "mobile", apiName: "Mobile Engineer", icon: "mdi:cellphone" },
   { id: "qa", apiName: "QA Engineer", icon: "mdi:bug-check" },
   { id: "software", apiName: "Software Developer", icon: "mdi:laptop" },
+  { id: "it-support", apiName: "IT Support Specialist", icon: "mdi:headset" },
+  { id: "erp", apiName: "ERP Consultant", icon: "mdi:office-building-cog" },
 ] as const;
 
 export default function SelectRolePage() {
