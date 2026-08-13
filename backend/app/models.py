@@ -1,6 +1,23 @@
 from typing import Literal
 from pydantic import BaseModel
 
+class LoginInfo(BaseModel):
+    email: str
+    password: str
+
+class SignUpInfo(BaseModel):
+    email: str
+    password: str
+    first_name: str
+    last_name: str
+
+class VerifyEmailInfo(BaseModel):
+    email: str
+    code: str
+
+class CompletedSkills(BaseModel):
+    skills: list[str]
+
 class MatchData(BaseModel):
     matched_demanded: int
     total_demanded: int
