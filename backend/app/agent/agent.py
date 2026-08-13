@@ -2,27 +2,26 @@ import json
 from pathlib import Path
 from strands import Agent, tool
 from dotenv import load_dotenv
-from models import GapResult, Report
+from models import GapResult, NormalizedSkill, Report
+from handleposting import load_demand_profile
 
 with open(Path(__file__).parent.parent / "resources.json") as resources_json_file:
     resources_json = json.load(resources_json_file)
 
-with open(Path(__file__).parent.parent / "demand_profile.json") as demand_profile_file:
-    demand_profile_json = json.load(demand_profile_file)
+demand_profile = load_demand_profile()
 
 load_dotenv()
 
-def load_role_demand(role: str) -> list[dict] | None:
+def load_role_demand(role: str) -> list[NormalizedSkill] | None:
     """The single source of demand data (later: reads the aggregator's artifacts)."""
-    return demand_profile_json.get(role, None)
-
+    return demand_profile.get(role, None)
 
 @tool
 def get_role_demand(role: str):
     """This tool returns every demanded skill for one job role, with that skill's market frequency and trend. The argument is a job role taken from target_roles, such as Backend Engineer. It is never a skill name."""
     output = load_role_demand(role)
     if output is None:
-        return f"{role} is not a role. Valid roles are: {', '.join(demand_profile_json)}"
+        return f"{role} is not a role. Valid roles are: {', '.join(demand_profile)}"
 
     return output
 
@@ -60,7 +59,7 @@ def get_recommendations(gaps: GapResult, language: str = "en"):
     demand: dict[str, float] = {}
     for role in gaps.target_roles:
         for item in load_role_demand(role) or []:
-            demand[item["skill"]] = max(demand.get(item["skill"], 0.0), float(item["demand_percentage"]))
+            demand[item.skill] = max(demand.get(item.skill, 0.0), float(item.demand_percentage))
 
     report.recommendations.sort(key=lambda r: demand.get(r.skill, 0.0), reverse=True)
     for i, rec in enumerate(report.recommendations, start=1):
