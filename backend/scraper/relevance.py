@@ -7,8 +7,17 @@ hospitality / sales / construction roles. Every scraper runs each posting
 through is_cs_relevant() before saving so only genuine CS/IT postings are kept.
 
 Logic:
-  * a clearly non-CS title with no CS signal  → reject
-  * a CS keyword in the title                  → accept
+  * a non-CS job-function word in the title    → reject, no matter what
+    other CS-sounding word is also in the title. Turkish titles are
+    "[domain] [function]" ("Yazılım Satış Uzmanı" = software SALES
+    specialist), and the function word is what the person actually does —
+    a domain word like "yazılım"/"erp"/"bilişim" next to it doesn't change
+    that. (An earlier version tried to split CS_TITLE_KW into "weak" and
+    "strong" signals so specific ones could still override a non-CS word;
+    that only shrank the blast radius one keyword at a time and still let
+    "Yazılım Satış Uzmanı" through because "yazılım" scanned as "strong".
+    One rule, no tiers, is what actually holds.)
+  * a CS keyword in the title, no non-CS word  → accept
   * a CS department, unless the department name itself reads non-tech
     (company-wide sector is deliberately NOT used — see is_cs_relevant)
                                                 → accept
@@ -42,13 +51,13 @@ CS_TITLE_KW = re.compile(
     r"machine\s?learn|makine\s?öğrenme|yapay\s?zeka|deep\s?learn|ml\s?engineer|\bai\b|"
     r"mlops|artificial\s?intelligence|prompt\s?engineer|\bllm\s?(engineer|developer|ops)|"
     r"cloud|bulut|aws|azure|gcp|kubernetes|docker|"
-    r"siber|cyber|bilgi\s?güvenli|güvenlik.*bilgi|penetration|"
+    r"siber|cyber|bilgi\s?güvenli|güvenlik.*bilgi|penetration|pentest|"
+    r"security\s?specialist|"
     r"sistem\w*.*?(müh|yönet|admin|uzman|destek|analist)|systems?\s?(admin|engineer|analyst|architect)|"
     r"database|veri\s?taban|dba|"
     r"yazılım\s?test|test\s?(otomasyon|automation)|qa\s?engineer|quality\s?assur|"
-    r"\berp\b|sap\s?(abap|basis|danış|konsül|mm|fi|sd|hr|müdür|proje|uzman|yönet)|"
+    r"\berp\b|\babap\b|sap\s?(abap|basis|danış|konsül|mm|fi|sd|hr|müdür|proje|uzman|yönet)|"
     r"\bit\b.*?(uzman|yönet|manager|müdür|support|destek|direktör|supervisor|specialist|engineer|mühend|network|proje|auditor|analyst|technician|teknisyen)|"
-    r"bilgi\s?işlem|bilgi\s?teknoloj|information\s?tech|bilişim|"
     r"scrum|product\s?owner|"
     r"android|ios\s?(developer|geliştir|engineer)|mobil\s?(uygulama|geliştir)|mobile\s?(dev|engineer|application)|"
     r"embedded|gömülü|firmware|"
@@ -71,12 +80,14 @@ CS_TITLE_KW = re.compile(
     r"site\s?reliability|release\s?engineer|search\s?engineer|api\s?engineer|"
     r"performance\s?engineer|windows\s?admin|salesforce|\biot\b|"
     r"computer\s?vision|\bnlp\b|game\s?(developer|engineer)|oyun\s?(geliştir|programcı)|"
-    r"blockchain|web3|automation\s?engineer|support\s?engineer|applied\s?scientist",
+    r"blockchain|web3|automation\s?engineer|support\s?engineer|applied\s?scientist|"
+    r"tech\s?lead|technical\s?lead|\badas\b|"
+    r"bilgi\s?işlem|bilgi\s?teknoloj|information\s?tech|bilişim",
     re.IGNORECASE,
 )
 
 NON_CS_TITLE_KW = re.compile(
-    r"inşaat|mimar(?!.*yazılım)|vinç|forklift|harita|hakediş|"
+    r"inşaat|vinç|forklift|harita|hakediş|"
     r"muhasebe|mali\s?müşavir|bordro|ön\s?muhasebe|finans\s?müdür|sekreter|"
     r"aşçı|garson|barmen|mutfak|restoran|otel|resepsiyon|konaklama|kat\s?şef|meydancı|"
     r"barista|kasap|bulaşıkhane|\bvale|bekçi|"
@@ -111,6 +122,20 @@ NON_CS_TITLE_KW = re.compile(
     re.IGNORECASE,
 )
 
+# "Mimar" (architect) is ambiguous on its own -- a construction/building
+# architect is not a CS role, but "Yazılım Mimarı"/"Sistem Mimarı"/"Çözüm
+# Mimarı" (software/systems/solution architect) definitely are, and Turkish
+# word order puts the domain word before "mimar" ("Yazılım Mimarı"), which a
+# forward-only regex lookahead can't see (it only looks past the match, not
+# before it). Handled separately: "mimar" only counts as a non-CS signal
+# when none of these domain words appear anywhere else in the title.
+MIMAR_KW = re.compile(r"mimar", re.IGNORECASE)
+TECH_ARCHITECT_DOMAIN_KW = re.compile(
+    r"yazılım|sistem|çözüm|solution|uygulama|veri|data|network|güvenlik|"
+    r"security|bulut|cloud|kurumsal|enterprise",
+    re.IGNORECASE,
+)
+
 
 # Older/formal Turkish spelling uses circumflex vowels (â/î/û — e.g. "Zekâ",
 # "Kâğıt") that are distinct Unicode characters from plain a/i/u, so patterns
@@ -132,10 +157,18 @@ def is_cs_relevant(posting: dict) -> bool:
     has_non_cs     = bool(NON_CS_TITLE_KW.search(title))
     has_non_cs_dept = bool(NON_CS_TITLE_KW.search(dept))
 
-    # Clear non-CS title with no CS signal → reject.
-    if has_non_cs and not has_cs:
+    if MIMAR_KW.search(title) and not TECH_ARCHITECT_DOMAIN_KW.search(title):
+        has_non_cs = True
+    elif MIMAR_KW.search(title):
+        has_cs = True
+
+    # A non-CS job-function word always wins, regardless of any CS-sounding
+    # word also present -- "Yazılım Satış Uzmanı" is a sales job, "Muhasebe
+    # Uzmanı (Logo ERP Deneyimli)" is an accounting job. The domain word
+    # ("yazılım", "erp") describes what the company/product is, not what
+    # this person does.
+    if has_non_cs:
         return False
-    # CS keyword in the title → accept.
     if has_cs:
         return True
     # CS department → accept (department is job-level and reliable) — unless

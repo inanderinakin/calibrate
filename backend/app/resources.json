@@ -710,5 +710,119 @@
             "type": "course",
             "language": "en"
         }
+    ],
+    "SAP": [
+        {
+            "title": "SAP Learning",
+            "url": "https://learning.sap.com",
+            "type": "course",
+            "language": "en"
+        },
+        {
+            "title": "BT Akademi: SAP ERP Uygulamaları Eğitimi",
+            "url": "https://www.btakademi.com/egitim/sap-erp-uygulamalari-egitimi-2947",
+            "type": "course",
+            "language": "tr"
+        }
+    ],
+    "ABAP": [
+        {
+            "title": "SAP Learning: Learn the Basics of ABAP Programming",
+            "url": "https://learning.sap.com/courses/learn-the-basics-of-abap-programming-on-sap-btp",
+            "type": "course",
+            "language": "en"
+        },
+        {
+            "title": "BT Akademi: SAP ABAP Programlama Temel Eğitimi",
+            "url": "https://www.btakademi.com/egitim/sap-abap-programlama-temel-egitimi-2389",
+            "type": "course",
+            "language": "tr"
+        }
+    ],
+    "Netsis": [
+        {
+            "title": "Udemy: Örneklerle Netsis ERP Üretim Süreçleri",
+            "url": "https://www.udemy.com/course/netsis-uretim-modulu/",
+            "type": "course",
+            "language": "tr"
+        }
+    ],
+    "Logo": [
+        {
+            "title": "Udemy: Logo GO3/Tiger3 Bilgisayarlı Muhasebe Eğitimi",
+            "url": "https://www.udemy.com/course/logo-erp-go3-tiger-bilgisayarl-muhasebe-egitimi/",
+            "type": "course",
+            "language": "tr"
+        }
+    ],
+    "Active Directory": [
+        {
+            "title": "Microsoft Learn: Active Directory Domain Services",
+            "url": "https://learn.microsoft.com/en-us/training/paths/active-directory-domain-services/",
+            "type": "course",
+            "language": "en"
+        },
+        {
+            "title": "BT Akademi: Active Directory Services with Windows Server",
+            "url": "https://btakademi.com/egitim/active-directory-services-with-windows-server-2472",
+            "type": "course",
+            "language": "tr"
+        }
+    ],
+    "Windows Server": [
+        {
+            "title": "Microsoft Learn: Windows Server Deployment, Configuration, and Administration",
+            "url": "https://learn.microsoft.com/en-us/training/paths/windows-server-deployment-configuration-administration/",
+            "type": "course",
+            "language": "en"
+        }
+    ],
+    "ITIL": [
+        {
+            "title": "Simplilearn: Free ITIL 4 Foundation Course",
+            "url": "https://www.simplilearn.com/free-itil-v-four-course-skillup",
+            "type": "course",
+            "language": "en"
+        }
+    ],
+    "ServiceNow": [
+        {
+            "title": "ServiceNow University",
+            "url": "https://learning.servicenow.com/",
+            "type": "course",
+            "language": "en"
+        }
+    ],
+    "Zendesk": [
+        {
+            "title": "Zendesk Academy",
+            "url": "https://academy.zendesk.com/",
+            "type": "course",
+            "language": "en"
+        }
+    ],
+    "Microsoft 365": [
+        {
+            "title": "Microsoft Learn: Explore Microsoft 365 Administration",
+            "url": "https://learn.microsoft.com/en-us/training/paths/explore-microsoft-365-administration/",
+            "type": "course",
+            "language": "en"
+        }
+    ],
+    "Jira": [
+        {
+            "title": "Atlassian University: Foundation Free Courses",
+            "url": "https://university.atlassian.com/student/collection/1112824-atlassian-foundation-free-courses",
+            "type": "course",
+            "language": "en"
+        }
+    ],
+    "SCCM": [
+        {
+            "title": "Microsoft Learn: Configuration Manager Documentation",
+            "url": "https://learn.microsoft.com/en-us/intune/configmgr/core/understand/introduction",
+            "type": "documentation",
+            "language": "en"
+        }
     ]
 }

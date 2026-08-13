@@ -14,6 +14,8 @@ export const selectRole = {
       mobile: { title: "Mobile Developer", description: "Build native and cross-platform mobile applications." },
       qa: { title: "QA Engineer", description: "Test, automate and safeguard product quality." },
       software: { title: "Software Developer", description: "Build and ship software across a broad range of projects." },
+      "it-support": { title: "IT Support Specialist", description: "Keep systems, accounts and devices running for everyone else." },
+      erp: { title: "ERP Consultant", description: "Configure and support enterprise systems like SAP." },
     },
   },
   tr: {
@@ -31,6 +33,8 @@ export const selectRole = {
       mobile: { title: "Mobil Geliştirici", description: "Yerel ve çapraz platform mobil uygulamalar geliştirin." },
       qa: { title: "QA Mühendisi", description: "Ürün kalitesini test edin, otomatikleştirin ve güvence altına alın." },
       software: { title: "Yazılım Geliştirici", description: "Geniş bir proje yelpazesinde yazılım geliştirin ve yayınlayın." },
+      "it-support": { title: "IT Destek Uzmanı", description: "Sistemleri, hesapları ve cihazları herkes için çalışır tutun." },
+      erp: { title: "ERP Danışmanı", description: "SAP gibi kurumsal sistemleri yapılandırın ve destekleyin." },
     },
   },
 };
