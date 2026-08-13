@@ -362,16 +362,13 @@ def scrape_posting(url: str, session: requests.Session) -> dict | None:
     # as a fallback when JSON-LD carries no description.
     ld_desc = ld.get("description")
     if ld_desc:
-        posting["description_html"] = ld_desc
         posting["description_text"] = BeautifulSoup(ld_desc, "html.parser").get_text("\n", strip=True)
     else:
         desc_el = _description_block(soup)
         if desc_el:
             posting["description_text"] = desc_el.get_text(separator="\n", strip=True)
-            posting["description_html"] = desc_el.decode_contents()
         else:
             posting["description_text"] = None
-            posting["description_html"] = None
 
     posting["candidate_criteria"] = {}
     if posting["experience_level"]:
