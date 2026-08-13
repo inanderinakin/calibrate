@@ -690,5 +690,25 @@
             "type": "documentation",
             "language": "en"
         }
+    ],
+    "Pandas": [
+        {
+            "title": "10 minutes to pandas",
+            "url": "https://pandas.pydata.org/docs/user_guide/10min.html",
+            "type": "documentation",
+            "language": "en"
+        },
+        {
+            "title": "Kaggle Learn - Pandas",
+            "url": "https://www.kaggle.com/learn/pandas",
+            "type": "course",
+            "language": "en"
+        },
+        {
+            "title": "freeCodeCamp - Data Analysis with Python",
+            "url": "https://www.freecodecamp.org/learn/data-analysis-with-python/",
+            "type": "course",
+            "language": "en"
+        }
     ]
 }
