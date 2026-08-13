@@ -76,9 +76,15 @@ async def upload_cv(file: UploadFile = File(...)):
     if (file.content_type == "application/pdf"):
         try:
             await run_in_threadpool(s3_client.upload_file, str(cv_dest), bucket, f"uploads/{safe_name}")
-            os.remove(cv_dest)
         except ClientError as e:
-            print("Error")
+            print(f"S3 Upload failed: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+                detail="Failed to upload document to secure storage."
+            )
+        finally:
+            if cv_dest.exists():
+                os.remove(cv_dest)
     else:
         return {"error": "We only accept PDF at the moment. Please check back later."}
 
