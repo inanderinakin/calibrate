@@ -17,11 +17,19 @@ Resources:
         - x86_64
       FunctionUrlConfig:
         AuthType: NONE
+      Environment:
+        Variables:
+          USER_TABLE: !Ref UserDataTable
+          USER_POOL: !Ref UserPool
+          APP_CLIENT: !Ref AppClient
       Policies:
         - S3FullAccessPolicy:
             BucketName: calibrate-teamthrow
 
         - TextractPolicy: {} 
+
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserDataTable
 
         - Statement:
             - Effect: Allow
@@ -32,8 +40,34 @@ Resources:
                 - !Sub "arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/global.anthropic.claude-sonnet-4-6"
                 - "arn:aws:bedrock:*::foundation-model/anthropic.claude-sonnet-4-6*"
                 - "arn:aws:bedrock:*::foundation-model/cohere.embed-multilingual-v3"
+  UserDataTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: userId
+        Type: String
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UsernameAttributes: [email]
+      AutoVerifiedAttributes: [email]
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+  AppClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref UserPool
+      GenerateSecret: false
+      ExplicitAuthFlows: [ALLOW_USER_PASSWORD_AUTH, ALLOW_REFRESH_TOKEN_AUTH]
 
 Outputs:
   FunctionUrl:
     Description: "Lambda Function URL"
     Value: !GetAtt CalibrateApiFunctionUrl.FunctionUrl
+  UserPoolId:
+    Description: "Cognito user pool id"
+    Value: !Ref UserPool
+  AppClientId:
+    Description: "Cognito app client id"
+    Value: !Ref AppClient
