@@ -19,9 +19,11 @@ def read_completed_skills(userId: str):
 
 
 def write_completed_skills(userId: str, skills: list[str]):
-    table.put_item(
-        Item={
-            'userId': userId,
-            completed_skills: skills
-        }
+    table.update_item(
+        Key = {
+            'userId': userId
+        },
+        UpdateExpression = "SET #completed = :skills",
+        ExpressionAttributeNames = {'#completed': completed_skills},
+        ExpressionAttributeValues = {':skills': skills}
     )

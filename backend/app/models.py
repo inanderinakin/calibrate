@@ -15,6 +15,9 @@ class VerifyEmailInfo(BaseModel):
     email: str
     code: str
 
+class CompletedSkills(BaseModel):
+    skills: list[str]
+
 class MatchData(BaseModel):
     matched_demanded: int
     total_demanded: int

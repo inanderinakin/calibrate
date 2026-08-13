@@ -1,29 +1,33 @@
 import os
 import tempfile
+import jwt
+from typing_extensions import Annotated
 import uuid
 from pathlib import Path
 from typing import Literal
-
-from fastapi.concurrency import run_in_threadpool
-from agent import get_recommendations
-from handlecv import compute_gaps
-from normalize import normalize
-from models import GapResult, GapRequest, LoginInfo, NormalizedSkill, SignUpInfo, VerifyEmailInfo
-from skills import PATTERNS, SKILL_CATEGORIES
-
-from fastapi import FastAPI, HTTPException, Query, UploadFile, status
-from fastapi.params import File
-from fastapi.middleware.cors import CORSMiddleware
 import boto3
 from botocore.exceptions import ClientError
-from handlecv import extract_skill_candidates, extract_cv_text
-
-from handleposting import load_demand_profile, load_trends
 from mangum import Mangum
+
+from fastapi import Depends, FastAPI, HTTPException, Query, UploadFile, status
+from fastapi.params import File
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.concurrency import run_in_threadpool
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+
+from agent import get_recommendations
+from handlecv import compute_gaps, extract_skill_candidates, extract_cv_text
+from normalize import normalize
+from models import CompletedSkills, GapResult, GapRequest, LoginInfo, NormalizedSkill, SignUpInfo, VerifyEmailInfo
+from skills import PATTERNS, SKILL_CATEGORIES
+from handleposting import load_demand_profile, load_trends
+from storage import read_completed_skills, write_completed_skills
+from auth import verify_token
 
 profile = load_demand_profile()
 trends = load_trends()
 app = FastAPI()
+security = HTTPBearer()
 cognito_client = boto3.client("cognito-idp")
 
 origins = [
@@ -42,9 +46,42 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
+async def verify_token_dependency(credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)]):
+    try:
+        user_id = verify_token(credentials.credentials)
+    except jwt.PyJWTError as error:
+        print(f"Token rejected: {type(error).__name__}: {error}")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Your session is no longer valid. Please sign in again")
+    return user_id
+
+
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
+
+@app.get("/me")
+def read_current_user(user_id: Annotated[str, Depends(verify_token_dependency)]):
+    return {"user_id": user_id}
+
+@app.get("/completed_skills")
+async def get_completed_skills(user_id: Annotated[str, Depends(verify_token_dependency)]):
+    try:
+        skills = await run_in_threadpool(read_completed_skills, user_id)
+    except ClientError as err:
+        print(f"Could not read completed skills: {err}")
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="We could not load your progress right now")
+
+    return {"completed_skills": skills}
+
+@app.post("/completed_skills")
+async def set_completed_skills(completed: CompletedSkills, user_id: Annotated[str, Depends(verify_token_dependency)]):
+    try:
+        await run_in_threadpool(write_completed_skills, user_id, completed.skills)
+    except ClientError as err:
+        print(f"Could not save completed skills: {err}")
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="We could not save your progress right now")
+
+    return {"completed_skills": completed.skills}
 
 @app.post("/sign_up")
 async def sign_up(signup_info: SignUpInfo):
@@ -113,7 +150,7 @@ async def login(login_info: LoginInfo):
                 'USERNAME': login_info.email,
                 'PASSWORD': login_info.password,
             }
-            )
+        )
     except ClientError as err:
         code = err.response["Error"]["Code"]
 
@@ -127,8 +164,12 @@ async def login(login_info: LoginInfo):
 
     result = response.get("AuthenticationResult")
 
+
+
     if result is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Sign in could not be completed")
+
+    user_id = verify_token(result['IdToken'])
 
     return {"id_token": result["IdToken"], "refresh_token": result["RefreshToken"]}
 
