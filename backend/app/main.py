@@ -8,7 +8,7 @@ from fastapi.concurrency import run_in_threadpool
 from agent import get_recommendations
 from handlecv import compute_gaps
 from normalize import normalize
-from models import GapResult, GapRequest, NormalizedSkill
+from models import GapResult, GapRequest, LoginInfo, NormalizedSkill, SignUpInfo, VerifyEmailInfo
 from skills import PATTERNS, SKILL_CATEGORIES
 
 from fastapi import FastAPI, HTTPException, Query, UploadFile, status
@@ -24,6 +24,7 @@ from mangum import Mangum
 profile = load_demand_profile()
 trends = load_trends()
 app = FastAPI()
+cognito_client = boto3.client("cognito-idp")
 
 origins = [
     "http://localhost:3000",
@@ -44,6 +45,92 @@ app.add_middleware(
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
+
+@app.post("/sign_up")
+async def sign_up(signup_info: SignUpInfo):
+    try:
+        response = cognito_client.sign_up(
+            ClientId = os.getenv('APP_CLIENT'),
+            Username= signup_info.email,
+            Password= signup_info.password,
+            UserAttributes= [
+                {"Name": "given_name", "Value": signup_info.first_name},
+                {"Name": "family_name", "Value": signup_info.last_name},
+            ],
+        )
+    except ClientError as err:
+        code = err.response["Error"]["Code"]
+
+        if code == "UsernameExistsException":
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="This email is already used")
+        elif code == "InvalidPasswordException":
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Password doesn't fit the requirements")
+        elif code == "InvalidParameterException":
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Please check the email and password you entered")
+
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Sign up is unavailable right now")
+
+    result = response.get("UserSub")
+    delivery_detail = response.get("CodeDeliveryDetails")
+
+    return {"result": result, "detail": delivery_detail}
+
+@app.post("/verify_email")
+async def verify_email(verify_info: VerifyEmailInfo):
+    try:
+        response = cognito_client.confirm_sign_up(
+            ClientId= os.getenv("APP_CLIENT"),
+            Username= verify_info.email,
+            ConfirmationCode= verify_info.code
+        )
+    except ClientError as err:
+        code = err.response["Error"]["Code"]
+
+        if code == "ExpiredCodeException":
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Code has expired. Please regenerate it")
+
+        if code == "CodeMismatchException":
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="That code is not correct")
+
+        if code == "NotAuthorizedException":
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="This account is already confirmed. You can sign in")
+
+        if code in ("UserNotFoundException", "TooManyFailedAttemptsException", "LimitExceededException"):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="We could not confirm this account. Please request a new code")
+
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Confirmation is unavailable right now")
+
+    return {"confirmed": True}
+
+
+@app.post("/login")
+async def login(login_info: LoginInfo):
+    try:
+        response = cognito_client.initiate_auth(
+            ClientId= os.getenv('APP_CLIENT'),
+            AuthFlow='USER_PASSWORD_AUTH',
+            AuthParameters= {
+                'USERNAME': login_info.email,
+                'PASSWORD': login_info.password,
+            }
+            )
+    except ClientError as err:
+        code = err.response["Error"]["Code"]
+
+        if code in ("NotAuthorizedException", "UserNotFoundException"):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect email or password")
+
+        if code == "UserNotConfirmedException":
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Please confirm your account before signing in")
+
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Sign in is unavailable right now")
+
+    result = response.get("AuthenticationResult")
+
+    if result is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Sign in could not be completed")
+
+    return {"id_token": result["IdToken"], "refresh_token": result["RefreshToken"]}
 
 @app.post("/upload_cv")
 async def upload_cv(file: UploadFile = File(...)):
