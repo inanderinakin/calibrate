@@ -214,7 +214,7 @@ def build_role_series():
             ]
             series[term] = values
 
-        roles[role] = {"weeks": weeks, "series": series}
+        roles[role] = {"weeks": weeks, "totals": [t[1] for t in totals], "series": series}
 
     return roles
 

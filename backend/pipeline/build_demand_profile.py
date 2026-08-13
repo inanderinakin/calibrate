@@ -42,7 +42,10 @@ def build_demand_profile():
 
     json_dict = {}
     for role in demand_profile:
-        json_dict[role] = [skill.model_dump() for skill in demand_profile[role]]
+        json_dict[role] = {
+            "postings_count": postings_per_role[role],
+            "skills": [skill.model_dump() for skill in demand_profile[role]]
+        }
 
     with open(demand_profile_path, "w", encoding="utf-8") as f:
         f.write(json.dumps(json_dict))

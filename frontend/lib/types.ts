@@ -9,6 +9,7 @@ export interface MatchData {
   matched_demanded: number;
   total_demanded: number;
   ratio: number;
+  postings_count: number;
 }
 
 export interface Gap {
@@ -78,6 +79,7 @@ export interface TrendSkill {
 
 export interface RoleTrend {
   weeks: string[];
+  totals: number[];
   series: Record<string, number[]>;
 }
 
