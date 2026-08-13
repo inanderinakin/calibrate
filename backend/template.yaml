@@ -3,7 +3,7 @@ Transform: AWS::Serverless-2016-10-31
 
 Globals:
   Function:
-    Timeout: 60
+    Timeout: 300
     MemorySize: 2048
 
 Resources:
