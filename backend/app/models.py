@@ -22,6 +22,7 @@ class MatchData(BaseModel):
     matched_demanded: int
     total_demanded: int
     ratio: float
+    postings_count: int
 
 class Gap(BaseModel): 
     skill: str

@@ -1,6 +1,6 @@
 from models import DemandedSkill, MatchData, NormalizedSkill, GapResult, Gap
 
-def compute_gaps(cv_skills: list[NormalizedSkill], target_roles: list[str], demand_profile: dict[str, list[DemandedSkill]]) -> GapResult:
+def compute_gaps(cv_skills: list[NormalizedSkill], target_roles: list[str], demand_profile: dict[str, dict]) -> GapResult:
     gaps_list = {}
     checked_roles = []
     matched_list = {}
@@ -10,11 +10,13 @@ def compute_gaps(cv_skills: list[NormalizedSkill], target_roles: list[str], dema
 
         checked_roles.append(role)
         gaps_list[role] = []
-        profile = demand_profile[role]
+        profile_data = demand_profile[role]
+        profile_skills = profile_data["skills"]
+        postings_count = profile_data["postings_count"]
 
-        total_demanded = len(profile)
+        total_demanded = len(profile_skills)
         
-        for demanded in profile:
+        for demanded in profile_skills:
             if not any(cv_skill.skill == demanded.skill for cv_skill in cv_skills):
                 gap = Gap(
                     skill = demanded.skill,
@@ -28,7 +30,7 @@ def compute_gaps(cv_skills: list[NormalizedSkill], target_roles: list[str], dema
                 gaps_list[role].append(gap)
 
         matched_demanded = total_demanded - len(gaps_list[role])
-        matched_list[role] = MatchData(matched_demanded=matched_demanded, total_demanded=total_demanded, ratio= matched_demanded / total_demanded if total_demanded else 0.0)
+        matched_list[role] = MatchData(matched_demanded=matched_demanded, total_demanded=total_demanded, ratio= matched_demanded / total_demanded if total_demanded else 0.0, postings_count=postings_count)
     return GapResult(target_roles=checked_roles, gaps = gaps_list, matched_data = matched_list)
 
 if __name__ == "__main__":
@@ -41,8 +43,8 @@ if __name__ == "__main__":
     cv = [python_normalized, java_normalized]
 
     profile = {
-        "Data Scientist": [java_normalized, c_normalized, sql_normalized],
-        "Software Engineer": [java_normalized],
+        "Data Scientist": {"postings_count": 100, "skills": [java_normalized, c_normalized, sql_normalized]},
+        "Software Engineer": {"postings_count": 200, "skills": [java_normalized]},
     }
 
     result = compute_gaps(cv_skills = cv, target_roles = target_roles, demand_profile = profile)

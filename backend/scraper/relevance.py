@@ -152,6 +152,20 @@ TECH_ARCHITECT_DOMAIN_KW = re.compile(
     re.IGNORECASE,
 )
 
+# "Mimar" (architect) is ambiguous on its own -- a construction/building
+# architect is not a CS role, but "Yazılım Mimarı"/"Sistem Mimarı"/"Çözüm
+# Mimarı" (software/systems/solution architect) definitely are, and Turkish
+# word order puts the domain word before "mimar" ("Yazılım Mimarı"), which a
+# forward-only regex lookahead can't see (it only looks past the match, not
+# before it). Handled separately: "mimar" only counts as a non-CS signal
+# when none of these domain words appear anywhere else in the title.
+MIMAR_KW = re.compile(r"mimar", re.IGNORECASE)
+TECH_ARCHITECT_DOMAIN_KW = re.compile(
+    r"yazılım|sistem|çözüm|solution|uygulama|veri|data|network|güvenlik|"
+    r"security|bulut|cloud|kurumsal|enterprise",
+    re.IGNORECASE,
+)
+
 
 # Older/formal Turkish spelling uses circumflex vowels (â/î/û — e.g. "Zekâ",
 # "Kâğıt") that are distinct Unicode characters from plain a/i/u, so patterns

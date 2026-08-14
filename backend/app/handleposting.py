@@ -28,10 +28,18 @@ def load_demand_profile():
 
     profile = {}
 
-    for role in json_data:
-        profile[role] = list()
-        for skill in json_data[role]:
-            profile[role].append(DemandedSkill(**skill))
+    for role, role_data in json_data.items():
+        if isinstance(role_data, list):
+            skills = role_data
+            postings_count = 200 # fallback
+        else:
+            skills = role_data.get("skills", [])
+            postings_count = role_data.get("postings_count", 0)
+        
+        profile[role] = {
+            "postings_count": postings_count,
+            "skills": [DemandedSkill(**skill) for skill in skills]
+        }
 
     return profile
 

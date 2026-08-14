@@ -24,6 +24,7 @@ type Skill = {
   trend: Trend;
   closestCvSkill: string | null;
   icon: string;
+  postingsCount: number;
 };
 
 const skillIcons: Record<string, string> = {
@@ -176,22 +177,22 @@ export default function DashboardPage() {
 
   /* ---------------- MISSING SKILLS ---------------- */
 
-  const gapBySkill = new Map<string, Gap>();
+  const gapBySkill = new Map<string, { gap: Gap; role: string }>();
 
   for (const role of roles) {
     for (const gap of gaps.gaps[role] ?? []) {
       const seen = gapBySkill.get(gap.skill);
 
-      if (!seen || gap.demand_percentage > seen.demand_percentage) {
-        gapBySkill.set(gap.skill, gap);
+      if (!seen || gap.demand_percentage > seen.gap.demand_percentage) {
+        gapBySkill.set(gap.skill, { gap, role });
       }
     }
   }
 
   const missingSkills: Skill[] = [...gapBySkill.values()]
-    .sort((a, b) => b.demand_percentage - a.demand_percentage)
+    .sort((a, b) => b.gap.demand_percentage - a.gap.demand_percentage)
     .slice(0, 5)
-    .map((gap) => {
+    .map(({ gap, role }) => {
       const name = getDisplaySkillName(gap.skill);
       return {
         name,
@@ -200,6 +201,7 @@ export default function DashboardPage() {
         trend: gap.trend,
         closestCvSkill: gap.closest_cv_skill,
         icon: getSkillIcon(name),
+        postingsCount: gaps.matched_data[role]?.postings_count ?? 0,
       };
     });
 
@@ -420,7 +422,7 @@ export default function DashboardPage() {
                         </span>
 
                         <p className="text-xs text-[var(--text-muted)]">
-                          {t.dashboard.inYourRoles}
+                          {t.dashboard.basedOnPostings(skill.postingsCount)}
                         </p>
                       </div>
                     </button>

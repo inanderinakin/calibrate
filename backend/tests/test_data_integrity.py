@@ -13,13 +13,19 @@ def load_json_artifact(filename):
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
+def skills_of(role_data):
+    """The profile stores either a plain list of skills or {skills, postings_count}."""
+    if isinstance(role_data, list):
+        return role_data
+    return role_data.get("skills", [])
+
 def test_every_profile_skill_exists_in_keyword_list():
     """Check that every skill demanded in a profile exists in the keyword patterns."""
     demand_profile = load_json_artifact("demand_profile.json")
     
     missing_skills = []
-    for role, skills in demand_profile.items():
-        for skill_entry in skills:
+    for role, role_data in demand_profile.items():
+        for skill_entry in skills_of(role_data):
             skill_name = skill_entry["skill"]
             if skill_name not in PATTERNS:
                 missing_skills.append(f"{skill_name} (in {role})")
@@ -32,8 +38,8 @@ def test_every_profile_skill_has_a_resource():
     resources = load_json_artifact("resources.json")
     
     unique_demanded_skills = set()
-    for skills in demand_profile.values():
-        for skill_entry in skills:
+    for role_data in demand_profile.values():
+        for skill_entry in skills_of(role_data):
             unique_demanded_skills.add(skill_entry["skill"])
             
     missing_resources = [skill for skill in unique_demanded_skills if skill not in resources]

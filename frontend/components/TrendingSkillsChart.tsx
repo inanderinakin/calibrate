@@ -101,6 +101,11 @@ export default function TrendingSkillsChart({
     [view, selected, span]
   );
 
+  const actualTotals = useMemo(
+    () => (view && view.totals ? view.totals.slice(-span) : []),
+    [view, span]
+  );
+
   useEffect(() => {
     if (actual.length === 0) return;
 
@@ -287,6 +292,11 @@ export default function TrendingSkillsChart({
             fontWeight={700}
           >
             {formatPercent(Math.round(actual[actual.length - 1] * 100), language)}
+            {actualTotals.length > 0 && (
+              <tspan className="fill-(--text-muted) font-normal text-[10px]" dx="4">
+                (n={actualTotals[actualTotals.length - 1]})
+              </tspan>
+            )}
           </text>
 
           {values.map((v, i) => (
@@ -312,6 +322,7 @@ export default function TrendingSkillsChart({
               {role
                 ? t.roleShare(selected, Math.round(actual[hover] * 100), role)
                 : t.postingsShare(selected, Math.round(actual[hover] * 100))}
+              {actualTotals.length > 0 && ` (n=${actualTotals[hover]})`}
             </div>
           </div>
         )}
