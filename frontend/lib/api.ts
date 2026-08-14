@@ -1,3 +1,5 @@
+import { tokens } from "@/lib/tokens";
+
 export const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export async function errorMessage(
@@ -46,4 +48,99 @@ export async function uploadCv(file: File) {
   }
 
   return data;
+}
+
+export async function post_login(email: string, password: string) {
+  const loginResponse = await fetch(`${API_URL}/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email: email,
+      password: password,
+    }),
+  });
+
+  if (!loginResponse.ok ) {
+    throw new Error(await errorMessage(loginResponse, "Login failure"))
+  }
+  return await loginResponse.json()
+}
+
+function authHeaders() {
+  const idToken = tokens.getIdToken();
+
+  if (!idToken) {
+    throw new Error("You are not signed in.");
+  }
+
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${idToken}`,
+  };
+}
+
+export async function getCompletedSkills(): Promise<string[]> {
+  const res = await fetch(`${API_URL}/completed_skills`, {
+    headers: authHeaders(),
+  });
+
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not load your progress"));
+  }
+
+  const data = await res.json();
+  return data.completed_skills;
+}
+
+export async function setCompletedSkills(skills: string[]): Promise<string[]> {
+  const res = await fetch(`${API_URL}/completed_skills`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({ skills }),
+  });
+
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not save your progress"));
+  }
+
+  const data = await res.json();
+  return data.completed_skills;
+}
+
+export async function post_signup(
+  email: string,
+  password: string,
+  firstName: string,
+  lastName: string
+) {
+  const res = await fetch(`${API_URL}/sign_up`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email,
+      password,
+      first_name: firstName,
+      last_name: lastName,
+    }),
+  });
+
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Sign up failed"));
+  }
+
+  return await res.json();
+}
+
+export async function post_verify_email(email: string, code: string) {
+  const res = await fetch(`${API_URL}/verify_email`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, code }),
+  });
+
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Confirmation failed"));
+  }
+
+  return await res.json();
 }

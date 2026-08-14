@@ -5,6 +5,7 @@ import { stepIndicator } from "./stepIndicator";
 import { landing } from "./landing";
 import { login } from "./login";
 import { signup } from "./signup";
+import { verifyEmail } from "./verifyEmail";
 import { uploadCv } from "./uploadCv";
 import { selectRole } from "./selectRole";
 import { analyseCv } from "./analyseCv";
@@ -25,6 +26,7 @@ function pick(language: Language) {
     landing: landing[language],
     login: login[language],
     signup: signup[language],
+    verifyEmail: verifyEmail[language],
     uploadCv: uploadCv[language],
     selectRole: selectRole[language],
     analyseCv: analyseCv[language],

@@ -5,6 +5,7 @@ export const login = {
     password: "Password",
     submit: "Log in",
     orContinueWith: "or continue with",
+    genericError: "We could not sign you in. Please try again.",
   },
   tr: {
     title: "Giriş Yap",
@@ -12,5 +13,6 @@ export const login = {
     password: "Şifre",
     submit: "Giriş Yap",
     orContinueWith: "veya şununla devam et",
+    genericError: "Giriş yapılamadı. Lütfen tekrar deneyin.",
   },
 };
