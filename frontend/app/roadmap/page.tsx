@@ -11,6 +11,7 @@ import { getDisplaySkillName } from "@/lib/escoMapper";
 import { getCategoryLabel } from "@/lib/skillCategories";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
+import { getCompletedSkills, setCompletedSkills } from "@/lib/api";
 
 export default function RoadmapPage() {
   const { language } = useLanguage();
@@ -21,15 +22,17 @@ export default function RoadmapPage() {
   const [completed, setCompleted] = useState<Set<string>>(new Set());
 
   function toggleCompleted(skill: string) {
-    setCompleted((current) => {
-      const next = new Set(current);
-      if (next.has(skill)) {
-        next.delete(skill);
-      } else {
-        next.add(skill);
-      }
-      return next;
-    });
+    const previous = completed;
+    const next = new Set(previous);
+
+    if (next.has(skill)) {
+      next.delete(skill);
+    } else {
+      next.add(skill);
+    }
+
+    setCompleted(next);
+    setCompletedSkills([...next]).catch(() => setCompleted(previous));
   }
 
   useEffect(() => {
@@ -39,6 +42,20 @@ export default function RoadmapPage() {
     setCvUploaded(Array.isArray(skills) && skills.length > 0);
     setReport(savedReport);
     setLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    async function loadCompleted() {
+      try {
+        const saved = await getCompletedSkills();
+        setCompleted(new Set(saved));
+      }
+      catch {
+        setCompleted(new Set());
+      }
+    }
+
+    loadCompleted();
   }, []);
 
   // Avoid rendering the wrong state before checking the session.
@@ -82,10 +99,10 @@ export default function RoadmapPage() {
         <div className="mx-auto flex max-w-3xl flex-col items-start gap-5 rounded-[30px] glass-card p-8 shadow-lg">
           <Icon
             icon="mdi:map-outline"
-            className="h-14 w-14 text-[var(--accent-2)]"
+            className="h-14 w-14 text-(--accent-2)"
           />
 
-            <h1 className="text-3xl font-black text-[var(--text-primary)] md:text-5xl">
+            <h1 className="text-3xl font-black text-(--text-primary) md:text-5xl">
               {t.roadmap.noRoadmapYet}
             </h1>
 
