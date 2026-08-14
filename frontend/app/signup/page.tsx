@@ -3,32 +3,43 @@
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { useAuth } from "@/contexts/AuthContext";
+import { saveProfile } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
+import { post_signup } from "@/lib/api";
 import BackButton from "@/components/BackButton";
 
 export default function SignupPage() {
   const router = useRouter();
-  const { login } = useAuth();
   const { language } = useLanguage();
   const t = getTranslations(language);
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [studyField, setStudyField] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    setError(null);
+    setSubmitting(true);
 
-    // TODO: replace with a real API call once the backend exists, e.g.
-    // const res = await fetch("/api/signup", { method: "POST", body: ... });
-    // then call login(res.user) with the server's response instead of
-    // the raw form values below.
-    login({ firstName, lastName, email, studyField });
+    try {
+      await post_signup(email, password, firstName, lastName);
 
-    router.push("/upload_cv");
+      saveProfile({ firstName, lastName, email, studyField });
+
+      router.push(`/verify_email?email=${encodeURIComponent(email)}`);
+    }
+    catch (err) {
+      setError(err instanceof Error ? err.message : t.signup.genericError);
+    }
+    finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -78,14 +89,32 @@ export default function SignupPage() {
         />
         <input
           required
+          type="password"
+          placeholder={t.signup.password}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="glass-input rounded-lg border border-[var(--border-color)] px-4 py-2.5 text-[var(--text-primary)] outline-none focus:border-[var(--accent-2)]"
+        />
+        <input
+          required
           placeholder={t.signup.fieldOfStudy}
           value={studyField}
           onChange={(e) => setStudyField(e.target.value)}
           className="glass-input rounded-lg border border-[var(--border-color)] px-4 py-2.5 text-[var(--text-primary)] outline-none focus:border-[var(--accent-2)]"
         />
 
+        {error && (
+          <p
+            role="alert"
+            className="rounded-lg border border-[var(--accent-2)] px-4 py-2.5 text-sm font-medium text-[var(--text-primary)]"
+          >
+            {error}
+          </p>
+        )}
+
         <motion.button
           type="submit"
+          disabled={submitting}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.97 }}
           className="rounded-lg bg-[var(--accent-bg)] text-[var(--accent-text)] py-2.5 font-medium mt-2"

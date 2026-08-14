@@ -1,6 +1,15 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 
+Parameters:
+  GoogleClientId:
+    Type: String
+    Description: "OAuth client id from Google Cloud Console"
+  GoogleClientSecret:
+    Type: String
+    NoEcho: true
+    Description: "OAuth client secret from Google Cloud Console"
+
 Globals:
   Function:
     Timeout: 300
@@ -54,12 +63,43 @@ Resources:
       Policies:
         PasswordPolicy:
           MinimumLength: 8
+  UserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      UserPoolId: !Ref UserPool
+      Domain: calibrate-auth
+  GoogleIdentityProvider:
+    Type: AWS::Cognito::UserPoolIdentityProvider
+    Properties:
+      UserPoolId: !Ref UserPool
+      ProviderName: Google
+      ProviderType: Google
+      ProviderDetails:
+        client_id: !Ref GoogleClientId
+        client_secret: !Ref GoogleClientSecret
+        authorize_scopes: "openid email profile"
+      AttributeMapping:
+        email: email
+        given_name: given_name
+        family_name: family_name
+        username: sub
   AppClient:
     Type: AWS::Cognito::UserPoolClient
+    DependsOn: GoogleIdentityProvider
     Properties:
       UserPoolId: !Ref UserPool
       GenerateSecret: false
       ExplicitAuthFlows: [ALLOW_USER_PASSWORD_AUTH, ALLOW_REFRESH_TOKEN_AUTH]
+      SupportedIdentityProviders: [COGNITO, Google]
+      AllowedOAuthFlows: [code]
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthScopes: [openid, email, profile]
+      CallbackURLs:
+        - http://localhost:3000/auth/callback
+        - https://main.d1nc4zzbkovnjv.amplifyapp.com/auth/callback
+      LogoutURLs:
+        - http://localhost:3000/login
+        - https://main.d1nc4zzbkovnjv.amplifyapp.com/login
 
 Outputs:
   FunctionUrl:
@@ -68,6 +108,9 @@ Outputs:
   UserPoolId:
     Description: "Cognito user pool id"
     Value: !Ref UserPool
+  HostedUiDomain:
+    Description: "Cognito hosted UI domain"
+    Value: !Sub "https://${UserPoolDomain}.auth.${AWS::Region}.amazoncognito.com"
   AppClientId:
     Description: "Cognito app client id"
     Value: !Ref AppClient
