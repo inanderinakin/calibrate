@@ -7,7 +7,10 @@ import AppShell from "@/components/AppShell";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
+import { useRequireAuth } from "@/lib/useRequireAuth";
+
 export default function ProfilePage() {
+  const allowed = useRequireAuth();
   const { user } = useAuth();
   const { language } = useLanguage();
   const t = getTranslations(language);
@@ -18,6 +21,8 @@ export default function ProfilePage() {
         year: "numeric",
       })
     : null;
+
+  if (!allowed) return <AppShell backHref="/dashboard" />;
 
   return (
     <AppShell backHref="/dashboard">
