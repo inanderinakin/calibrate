@@ -23,6 +23,28 @@ export function signInWith(provider: "Google") {
   window.location.assign(`${DOMAIN}/oauth2/authorize?${params}`);
 }
 
+export async function refreshIdToken(refreshToken: string) {
+  if (!DOMAIN || !CLIENT_ID) {
+    throw new Error("Cognito hosted UI is not configured.");
+  }
+
+  const res = await fetch(`${DOMAIN}/oauth2/token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "refresh_token",
+      client_id: CLIENT_ID,
+      refresh_token: refreshToken,
+    }),
+  });
+
+  if (!res.ok) {
+    throw new Error("Your session has expired.");
+  }
+
+  return (await res.json()) as { id_token: string };
+}
+
 export async function exchangeCodeForTokens(code: string) {
   if (!DOMAIN || !CLIENT_ID) {
     throw new Error("Cognito hosted UI is not configured.");

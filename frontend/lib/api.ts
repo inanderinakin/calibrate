@@ -1,4 +1,5 @@
 import { tokens } from "@/lib/tokens";
+import { refreshIdToken } from "@/lib/hostedUi";
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -79,10 +80,38 @@ function authHeaders() {
   };
 }
 
+function endSession(): never {
+  tokens.clear();
+
+  if (typeof window !== "undefined") {
+    window.location.assign("/login");
+  }
+
+  throw new Error("Your session has expired. Please sign in again.");
+}
+
+async function authedFetch(path: string, init: RequestInit = {}) {
+  const res = await fetch(`${API_URL}${path}`, { ...init, headers: authHeaders() });
+
+  if (res.status !== 401) return res;
+
+  const refreshToken = tokens.getRefreshToken();
+
+  if (!refreshToken) endSession();
+
+  try {
+    const refreshed = await refreshIdToken(refreshToken);
+    tokens.setIdToken(refreshed.id_token);
+  }
+  catch {
+    endSession();
+  }
+
+  return await fetch(`${API_URL}${path}`, { ...init, headers: authHeaders() });
+}
+
 export async function getCompletedSkills(): Promise<string[]> {
-  const res = await fetch(`${API_URL}/completed_skills`, {
-    headers: authHeaders(),
-  });
+  const res = await authedFetch("/completed_skills");
 
   if (!res.ok) {
     throw new Error(await errorMessage(res, "Could not load your progress"));
@@ -93,9 +122,8 @@ export async function getCompletedSkills(): Promise<string[]> {
 }
 
 export async function setCompletedSkills(skills: string[]): Promise<string[]> {
-  const res = await fetch(`${API_URL}/completed_skills`, {
+  const res = await authedFetch("/completed_skills", {
     method: "POST",
-    headers: authHeaders(),
     body: JSON.stringify({ skills }),
   });
 
