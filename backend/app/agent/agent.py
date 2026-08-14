@@ -14,7 +14,12 @@ load_dotenv()
 
 def load_role_demand(role: str) -> list[NormalizedSkill] | None:
     """The single source of demand data (later: reads the aggregator's artifacts)."""
-    return demand_profile.get(role, None)
+    role_data = demand_profile.get(role)
+
+    if role_data is None:
+        return None
+
+    return role_data["skills"]
 
 @tool
 def get_role_demand(role: str):
@@ -77,7 +82,7 @@ if __name__ == "__main__":
             ]
         },
         "matched_data": {
-            "Data Scientist": {"matched_demanded": 3, "total_demanded": 5, "ratio": 0.6}
+            "Data Scientist": {"matched_demanded": 3, "total_demanded": 5, "ratio": 0.6, "postings_count": 213}
         }
     }
     parsedData = GapResult(**gaps)
