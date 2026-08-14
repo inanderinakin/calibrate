@@ -29,8 +29,8 @@
   --accent-text: var(--creamy);
   --icon-color: var(--burgundy);
 
-  --bg-texture: url("/bg/white-bg.jpg");
-  --sidebar-texture: url("/bg/burgundy-bg.jpg");
+  --bg-texture: url("/bg/white-bg.png");
+  --sidebar-texture: url("/bg/burgundy-bg.png");
   --landing-texture: url("/bg/light-picture.png");
 
   --nav-active: var(--pink);
@@ -59,7 +59,7 @@
   --accent-text: var(--dark-blue);
   --icon-color: var(--creamy);
 
-  --bg-texture: url("/bg/blue-bg.jpg");
+  --bg-texture: url("/bg/blue-bg.png");
   --sidebar-texture: none; /* dark sidebar is a flat #3C5E82 fill in the design, no texture */
   --landing-texture: url("/bg/dark-picture.png");
 
@@ -74,9 +74,8 @@
 
 /*
   BACKGROUND ASSETS — see /public/bg/README.md.
-  The 3 files (white-bg.jpg, blue-bg.jpg, burgundy-bg.jpg) are saved there.
-  Figma served them as JPEG, not PNG, so the extensions differ from the
-  original README; light-picture / dark-picture are still PNG.
+  The 3 files (white-bg.png, blue-bg.png, burgundy-bg.png) are saved there.
+  light-picture / dark-picture are not in the repo yet.
 */
 .page-texture {
   background-image: var(--bg-texture);
