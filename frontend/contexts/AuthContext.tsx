@@ -7,6 +7,7 @@ import {
   useEffect,
   ReactNode,
 } from "react";
+import { tokens } from "@/lib/tokens";
 
 export interface AuthUser {
   firstName: string;
@@ -40,6 +41,11 @@ function readProfile(): AuthUser | null {
     window.localStorage.removeItem(PROFILE_KEY);
     return null;
   }
+}
+
+export function saveProfile(profile: AuthUser) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -87,7 +93,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     persist(merged);
   };
 
-  const logout = () => persist(null);
+  const logout = () => {
+    tokens.clear();
+    persist(null);
+  };
 
   const updateUser = (partial: Partial<AuthUser>) => {
     const base = user ?? readProfile();

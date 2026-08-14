@@ -118,7 +118,37 @@ NON_CS_TITLE_KW = re.compile(
     r"e.ticaret\s?uzman|"
     r"üretim\s?destek|operasyon\s?şef|"
     r"pos\s?destek|"
-    r"iş\s?sağlığı|i̇sg\s?uzman",
+    r"iş\s?sağlığı|i̇sg\s?uzman|"
+    r"\bteacher\b|kolej|kampüs|okul|\blise\b|"
+    r"eğitim\s?(danış|koordinat|koç|yönetici|operasyon)|educational\s?coordinator|"
+    r"ölçme|değerlendirme\s?uzman|rehberlik|veli\s?ilişki|okul\s?öncesi|"
+    r"kurs\s?müdür|din\s?kültürü|"
+    r"front\s?office|night\s?audit|restaurant|"
+    r"tercüman|videographer|video\s?editör|video\s?prodüksiyon|"
+    r"cari\s?hesap|tahsilat|perakende\s?kredi|"
+    r"sosyal\s?medya|kurumsal\s?iletişim|\bmarketer\b|"
+    r"bayi\s?kanalı|kamera\s?sistemleri\s?montaj|matbaa|mobilya\s?teknikeri|"
+    r"gazlı\s?söndürme|enerji\s?mühendis|akıllı\s?mühimmat|hvac\s?otomasyon|"
+    r"metal\s?kalıp|fason\s?takip|"
+    r"\bpazarlama\b|içerik\s?geliştirme\s?uzman|grafik\s?tasarım|\beditör\b|"
+    r"ses\s?ışık\s?sistemleri|internet\s?reklam|bilgi\s?ve\s?belge\s?yönetici|"
+    r"şube\s?müdür|şube\s?yönetici|üretim\s?müdür|resmi\s?işler|kalite\s?müdür|"
+    r"sağlık,?\s?güvenlik\s?ve\s?çevre|iş\s?geliştirme\s?ve\s?enerji|"
+    r"internal\s?auditor|üretim\s?ve\s?kalite\s?teknisyen",
+    re.IGNORECASE,
+)
+
+# "Mimar" (architect) is ambiguous on its own -- a construction/building
+# architect is not a CS role, but "Yazılım Mimarı"/"Sistem Mimarı"/"Çözüm
+# Mimarı" (software/systems/solution architect) definitely are, and Turkish
+# word order puts the domain word before "mimar" ("Yazılım Mimarı"), which a
+# forward-only regex lookahead can't see (it only looks past the match, not
+# before it). Handled separately: "mimar" only counts as a non-CS signal
+# when none of these domain words appear anywhere else in the title.
+MIMAR_KW = re.compile(r"mimar", re.IGNORECASE)
+TECH_ARCHITECT_DOMAIN_KW = re.compile(
+    r"yazılım|sistem|çözüm|solution|uygulama|veri|data|network|güvenlik|"
+    r"security|bulut|cloud|kurumsal|enterprise",
     re.IGNORECASE,
 )
 
