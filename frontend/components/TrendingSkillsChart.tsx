@@ -102,7 +102,7 @@ export default function TrendingSkillsChart({
   );
 
   const actualTotals = useMemo(
-    () => (view && view.totals ? view.totals.slice(-span) : []),
+    () => (view && "totals" in view ? view.totals.slice(-span) : []),
     [view, span]
   );
 
