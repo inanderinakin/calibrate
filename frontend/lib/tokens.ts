@@ -47,6 +47,11 @@ export const tokens = {
     window.localStorage.setItem(KEYS.refreshToken, refreshToken);
   },
 
+  setIdToken: (idToken: string) => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(KEYS.idToken, idToken);
+  },
+
   clear: () => {
     if (typeof window === "undefined") return;
     for (const key of Object.values(KEYS)) window.localStorage.removeItem(key);
