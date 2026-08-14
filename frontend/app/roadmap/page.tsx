@@ -12,8 +12,10 @@ import { getCategoryLabel } from "@/lib/skillCategories";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
 import { getCompletedSkills, setCompletedSkills } from "@/lib/api";
+import { useRequireAuth } from "@/lib/useRequireAuth";
 
 export default function RoadmapPage() {
+  const allowed = useRequireAuth();
   const { language } = useLanguage();
   const t = getTranslations(language);
   const [report, setReport] = useState<Report | null>(null);
@@ -57,6 +59,8 @@ export default function RoadmapPage() {
 
     loadCompleted();
   }, []);
+
+  if (!allowed) return <AppShell backHref="/dashboard" />;
 
   // Avoid rendering the wrong state before checking the session.
   if (!loaded || cvUploaded === null) {

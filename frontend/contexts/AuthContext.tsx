@@ -43,6 +43,11 @@ function readProfile(): AuthUser | null {
   }
 }
 
+export function clearStoredUser() {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(STORAGE_KEY);
+}
+
 export function saveProfile(profile: AuthUser) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));

@@ -8,6 +8,7 @@ export const sidebar = {
     roadMap: "Road Map",
     settings: "Settings",
     noFieldSet: "No field set",
+    signUpPrompt: "Sign up to save your roadmap",
   },
   tr: {
     cvAnalysis: "CV Analizi",
@@ -18,5 +19,6 @@ export const sidebar = {
     roadMap: "Yol Haritası",
     settings: "Ayarlar",
     noFieldSet: "Alan belirtilmedi",
+    signUpPrompt: "Yol haritanızı kaydetmek için kayıt olun",
   },
 };

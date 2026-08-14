@@ -109,7 +109,7 @@ export default function Sidebar() {
 
       {/* Bottom: profile summary, driven entirely by AuthContext */}
       <MotionLink
-        href="/profile"
+        href={user ? "/profile" : "/signup"}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
@@ -120,10 +120,16 @@ export default function Sidebar() {
       >
         <Icon icon="iconamoon:profile-circle-bold" className="w-10 h-10 shrink-0" />
         <div className="hidden md:flex md:flex-col md:min-w-0">
-          <span className="text-lg font-bold truncate">{user?.firstName ?? t.profile.guest}</span>
-          <span className="text-[10px] font-light truncate">
-            {user?.studyField ?? t.sidebar.noFieldSet}
-          </span>
+          {user ? (
+            <>
+              <span className="text-lg font-bold truncate">{user.firstName}</span>
+              <span className="text-[10px] font-light truncate">
+                {user.studyField || t.sidebar.noFieldSet}
+              </span>
+            </>
+          ) : (
+            <span className="text-sm font-bold">{t.sidebar.signUpPrompt}</span>
+          )}
         </div>
       </MotionLink>
     </aside>

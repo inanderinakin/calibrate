@@ -1,5 +1,6 @@
 import { tokens } from "@/lib/tokens";
 import { refreshIdToken } from "@/lib/hostedUi";
+import { clearStoredUser } from "@/contexts/AuthContext";
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -82,6 +83,7 @@ function authHeaders() {
 
 function endSession(): never {
   tokens.clear();
+  clearStoredUser();
 
   if (typeof window !== "undefined") {
     window.location.assign("/login");
