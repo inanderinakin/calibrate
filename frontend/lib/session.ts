@@ -40,6 +40,15 @@ export const session = {
   getReport: () => read<Report>(KEYS.report),
   setReport: (report: Report) => write(KEYS.report, report),
 
+  clearDerived: () => {
+    if (typeof window === "undefined") return;
+    window.sessionStorage.removeItem(KEYS.gaps);
+    window.sessionStorage.removeItem(KEYS.report);
+  },
+
+  hasAnalysis: () =>
+    read<NormalizedSkill[]>(KEYS.cvSkills) !== null || read<Report>(KEYS.report) !== null,
+
   clear: () => {
     if (typeof window === "undefined") return;
     for (const key of Object.values(KEYS)) window.sessionStorage.removeItem(key);

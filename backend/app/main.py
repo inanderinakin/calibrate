@@ -18,10 +18,10 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from agent import get_recommendations
 from handlecv import compute_gaps, extract_skill_candidates, extract_cv_text
 from normalize import normalize
-from models import CompletedSkills, GapResult, GapRequest, LoginInfo, NormalizedSkill, SignUpInfo, VerifyEmailInfo
+from models import Analysis, CompletedSkills, GapResult, GapRequest, LoginInfo, NormalizedSkill, SignUpInfo, VerifyEmailInfo
 from skills import PATTERNS, SKILL_CATEGORIES
 from handleposting import load_demand_profile, load_trends
-from storage import read_completed_skills, write_completed_skills
+from storage import read_analysis, read_completed_skills, write_analysis, write_completed_skills
 from auth import verify_token
 
 profile = load_demand_profile()
@@ -82,6 +82,26 @@ async def set_completed_skills(completed: CompletedSkills, user_id: Annotated[st
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="We could not save your progress right now")
 
     return {"completed_skills": completed.skills}
+
+@app.get("/analysis")
+async def get_analysis(user_id: Annotated[str, Depends(verify_token_dependency)]):
+    try:
+        saved = await run_in_threadpool(read_analysis, user_id)
+    except ClientError as err:
+        print(f"Could not read analysis: {err}")
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="We could not load your saved analysis")
+
+    return {"analysis": saved}
+
+@app.post("/analysis")
+async def set_analysis(analysis: Analysis, user_id: Annotated[str, Depends(verify_token_dependency)]):
+    try:
+        await run_in_threadpool(write_analysis, user_id, analysis.model_dump())
+    except ClientError as err:
+        print(f"Could not save analysis: {err}")
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="We could not save your analysis")
+
+    return {"saved": True}
 
 @app.post("/sign_up")
 async def sign_up(signup_info: SignUpInfo):

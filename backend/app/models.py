@@ -18,6 +18,12 @@ class VerifyEmailInfo(BaseModel):
 class CompletedSkills(BaseModel):
     skills: list[str]
 
+class Analysis(BaseModel):
+    cv_skills: list["NormalizedSkill"] = []
+    target_roles: list[str] = []
+    gaps: "GapResult | None" = None
+    report: "Report | None" = None
+
 class MatchData(BaseModel):
     matched_demanded: int
     total_demanded: int

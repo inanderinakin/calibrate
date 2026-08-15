@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import AppShell from "@/components/AppShell";
 import StepIndicator from "@/components/StepIndicator";
 import { session } from "@/lib/session";
+import { persistSession } from "@/lib/api";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
 
@@ -52,6 +53,7 @@ export default function SelectRolePage() {
     if (selected.length === 0) return;
 
     session.setTargetRoles(selected);
+    persistSession().catch(() => {});
     router.push("/analyse_cv");
   }
 

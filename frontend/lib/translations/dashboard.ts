@@ -44,6 +44,7 @@ export const dashboard = {
     email: "E-mail",
     viewFullProfile: "View full profile",
     getYourRoadmap: "Get your Roadmap!",
+    viewRoadmap: "View your roadmap",
     generateRoadmap: "Generate Personalized Roadmap",
   },
   tr: {
@@ -89,6 +90,7 @@ export const dashboard = {
     email: "E-posta",
     viewFullProfile: "Tam profili görüntüle",
     getYourRoadmap: "Yol Haritanızı Alın!",
+    viewRoadmap: "Yol haritanızı görüntüleyin",
     generateRoadmap: "Kişiselleştirilmiş Yol Haritası Oluştur",
   },
 };

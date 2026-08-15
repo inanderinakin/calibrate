@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { resolveEntryPath } from "@/lib/entry";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations, type Translations } from "@/lib/translations";
 
@@ -91,7 +94,21 @@ function IntroPage({ onContinue, t }: { onContinue: () => void; t: Translations 
 }
 
 function MainLandingPage({ t, onBack }: { t: Translations; onBack?: () => void }) {
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const [isDark, setIsDark] = useState(false);
+  const [navigating, setNavigating] = useState(false);
+
+  async function handleContinue() {
+    setNavigating(true);
+
+    try {
+      router.push(await resolveEntryPath());
+    }
+    catch {
+      setNavigating(false);
+    }
+  }
 
   useEffect(() => {
     const updateTheme = () => {
@@ -151,19 +168,35 @@ function MainLandingPage({ t, onBack }: { t: Translations; onBack?: () => void }
               </motion.button>
             )}
 
-            <Link
-              href="/login"
-              className="btn-hover rounded-lg bg-[var(--accent-bg)] text-[var(--accent-text)] px-4 py-1.5 text-[10px] font-medium leading-none sm:px-5 sm:py-2 sm:text-[11px] lg:px-6 lg:py-2.5 lg:text-[13px]"
-            >
-              {t.landing.login}
-            </Link>
+            {isAuthenticated ? (
+              <button
+                type="button"
+                onClick={handleContinue}
+                disabled={navigating}
+                className="btn-hover flex items-center gap-1.5 rounded-lg bg-[var(--accent-bg)] text-[var(--accent-text)] px-4 py-1.5 text-[10px] font-medium leading-none disabled:opacity-70 sm:px-5 sm:py-2 sm:text-[11px] lg:px-6 lg:py-2.5 lg:text-[13px]"
+              >
+                {navigating && (
+                  <Icon icon="cuida:loading-left-outline" className="h-3 w-3 animate-spin-ccw" />
+                )}
+                {t.landing.continueToApp}
+              </button>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="btn-hover rounded-lg bg-[var(--accent-bg)] text-[var(--accent-text)] px-4 py-1.5 text-[10px] font-medium leading-none sm:px-5 sm:py-2 sm:text-[11px] lg:px-6 lg:py-2.5 lg:text-[13px]"
+                >
+                  {t.landing.login}
+                </Link>
 
-            <Link
-              href="/signup"
-              className="btn-hover rounded-lg border border-[var(--landing-accent)] bg-transparent px-4 py-1.5 text-[10px] font-medium leading-none text-[var(--landing-accent)] sm:px-5 sm:py-2 sm:text-[11px] lg:px-6 lg:py-2.5 lg:text-[13px]"
-            >
-              {t.landing.signIn}
-            </Link>
+                <Link
+                  href="/signup"
+                  className="btn-hover rounded-lg border border-[var(--landing-accent)] bg-transparent px-4 py-1.5 text-[10px] font-medium leading-none text-[var(--landing-accent)] sm:px-5 sm:py-2 sm:text-[11px] lg:px-6 lg:py-2.5 lg:text-[13px]"
+                >
+                  {t.landing.signIn}
+                </Link>
+              </>
+            )}
 
             <button
               type="button"
@@ -266,9 +299,28 @@ function MainLandingPage({ t, onBack }: { t: Translations; onBack?: () => void }
 }
 
 export default function LandingPage() {
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const [showIntro, setShowIntro] = useState(true);
+  const [redirecting, setRedirecting] = useState(true);
   const { language } = useLanguage();
   const t = getTranslations(language);
+
+  // A signed-in user has no use for the pitch. Send them where they left off.
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setRedirecting(false);
+      return;
+    }
+
+    resolveEntryPath()
+      .then((path) => router.replace(path))
+      .catch(() => setRedirecting(false));
+  }, [isAuthenticated, router]);
+
+  if (redirecting && isAuthenticated) {
+    return <main className="min-h-screen bg-[var(--page-bg)]" />;
+  }
 
   if (showIntro) {
     return (

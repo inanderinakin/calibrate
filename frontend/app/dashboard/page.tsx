@@ -11,6 +11,7 @@ import { ChartSkeleton, DashboardSkeleton } from "@/components/Skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { API_URL } from "@/lib/api";
 import { session } from "@/lib/session";
+import { useRestoreAnalysis } from "@/lib/useRestoreAnalysis";
 import type { Gap, GapResult, Trend, TrendsPayload } from "@/lib/types";
 import { getDisplaySkillName } from "@/lib/escoMapper";
 import { getCategoryLabel } from "@/lib/skillCategories";
@@ -107,11 +108,16 @@ export default function DashboardPage() {
   const [trendsFailed, setTrendsFailed] = useState(false);
   const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
   const [focusSkills, setFocusSkills] = useState<string[]>([]);
+  const restored = useRestoreAnalysis();
+  const [hasRoadmap, setHasRoadmap] = useState(false);
 
   useEffect(() => {
+    if (!restored) return;
+
     setGaps(session.getGaps());
+    setHasRoadmap(session.getReport() !== null);
     setLoaded(true);
-  }, []);
+  }, [restored]);
 
   useEffect(() => {
     fetch(`${API_URL}/trends`)
@@ -781,11 +787,11 @@ export default function DashboardPage() {
               className="flex min-w-[390px] items-center justify-center gap-4 rounded-[18px] bg-[var(--accent-2)] px-10 py-4 text-xl font-black text-[var(--on-accent)] shadow-[0_5px_12px_rgba(0,0,0,0.2)] transition hover:scale-[1.01] active:scale-[0.99]"
             >
               <Icon
-                icon="mdi:auto-fix"
+                icon={hasRoadmap ? "mdi:map-outline" : "mdi:auto-fix"}
                 className="h-6 w-6"
               />
 
-              {t.dashboard.generateRoadmap}
+              {hasRoadmap ? t.dashboard.viewRoadmap : t.dashboard.generateRoadmap}
 
               <Icon
                 icon="mdi:arrow-right"

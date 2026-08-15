@@ -7,7 +7,7 @@ import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
 import AppShell from "@/components/AppShell";
 import StepIndicator from "@/components/StepIndicator";
-import { API_URL, errorMessage } from "@/lib/api";
+import { API_URL, errorMessage, saveAnalysis } from "@/lib/api";
 import { session } from "@/lib/session";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
@@ -88,6 +88,14 @@ export default function AnalyseCvPage() {
 
         session.setReport(report);
         setStep(4);
+
+        // Keep the analysis on the account so it survives closing the tab.
+        saveAnalysis({
+          cv_skills: cvSkills ?? [],
+          target_roles: targetRoles ?? [],
+          gaps,
+          report,
+        }).catch(() => {});
       } catch (e) {
         setError(
           e instanceof Error
