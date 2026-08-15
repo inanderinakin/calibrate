@@ -14,6 +14,7 @@ import { getTranslations } from "@/lib/translations";
 import { getCompletedSkills, setCompletedSkills } from "@/lib/api";
 import { useRequireAuth } from "@/lib/useRequireAuth";
 import { useRestoreAnalysis } from "@/lib/useRestoreAnalysis";
+import { downloadRoadmapPdf } from "@/lib/roadmapPdf";
 
 export default function RoadmapPage() {
   const allowed = useRequireAuth();
@@ -52,6 +53,32 @@ export default function RoadmapPage() {
     setFocus(session.getFocusSkills() ?? []);
     setLoaded(true);
   }, [restored]);
+
+  const [exporting, setExporting] = useState(false);
+
+  async function exportPdf() {
+    if (!report) return;
+
+    setExporting(true);
+
+    try {
+      await downloadRoadmapPdf(report, completed, t.common.trend, {
+        title: t.roadmap.title,
+        roles: t.roadmap.pdfRoles,
+        generatedOn: t.roadmap.pdfGeneratedOn,
+        completed: t.roadmap.completed,
+        trend: t.roadmap.pdfTrend,
+        resources: t.roadmap.pdfResources,
+        noResources: t.roadmap.noResources,
+        resourceTitle: t.roadmap.pdfResourceTitle,
+        resourceType: t.roadmap.pdfResourceType,
+        resourceLanguage: t.roadmap.pdfResourceLanguage,
+      });
+    }
+    finally {
+      setExporting(false);
+    }
+  }
 
   function toggleExpanded(skill: string) {
     setExpanded((current) => {
@@ -174,6 +201,16 @@ export default function RoadmapPage() {
               {report.summary}
             </p>
           )}
+
+          <button
+            type="button"
+            onClick={exportPdf}
+            disabled={exporting}
+            className="btn-hover mt-4 flex items-center gap-2 rounded-lg border-2 border-(--accent-bg) px-4 py-2 text-sm font-semibold text-(--accent-bg) disabled:opacity-60"
+          >
+            <Icon icon="mdi:file-pdf-box" className="h-5 w-5" />
+            {t.roadmap.exportPdf}
+          </button>
 
           {filtering && (
             <p className="mt-3 flex flex-wrap items-center gap-2 text-(--text-secondary)">
