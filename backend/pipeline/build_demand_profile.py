@@ -11,8 +11,35 @@ trends_json_path = Path(__file__).parent.parent / "app" / "trends.json"
 postings_path = Path(__file__).parent.parent / "scraper" / "postings.jsonl"
 unclassified_role = DEFAULT_ROLE
 known_roles = set(ROLE_PATTERNS) | {GENERIC_ROLE, DEFAULT_ROLE}
-demand_floor = 0.10
-max_skills_per_role = 10
+noise_floor = 0.05
+min_skills_per_role = 5
+
+
+def otsu_cut(shares):
+    """
+    Split skills sorted by demand into "in demand" and "long tail" at the point
+    that maximises the separation between the two groups. Otsu's method, so the
+    cut comes from each role's own distribution instead of a threshold we pick.
+    """
+    if len(shares) < 2:
+        return len(shares)
+
+    best_variance = -1.0
+    cut = len(shares)
+
+    for i in range(1, len(shares)):
+        head, tail = shares[:i], shares[i:]
+        head_weight = len(head) / len(shares)
+        tail_weight = len(tail) / len(shares)
+        head_mean = sum(head) / len(head)
+        tail_mean = sum(tail) / len(tail)
+        variance = head_weight * tail_weight * (head_mean - tail_mean) ** 2
+
+        if variance > best_variance:
+            best_variance = variance
+            cut = i
+
+    return cut
 
 def resolve_role(obj):
     stored = obj.get("role")
@@ -33,12 +60,14 @@ def build_demand_profile():
             if not count:
                 continue
             skill_demand = count / total
-            if skill_demand < demand_floor:
+            if skill_demand < noise_floor:
                 continue
             skills.append(DemandedSkill(skill=term, esco_category=SKILL_CATEGORIES[term], demand_percentage=skill_demand, trend=trends.get(term, "Stable")))
 
         skills.sort(key = lambda skill: skill.demand_percentage, reverse=True)
-        demand_profile[role] = skills[:max_skills_per_role]
+
+        cut = otsu_cut([skill.demand_percentage for skill in skills])
+        demand_profile[role] = skills[:max(cut, min_skills_per_role)]
 
     json_dict = {}
     for role in demand_profile:
