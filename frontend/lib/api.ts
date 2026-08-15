@@ -1,6 +1,8 @@
 import { tokens } from "@/lib/tokens";
 import { refreshIdToken } from "@/lib/hostedUi";
 import { clearStoredUser } from "@/contexts/AuthContext";
+import type { GapResult, NormalizedSkill, Report } from "@/lib/types";
+import { session } from "@/lib/session";
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -173,4 +175,50 @@ export async function post_verify_email(email: string, code: string) {
   }
 
   return await res.json();
+}
+
+export interface SavedAnalysis {
+  cv_skills: NormalizedSkill[];
+  target_roles: string[];
+  gaps: GapResult | null;
+  report: Report | null;
+}
+
+export async function getAnalysis(): Promise<SavedAnalysis | null> {
+  const res = await authedFetch("/analysis");
+
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not load your saved analysis"));
+  }
+
+  const data = await res.json();
+  return data.analysis ?? null;
+}
+
+export async function saveAnalysis(analysis: SavedAnalysis) {
+  const res = await authedFetch("/analysis", {
+    method: "POST",
+    body: JSON.stringify(analysis),
+  });
+
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not save your analysis"));
+  }
+
+  return await res.json();
+}
+
+/**
+ * Push whatever the session currently holds up to the account. Safe to call
+ * after any step of the flow — signed-out users are a no-op.
+ */
+export async function persistSession() {
+  if (!tokens.getIdToken()) return;
+
+  await saveAnalysis({
+    cv_skills: session.getCvSkills() ?? [],
+    target_roles: session.getTargetRoles() ?? [],
+    gaps: session.getGaps(),
+    report: session.getReport(),
+  });
 }

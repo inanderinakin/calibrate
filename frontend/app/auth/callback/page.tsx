@@ -8,6 +8,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
 import { exchangeCodeForTokens } from "@/lib/hostedUi";
 import { tokens, readClaims } from "@/lib/tokens";
+import { resolveEntryPath } from "@/lib/entry";
 
 function Callback() {
   const router = useRouter();
@@ -50,7 +51,7 @@ function Callback() {
           studyField: "",
         });
 
-        router.replace("/upload_cv");
+        router.replace(await resolveEntryPath());
       }
       catch (err) {
         setError(err instanceof Error ? err.message : t.login.genericError);

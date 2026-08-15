@@ -6,7 +6,7 @@ import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
 import AppShell from "@/components/AppShell";
 import StepIndicator from "@/components/StepIndicator";
-import { uploadCv } from "@/lib/api";
+import { persistSession, uploadCv } from "@/lib/api";
 import { session } from "@/lib/session";
 import type { NormalizedSkill } from "@/lib/types";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -82,6 +82,8 @@ export default function UploadCvPage() {
       }
 
       session.setCvSkills(skills);
+      session.clearDerived();
+      persistSession().catch(() => {});
       setSkillCount(skills.length);
     }
     catch (e) {

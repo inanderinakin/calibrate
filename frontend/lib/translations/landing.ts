@@ -2,6 +2,7 @@ export const landing = {
   en: {
     tagline: "Your AI-Powered CV analyser",
     startNow: "Start Now",
+    continueToApp: "Continue",
     login: "Login",
     signIn: "Sign in",
     heroLine1: "Your",
@@ -23,6 +24,7 @@ export const landing = {
   tr: {
     tagline: "Yapay Zeka Destekli CV Analistiniz",
     startNow: "Hemen Başla",
+    continueToApp: "Devam et",
     login: "Giriş Yap",
     signIn: "Kayıt Ol",
     heroLine1: "Sizin",

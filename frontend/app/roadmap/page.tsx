@@ -13,9 +13,11 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
 import { getCompletedSkills, setCompletedSkills } from "@/lib/api";
 import { useRequireAuth } from "@/lib/useRequireAuth";
+import { useRestoreAnalysis } from "@/lib/useRestoreAnalysis";
 
 export default function RoadmapPage() {
   const allowed = useRequireAuth();
+  const restored = useRestoreAnalysis();
   const { language } = useLanguage();
   const t = getTranslations(language);
   const [report, setReport] = useState<Report | null>(null);
@@ -38,13 +40,15 @@ export default function RoadmapPage() {
   }
 
   useEffect(() => {
+    if (!restored) return;
+
     const skills = session.getCvSkills();
     const savedReport = session.getReport();
 
     setCvUploaded(Array.isArray(skills) && skills.length > 0);
     setReport(savedReport);
     setLoaded(true);
-  }, []);
+  }, [restored]);
 
   useEffect(() => {
     async function loadCompleted() {

@@ -8,6 +8,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
 import { post_login } from "@/lib/api";
 import { tokens, readClaims } from "@/lib/tokens";
+import { resolveEntryPath } from "@/lib/entry";
 import BackButton from "@/components/BackButton";
 import { Icon } from "@iconify/react";
 import { signInWith } from "@/lib/hostedUi";
@@ -21,10 +22,12 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    setSubmitting(true);
 
     try {
       const response = await post_login(
@@ -42,10 +45,11 @@ export default function LoginPage() {
         studyField: "",
       });
 
-      router.push("/upload_cv");
+      router.push(await resolveEntryPath());
     }
     catch (e) {
       setError(e instanceof Error ? e.message : t.login.genericError);
+      setSubmitting(false);
     }
   }
 
@@ -101,9 +105,10 @@ export default function LoginPage() {
 
         <motion.button
           type="submit"
+          disabled={submitting}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.97 }}
-          className="rounded-lg bg-[var(--accent-bg)] text-[var(--accent-text)] py-2.5 font-medium mt-2"
+          className="rounded-lg bg-[var(--accent-bg)] text-[var(--accent-text)] py-2.5 font-medium mt-2 disabled:opacity-70"
         >
           {t.login.submit}
         </motion.button>
