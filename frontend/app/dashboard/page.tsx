@@ -110,6 +110,7 @@ export default function DashboardPage() {
   const [focusSkills, setFocusSkills] = useState<string[]>([]);
   const restored = useRestoreAnalysis();
   const [hasRoadmap, setHasRoadmap] = useState(false);
+  const [showMethodology, setShowMethodology] = useState(false);
 
   useEffect(() => {
     if (!restored) return;
@@ -371,6 +372,8 @@ export default function DashboardPage() {
 
                 <button
                   type="button"
+                  onClick={() => setShowMethodology((open) => !open)}
+                  aria-expanded={showMethodology}
                   className="flex items-center gap-2 rounded-lg border border-black/15 px-4 py-2 text-sm font-medium text-[var(--accent-2)]"
                 >
                   {t.dashboard.whyTheseSkills}
@@ -380,6 +383,38 @@ export default function DashboardPage() {
                   />
                 </button>
               </div>
+
+              {showMethodology && (
+                <div className="mb-5 rounded-[16px] border border-[var(--accent-2)] p-4">
+                  <p className="font-black text-[var(--text-primary)]">
+                    {t.dashboard.methodologyTitle}
+                  </p>
+
+                  <ul className="mt-2 space-y-1 text-sm text-[var(--text-secondary)]">
+                    {roles.map((role) => (
+                      <li key={role}>
+                        {t.dashboard.methodologyPostings(
+                          role,
+                          gaps.matched_data[role]?.postings_count ?? 0
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                    {t.dashboard.methodologyRule}
+                  </p>
+
+                  {trends?.recent_window && (
+                    <p className="mt-1 text-sm text-[var(--text-muted)]">
+                      {t.dashboard.methodologyWindow(
+                        trends.recent_window.start,
+                        trends.recent_window.end
+                      )}
+                    </p>
+                  )}
+                </div>
+              )}
 
               {missingSkills.length === 0 ? (
                 <p className="text-[var(--text-muted)]">
@@ -463,6 +498,10 @@ export default function DashboardPage() {
 
                 <p className="mt-1 text-base text-[var(--text-secondary)]">
                   {t.dashboard.selectSkillPrompt}
+                </p>
+
+                <p className="mt-1 text-sm text-[var(--text-muted)]">
+                  {t.dashboard.focusNote}
                 </p>
               </div>
             </div>
@@ -781,7 +820,10 @@ export default function DashboardPage() {
           <div className="flex justify-center py-6">
             <motion.button
               type="button"
-              onClick={() => router.push("/roadmap")}
+              onClick={() => {
+                session.setFocusSkills(focusSkills);
+                router.push("/roadmap");
+              }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.97 }}
               className="flex min-w-[390px] items-center justify-center gap-4 rounded-[18px] bg-[var(--accent-2)] px-10 py-4 text-xl font-black text-[var(--on-accent)] shadow-[0_5px_12px_rgba(0,0,0,0.2)] transition hover:scale-[1.01] active:scale-[0.99]"

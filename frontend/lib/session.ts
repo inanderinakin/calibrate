@@ -5,6 +5,7 @@ const KEYS = {
   targetRoles: "calibrate:target_roles",
   gaps: "calibrate:gaps",
   report: "calibrate:report",
+  focusSkills: "calibrate:focus_skills",
 } as const;
 
 function read<T>(key: string): T | null {
@@ -40,10 +41,14 @@ export const session = {
   getReport: () => read<Report>(KEYS.report),
   setReport: (report: Report) => write(KEYS.report, report),
 
+  getFocusSkills: () => read<string[]>(KEYS.focusSkills),
+  setFocusSkills: (skills: string[]) => write(KEYS.focusSkills, skills),
+
   clearDerived: () => {
     if (typeof window === "undefined") return;
     window.sessionStorage.removeItem(KEYS.gaps);
     window.sessionStorage.removeItem(KEYS.report);
+    window.sessionStorage.removeItem(KEYS.focusSkills);
   },
 
   hasAnalysis: () =>
