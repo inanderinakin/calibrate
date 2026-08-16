@@ -1,3 +1,4 @@
+import asyncio
 import os
 import tempfile
 import jwt
@@ -26,6 +27,7 @@ from auth import verify_token
 
 profile = load_demand_profile()
 trends = load_trends()
+agent_timeout_seconds = 240
 app = FastAPI()
 security = HTTPBearer()
 cognito_client = boto3.client("cognito-idp")
@@ -298,7 +300,11 @@ async def get_trends():
 async def recommend_with_agent(report: GapResult, language: Literal["tr", "en"] = "en"):
     # we use run_in_threadpool because bedrock takes couple of seconds to output
     # and we do not want our app to freeze while waiting for it
-    result = await run_in_threadpool(get_recommendations, report, language)
+    try:
+        result = await asyncio.wait_for(run_in_threadpool(get_recommendations, report, language), timeout=agent_timeout_seconds)
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=status.HTTP_504_GATEWAY_TIMEOUT, detail="The roadmap took too long to build. Please try again.")
+
     return {"recommendations": result}
 
 handler = Mangum(app, lifespan="off")

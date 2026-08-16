@@ -12,6 +12,7 @@ export const uploadCv = {
     cvRead: (count: number) => `CV read — we found ${count} skills.`,
     noSkillsFound: "We couldn't read any skills from that CV. Try another file.",
     uploadFailed: "Upload failed",
+    timeoutError: "Reading your CV is taking much longer than it should. Please try again.",
     genericError: "Something went wrong. Please try again.",
   },
   tr: {
@@ -27,6 +28,7 @@ export const uploadCv = {
     cvRead: (count: number) => `CV okundu — ${count} beceri bulduk.`,
     noSkillsFound: "Bu CV'den herhangi bir beceri okuyamadık. Başka bir dosya deneyin.",
     uploadFailed: "Yükleme başarısız oldu",
+    timeoutError: "CV'nizin okunması olması gerekenden çok daha uzun sürüyor. Lütfen tekrar deneyin.",
     genericError: "Bir şeyler ters gitti. Lütfen tekrar deneyin.",
   },
 };

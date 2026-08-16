@@ -6,7 +6,7 @@ import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
 import AppShell from "@/components/AppShell";
 import StepIndicator from "@/components/StepIndicator";
-import { persistSession, uploadCv } from "@/lib/api";
+import { isTimeout, persistSession, uploadCv } from "@/lib/api";
 import { session } from "@/lib/session";
 import type { NormalizedSkill } from "@/lib/types";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -87,7 +87,7 @@ export default function UploadCvPage() {
       setSkillCount(skills.length);
     }
     catch (e) {
-      setError(e instanceof Error ? e.message : t.uploadCv.genericError);
+      setError(isTimeout(e) ? t.uploadCv.timeoutError : e instanceof Error ? e.message : t.uploadCv.genericError);
     }
     finally {
       setIsUploading(false);

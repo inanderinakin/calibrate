@@ -19,6 +19,16 @@ export async function errorMessage(
   return `${fallback} (${res.status})`;
 }
 
+const UPLOAD_TIMEOUT_MS = 120_000;
+
+export function fetchWithTimeout(path: string, init: RequestInit, ms: number) {
+  return fetch(`${API_URL}${path}`, { ...init, signal: AbortSignal.timeout(ms) });
+}
+
+export function isTimeout(e: unknown) {
+  return e instanceof DOMException && e.name === "TimeoutError";
+}
+
 /**
  * Upload a CV to the backend.
  *
@@ -36,10 +46,10 @@ export async function uploadCv(file: File) {
   const body = new FormData();
   body.append("file", file);
 
-  const res = await fetch(`${API_URL}/upload_cv`, {
+  const res = await fetchWithTimeout("/upload_cv", {
     method: "POST",
     body,
-  });
+  }, UPLOAD_TIMEOUT_MS);
 
   if (!res.ok) {
     throw new Error(await errorMessage(res, "CV upload failed"));
