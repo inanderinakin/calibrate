@@ -51,7 +51,7 @@ jobs:
 
       - name: Install Python dependencies
         if: github.event_name != 'schedule' || steps.sched.outputs.is_scrape_day == 'true'
-        run: pip install playwright beautifulsoup4 boto3 requests linkedin-jobs-scraper==5.0.2 jsonlines pydantic
+        run: pip install playwright beautifulsoup4 boto3 requests linkedin-jobs-scraper==5.0.2 jsonlines pydantic pytest
 
       - name: Install Playwright browsers
         if: (github.event_name == 'schedule' && steps.sched.outputs.is_scrape_day == 'true') || inputs.run_kariyer == true
@@ -115,13 +115,30 @@ jobs:
             s3://calibrate-teamthrow/scraper-data/postings.jsonl \
             s3://calibrate-teamthrow/scraper-data/snapshots/postings_$(date -u +%F).jsonl
       - name: Generate trend and demand data
+        id: generate
         if: (github.event_name == 'workflow_dispatch' || steps.sched.outputs.is_scrape_day == 'true') && !cancelled()
         run: |
           aws s3 cp s3://calibrate-teamthrow/scraper-data/postings.jsonl scraper/postings.jsonl
           python pipeline/build_trends.py
           python pipeline/build_demand_profile.py
-          aws s3 cp app/trends.json s3://calibrate-teamthrow/pipeline-data/trends.json
-          aws s3 cp app/demand_profile.json s3://calibrate-teamthrow/pipeline-data/demand_profile.json
         working-directory: backend
         env:
           PYTHONPATH: app:.
+      - name: Test
+        id: test
+        if: steps.generate.outcome == 'success'
+        run: |
+          pytest
+        working-directory: backend
+      - name: Upload trend and demand data to S3.
+        id: upload
+        if: steps.test.outcome == 'success'
+        run: |
+          aws s3 cp app/trends.json s3://calibrate-teamthrow/pipeline-data/trends.json
+          aws s3 cp app/demand_profile.json s3://calibrate-teamthrow/pipeline-data/demand_profile.json
+        working-directory: backend
+      - name: Test the live api
+        if: steps.upload.outcome == 'success'
+        run: |
+          curl -f https://2rhhcqbv25oz3p7lgb7rzpkova0fnsdk.lambda-url.eu-central-1.on.aws/
+
