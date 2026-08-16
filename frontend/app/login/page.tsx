@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, FormEvent } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
@@ -106,11 +107,19 @@ export default function LoginPage() {
         <motion.button
           type="submit"
           disabled={submitting}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.97 }}
-          className="rounded-lg bg-[var(--accent-bg)] text-[var(--accent-text)] py-2.5 font-medium mt-2 disabled:opacity-70"
+          aria-busy={submitting}
+          whileHover={submitting ? undefined : { scale: 1.02 }}
+          whileTap={submitting ? undefined : { scale: 0.97 }}
+          className="flex items-center justify-center rounded-lg bg-[var(--accent-bg)] text-[var(--accent-text)] py-2.5 font-medium mt-2 disabled:opacity-70"
         >
-          {t.login.submit}
+          {submitting ? (
+            <>
+              <Icon icon="cuida:loading-left-outline" className="h-5 w-5 animate-spin-ccw" />
+              <span className="sr-only">{t.login.signingIn}</span>
+            </>
+          ) : (
+            t.login.submit
+          )}
         </motion.button>
 
         <div className="flex items-center gap-3 mt-1">
@@ -131,6 +140,16 @@ export default function LoginPage() {
           <Icon icon="flat-color-icons:google" className="h-5 w-5" />
           Google
         </motion.button>
+
+        <p className="mt-1 text-center text-sm text-[var(--text-muted)]">
+          {t.login.noAccount}{" "}
+          <Link
+            href="/signup"
+            className="font-medium text-[var(--accent-2)] underline"
+          >
+            {t.login.signUpCta}
+          </Link>
+        </p>
         </motion.form>
       </div>
     </main>
