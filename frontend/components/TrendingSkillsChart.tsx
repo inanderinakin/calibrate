@@ -214,8 +214,25 @@ export default function TrendingSkillsChart({
       <div className="relative">
         <svg
           viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-          className="w-full"
+          className="w-full rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-(--accent-bg)"
+          role="img"
+          aria-label={t.chartLabel(selected, weeks.length)}
+          tabIndex={0}
           onMouseLeave={() => setHover(null)}
+          onBlur={() => setHover(null)}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+              e.preventDefault();
+              const step = e.key === "ArrowRight" ? 1 : -1;
+              setHover((current) => {
+                const next = (current ?? values.length - 1) + step;
+                return Math.min(Math.max(next, 0), values.length - 1);
+              });
+            }
+            else if (e.key === "Escape") {
+              setHover(null);
+            }
+          }}
         >
           {ticks.map((tick) => (
             <g key={tick}>
@@ -308,9 +325,20 @@ export default function TrendingSkillsChart({
               height={innerH}
               fill="transparent"
               onMouseEnter={() => setHover(i)}
+              onPointerDown={() => setHover(i)}
             />
           ))}
         </svg>
+
+        <ul className="sr-only">
+          {weeks.map((week, i) => (
+            <li key={`sr-${week}`}>
+              {t.weekOf} {weekLabel(week, translations.common.months)}:{" "}
+              {formatPercent(Math.round(actual[i] * 100), language)}
+              {actualTotals.length > 0 && ` (n=${actualTotals[i]})`}
+            </li>
+          ))}
+        </ul>
 
         {hover !== null && (
           <div

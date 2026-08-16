@@ -173,7 +173,7 @@ function MainLandingPage({ t, onBack }: { t: Translations; onBack?: () => void }
                 type="button"
                 onClick={handleContinue}
                 disabled={navigating}
-                className="btn-hover flex items-center gap-1.5 rounded-lg bg-[var(--accent-bg)] text-[var(--accent-text)] px-4 py-1.5 text-[10px] font-medium leading-none disabled:opacity-70 sm:px-5 sm:py-2 sm:text-[11px] lg:px-6 lg:py-2.5 lg:text-[13px]"
+                className="btn-hover flex items-center gap-1.5 rounded-lg bg-[var(--accent-bg)] text-[var(--accent-text)] px-4 py-1.5 text-[13px] font-medium leading-none disabled:opacity-70 sm:px-5 sm:py-2 lg:px-6 lg:py-2.5"
               >
                 {navigating && (
                   <Icon icon="cuida:loading-left-outline" className="h-3 w-3 animate-spin-ccw" />
@@ -184,31 +184,19 @@ function MainLandingPage({ t, onBack }: { t: Translations; onBack?: () => void }
               <>
                 <Link
                   href="/login"
-                  className="btn-hover rounded-lg bg-[var(--accent-bg)] text-[var(--accent-text)] px-4 py-1.5 text-[10px] font-medium leading-none sm:px-5 sm:py-2 sm:text-[11px] lg:px-6 lg:py-2.5 lg:text-[13px]"
+                  className="btn-hover rounded-lg bg-[var(--accent-bg)] text-[var(--accent-text)] px-4 py-1.5 text-[13px] font-medium leading-none sm:px-5 sm:py-2 lg:px-6 lg:py-2.5"
                 >
                   {t.landing.login}
                 </Link>
 
                 <Link
                   href="/signup"
-                  className="btn-hover rounded-lg border border-[var(--landing-accent)] bg-transparent px-4 py-1.5 text-[10px] font-medium leading-none text-[var(--landing-accent)] sm:px-5 sm:py-2 sm:text-[11px] lg:px-6 lg:py-2.5 lg:text-[13px]"
+                  className="btn-hover rounded-lg border border-[var(--landing-accent)] bg-transparent px-4 py-1.5 text-[13px] font-medium leading-none text-[var(--landing-accent)] sm:px-5 sm:py-2 lg:px-6 lg:py-2.5"
                 >
                   {t.landing.signIn}
                 </Link>
               </>
             )}
-
-            <button
-              type="button"
-              aria-label={t.landing.openMenu}
-              className="ml-0.5 flex h-7 w-7 items-center justify-center text-[var(--landing-accent)] sm:h-8 sm:w-8"
-            >
-              <Icon
-                icon="material-symbols:menu-rounded"
-                width={20}
-                height={20}
-              />
-            </button>
           </nav>
         </header>
 
@@ -234,7 +222,7 @@ function MainLandingPage({ t, onBack }: { t: Translations; onBack?: () => void }
               </span>
             </h1>
 
-            <p className="mt-4 max-w-[230px] text-[11px] font-bold leading-[1.35] text-[var(--landing-accent)] sm:text-[12px] lg:mt-6 lg:max-w-[330px] lg:text-[17px]">
+            <p className="mt-4 max-w-[230px] text-[14px] font-bold leading-[1.35] text-[var(--landing-accent)] sm:text-[15px] lg:mt-6 lg:max-w-[330px] lg:text-[17px]">
               {t.landing.heroSubtitle}
             </p>
           </motion.div>
@@ -281,11 +269,11 @@ function MainLandingPage({ t, onBack }: { t: Translations; onBack?: () => void }
               />
 
               <div className="min-w-0">
-                <h2 className="text-[9px] font-black leading-tight text-[var(--landing-accent)] sm:text-[10px] lg:text-[15px]">
+                <h2 className="text-[14px] font-black leading-tight text-[var(--landing-accent)] lg:text-[15px]">
                   {feature.title}
                 </h2>
 
-                <p className="mt-0.5 text-[6px] font-medium leading-[1.25] text-[var(--landing-accent)] opacity-80 sm:text-[7px] lg:mt-1 lg:text-[11px]">
+                <p className="mt-0.5 text-[12px] font-medium leading-[1.25] text-[var(--landing-accent)] opacity-80 lg:mt-1 lg:text-[13px]">
                   {feature.description}
                 </p>
               </div>
