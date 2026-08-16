@@ -824,5 +824,85 @@
             "type": "documentation",
             "language": "en"
         }
+    ],
+    "Artificial Intelligence": [
+        {
+            "title": "Learn Prompting: Prompt Engineering Guide",
+            "url": "https://learnprompting.org/docs/introduction",
+            "type": "documentation",
+            "language": "en"
+        }
+    ],
+    "Firewall": [
+        {
+            "title": "Cisco NetAcad: Network Defense",
+            "url": "https://www.netacad.com/courses/network-defense",
+            "type": "course",
+            "language": "en"
+        }
+    ],
+    "Penetration Testing": [
+        {
+            "title": "TryHackMe: Jr Penetration Tester Path",
+            "url": "https://tryhackme.com/path/outline/jrpenetrationtester",
+            "type": "course",
+            "language": "en"
+        }
+    ],
+    "ERP": [
+        {
+            "title": "Alison: A Beginner's Guide to Enterprise Resource Planning (ERP) Systems",
+            "url": "https://alison.com/course/a-beginner-s-guide-to-enterprise-resource-planning-erp-systems",
+            "type": "course",
+            "language": "en"
+        }
+    ],
+    "CRM": [
+        {
+            "title": "HubSpot Academy",
+            "url": "https://academy.hubspot.com/",
+            "type": "course",
+            "language": "en"
+        }
+    ],
+    "Excel": [
+        {
+            "title": "Microsoft Learn: Excel Training",
+            "url": "https://learn.microsoft.com/en-us/training/browse/?products=office-excel",
+            "type": "course",
+            "language": "en"
+        }
+    ],
+    "Windows": [
+        {
+            "title": "Microsoft Learn: Explore the Windows Client",
+            "url": "https://learn.microsoft.com/en-us/training/modules/explore-windows-client/",
+            "type": "course",
+            "language": "en"
+        }
+    ],
+    "Networking": [
+        {
+            "title": "Cisco NetAcad: Networking Basics",
+            "url": "https://www.netacad.com/courses/networking-basics",
+            "type": "course",
+            "language": "en"
+        }
+    ],
+    "Power BI": [
+        {
+            "title": "Microsoft Learn: Get Started Building With Power BI",
+            "url": "https://learn.microsoft.com/en-us/training/modules/get-started-with-power-bi/",
+            "type": "course",
+            "language": "en"
+        }
+    ],
+    "Cybersecurity": [
+        {
+            "title": "Cisco NetAcad: Network Defense",
+            "url": "https://www.netacad.com/courses/network-defense",
+            "type": "course",
+            "language": "en"
+        }
     ]
 }

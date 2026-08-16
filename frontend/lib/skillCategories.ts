@@ -25,6 +25,10 @@ const CATEGORY_LABELS_TR: Record<string, string> = {
   "programming languages": "Programlama Dilleri",
   "enterprise resource planning": "Kurumsal Kaynak Planlama",
   "it support": "IT Desteği",
+  "network security": "Ağ Güvenliği",
+  "networking": "Ağ Yönetimi",
+  "customer relationship management": "Müşteri İlişkileri Yönetimi",
+  "office productivity": "Ofis Verimliliği",
 };
 
 export function getCategoryLabel(category: string, language: Language): string {

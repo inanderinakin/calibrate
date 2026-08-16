@@ -53,13 +53,18 @@ CATEGORIES = {
         "Kafka": ["kafka"],
         "Spark": ["spark"],
         "Pandas": ["pandas"],
+        "Power BI": ["power bi", "powerbi"],
     },
     "machine learning": {
         "TensorFlow": ["tensorflow"],
         "PyTorch": ["pytorch"],
         "scikit-learn": ["scikit-learn", "sklearn"],
-        "LLM": ["llm", "large language model"],
-        "NLP": ["nlp", "natural language processing"],
+        "LLM": ["llm", "large language model", "büyük dil modeli"],
+        "NLP": ["nlp", "natural language processing", "doğal dil işleme"],
+        "Artificial Intelligence": [
+            "artificial intelligence", "yapay zeka", "chatgpt", "gemini",
+            "prompt engineering", "prompt mühendisliği",
+        ],
     },
     "cloud services": {
         "AWS": ["aws", "amazon web services"],
@@ -76,13 +81,22 @@ CATEGORIES = {
     },
     "continuous integration": {
         "Jenkins": ["jenkins"],
-        "CI/CD": ["ci/cd", "cicd"],
+        "CI/CD": ["ci/cd", "cicd", "sürekli entegrasyon", "sürekli teslimat"],
     },
     "version control": {
         "Git": ["git"],
     },
     "operating systems": {
         "Linux": ["linux"],
+        "Windows": ["windows"],
+    },
+    "network security": {
+        "Firewall": ["firewall", "güvenlik duvarı"],
+        "Cybersecurity": ["cyber security", "cybersecurity", "siber güvenlik", "network security", "ağ güvenliği"],
+        "Penetration Testing": ["penetration testing", "pentest", "sızma testi"],
+    },
+    "networking": {
+        "Networking": ["network"],
     },
     "monitoring": {
         "Grafana": ["grafana"],
@@ -99,6 +113,10 @@ CATEGORIES = {
         "ABAP": ["abap"],
         "Netsis": ["netsis"],
         "Logo": ["logo yazılım", "logo tiger", "logo go3"],
+        "ERP": ["erp"],
+    },
+    "customer relationship management": {
+        "CRM": ["crm"],
     },
     "IT support": {
         "Active Directory": ["active directory"],
@@ -106,9 +124,12 @@ CATEGORIES = {
         "ITIL": ["itil"],
         "ServiceNow": ["servicenow", "service now"],
         "Zendesk": ["zendesk"],
-        "Microsoft 365": ["microsoft 365", "office 365", "m365"],
+        "Microsoft 365": ["microsoft 365", "office 365", "m365", "ms office", "microsoft office"],
         "Jira": ["jira"],
         "SCCM": ["sccm"],
+    },
+    "office productivity": {
+        "Excel": ["excel"],
     },
 }
 
@@ -128,3 +149,40 @@ for category, skills in CATEGORIES.items():
     for term, aliases in skills.items():
         PATTERNS[term] = build_pattern(aliases)
         SKILL_CATEGORIES[term] = category
+
+# "excel" is also the English verb ("you excel at...", "excel in this role"),
+# which shows up constantly in LinkedIn postings' generic culture-fit
+# boilerplate -- 25 of the first 65 LinkedIn matches were that verb, not the
+# spreadsheet. Re-anchored to exclude "excel at/in/wherever" specifically,
+# since those are the forms that actually occurred; a plain word-boundary
+# match can't tell noun from verb.
+PATTERNS["Excel"] = re.compile(
+    r"(?<![A-Za-z0-9_])excel(?!\s+(?:at|in|wherever)\b)(?![A-Za-z0-9_])",
+    re.IGNORECASE,
+)
+
+# Same problem, different word: "network" is also corporate-boilerplate
+# English ("BCG's global network", "ING Hubs network", "trust Proxify and
+# its network") -- 8.8% of matches corpus-wide were that business-network
+# sense, not computer networking. Excludes the qualifiers that pattern
+# actually showed up with.
+PATTERNS["Networking"] = re.compile(
+    r"(?<![A-Za-z0-9_])"
+    r"(?<!global )(?<!international )(?<!hubs )(?<!partner )"
+    r"(?<!professional )(?<!client )(?<!distribution )(?<!wide )"
+    r"(?<!sales )(?<!its )(?<!our )(?<!their )(?<!worldwide )"
+    r"(?<!corporate )(?<!business )"
+    r"network(?![A-Za-z0-9_])",
+    re.IGNORECASE,
+)
+
+# "Swift" (the Apple language) also collides with SWIFT the international
+# bank transfer network -- banking postings list it alongside EFT/FAST
+# ("EFT / FAST / SWIFT entegrasyon süreçleri"). Excludes that enumeration
+# specifically, since that's the exact form it showed up in.
+PATTERNS["Swift"] = re.compile(
+    r"(?<![A-Za-z0-9_])"
+    r"(?<! / FAST / )(?<!FT, FAST, )"
+    r"swift(?![A-Za-z0-9_])",
+    re.IGNORECASE,
+)
