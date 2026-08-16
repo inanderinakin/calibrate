@@ -272,7 +272,23 @@ async def get_gaps(gap_request: GapRequest):
 
 @app.get("/demand_profile")
 async def get_demand_profile(roles: list[str] = Query(...)):
-    return {role: [skill.model_dump() for skill in profile.get(role, [])] for role in roles}
+    demand_profile = {}
+    unsupported_roles = []
+
+    for role in roles:
+        if role not in profile:
+            unsupported_roles.append(role)
+    
+    if unsupported_roles:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail={
+            "message": "Some roles are not supported.",
+            "unsupported_roles": unsupported_roles,
+            "supported_roles": [role for role in profile]
+        })
+
+    for role in roles:
+        demand_profile[role] = {'postings_count': profile[role].get('postings_count'), 'skills': [skill.model_dump() for skill in profile[role].get('skills')]}  
+    return demand_profile
 
 @app.get("/trends")
 async def get_trends():
