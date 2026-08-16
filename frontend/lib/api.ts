@@ -232,3 +232,17 @@ export async function persistSession() {
     report: session.getReport(),
   });
 }
+
+/**
+ * Fetch market trends safely.
+ * Checks res.ok before attempting to parse JSON to avoid unhandled exceptions on non-200 responses.
+ */
+export async function getTrends() {
+  const res = await fetch(`${API_URL}/trends`);
+
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not fetch trends data"));
+  }
+
+  return await res.json();
+}
