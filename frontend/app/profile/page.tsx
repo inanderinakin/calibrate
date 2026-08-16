@@ -68,14 +68,6 @@ export default function ProfilePage() {
               </div>
 
               <div className="flex items-center gap-3">
-                <Icon icon="weui:location-outlined" className="w-9 h-9 text-(--accent-bg) shrink-0" />
-                <div>
-                  <p className="font-bold text-(--accent-bg)">{t.profile.location}</p>
-                  <p className="text-(--accent-bg)">Algeria</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
                 <Icon icon="solar:calendar-outline" className="w-9 h-9 text-(--accent-bg) shrink-0" />
                 <div>
                   <p className="font-bold text-(--accent-bg)">{t.profile.joined}</p>
