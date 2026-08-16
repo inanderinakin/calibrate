@@ -12,7 +12,7 @@ import type { NormalizedSkill } from "@/lib/types";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
 
-const MAX_FILE_SIZE_MB = 10;
+const MAX_FILE_SIZE_MB = 25; // Backend limits to 25MB at main.py:69
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
 export default function UploadCvPage() {
