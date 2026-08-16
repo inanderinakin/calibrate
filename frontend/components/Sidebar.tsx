@@ -56,7 +56,7 @@ export default function Sidebar() {
           {/* CV Analysis group */}
           <div
             className={`
-              flex items-center gap-3 rounded-lg px-3 py-2.5
+              hidden md:flex items-center gap-3 rounded-lg px-3 py-2.5
               justify-center md:justify-start
               ${cvFlowActive ? "text-[var(--nav-active)]" : "text-[var(--creamy)] hover:text-[var(--nav-active)]"}
             `}
@@ -64,7 +64,7 @@ export default function Sidebar() {
             <Icon icon="hugeicons:chart-analysis" className="w-6 h-6 shrink-0" />
             <span className="hidden md:inline text-lg font-black">{t.sidebar.cvAnalysis}</span>
           </div>
-          <div className="hidden md:flex flex-col gap-1 pl-9 pb-2">
+          <div className="flex flex-col gap-1 pb-2 md:pl-9">
             {CV_FLOW.map((item) => {
               const isActive = pathname === item.href;
               return (
@@ -73,11 +73,14 @@ export default function Sidebar() {
                   href={item.href}
                   whileHover={{ x: 3 }}
                   transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                  className={`text-sm font-semibold py-1 inline-block ${
-                    isActive ? "text-[var(--nav-active)]" : "text-[var(--creamy)]/80 hover:text-[var(--nav-active)]"
-                  }`}
+                  className={`
+                    flex items-center justify-center gap-3 rounded-lg px-3 py-2.5
+                    md:justify-start md:px-0 md:py-1 md:text-sm md:font-semibold
+                    ${isActive ? "text-[var(--nav-active)]" : "text-[var(--creamy)]/80 hover:text-[var(--nav-active)]"}
+                  `}
                 >
-                  {item.label}
+                  <Icon icon={item.icon} className="w-6 h-6 shrink-0 md:hidden" />
+                  <span className="sr-only md:not-sr-only">{item.label}</span>
                 </MotionLink>
               );
             })}
@@ -100,7 +103,7 @@ export default function Sidebar() {
                 `}
               >
                 <Icon icon={item.icon} className="w-6 h-6 shrink-0" />
-                <span className="hidden md:inline text-lg font-black">{item.label}</span>
+                <span className="sr-only md:not-sr-only text-lg font-black">{item.label}</span>
               </MotionLink>
             );
           })}
