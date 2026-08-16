@@ -2,10 +2,29 @@ import boto3
 from dotenv import load_dotenv
 import re
 import time
+import docx
 
 load_dotenv()
 
 client = boto3.client("textract")
+
+def extract_docx_text(file_path: str) -> list[str]:
+    doc = docx.Document(file_path)
+    lines = []
+    
+    for p in doc.paragraphs:
+        text = p.text.strip()
+        if text:
+            lines.append(text)
+
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                text = cell.text.strip()
+                if text and text not in lines:
+                    lines.append(text)
+                    
+    return lines
 
 def extract_cv_text(bucket: str, key: str) -> list[str]:
     response = client.start_document_text_detection(
@@ -31,13 +50,12 @@ def extract_cv_text(bucket: str, key: str) -> list[str]:
                 break
 
             elif isSuccess == "FAILED":
-                raise RuntimeError(f"Request failed: {result.get("StatusMessage")}") 
+                raise RuntimeError(f"Request failed: {result.get('StatusMessage')}") 
 
             time.sleep(5)
         else:
             raise RuntimeError("Max attempt reached. Please try again later...")
 
-    # this helps us extract sidebar but breaks some texts on single column cvs.
     sidebar_lines = [block["Text"] for block in result["Blocks"] if block["BlockType"] == "LINE" and block["Geometry"]["BoundingBox"]["Left"] < 0.2]
     main_lines = [block["Text"] for block in result["Blocks"] if block["BlockType"] == "LINE" and block["Geometry"]["BoundingBox"]["Left"] >= 0.2]
     return main_lines + sidebar_lines
@@ -59,17 +77,4 @@ def extract_skill_candidates(lines: list[str]) -> list[str]:
             fragment = fragment.strip(".,;:!?()\"'")
             potential_candidates.append(fragment)
     
-    return list(dict.fromkeys(potential_candidates)) 
-
-if __name__ == "__main__":
-    # print(extract_skill_candidates(extract_cv_text("calibrate-teamthrow", "dev/test-cv-tr.pdf")))
-    # print(extract_skill_candidates(extract_cv_text("calibrate-teamthrow", "dev/test-cv.pdf")))
-    test_lines = [
-        "Beceriler: Python, Java",
-        "Ders projelerimde SQL kullanarak veri tabanları tasarladım",
-        "C ve Python bilgisi",
-        "Veritabanı",
-        "Yönetimi",
-    ]
-    print(extract_skill_candidates(test_lines))
-    print(len(test_lines))
+    return list(dict.fromkeys(potential_candidates))

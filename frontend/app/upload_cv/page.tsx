@@ -12,7 +12,7 @@ import type { NormalizedSkill } from "@/lib/types";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
 
-const MAX_FILE_SIZE_MB = 25; // Backend limits to 25MB at main.py:69
+const MAX_FILE_SIZE_MB = 25;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
 export default function UploadCvPage() {
@@ -30,7 +30,7 @@ export default function UploadCvPage() {
 
     // Validate file size before proceeding (Fixes #65)
     if (f.size > MAX_FILE_SIZE_BYTES) {
-      setError(`File size exceeds ${MAX_FILE_SIZE_MB}MB limit.`);
+      setError(t.uploadCv.fileSizeError ?? `File size exceeds ${MAX_FILE_SIZE_MB}MB limit.`);
       return;
     }
 
@@ -46,7 +46,7 @@ export default function UploadCvPage() {
       f.name.toLowerCase().endsWith(".pdf");
 
     if (!isValidDocx && !isValidPdf) {
-      setError("Please upload a valid PDF or DOCX file.");
+      setError(t.uploadCv.invalidFileType ?? "Please upload a valid PDF or DOCX file.");
       return;
     }
 
@@ -66,7 +66,6 @@ export default function UploadCvPage() {
 
   function handleInputChange(e: ChangeEvent<HTMLInputElement>) {
     handleFile(e.target.files?.[0] ?? null);
-    // Reset input value to allow selecting the same file consecutively
     e.target.value = "";
   }
 
@@ -131,9 +130,8 @@ export default function UploadCvPage() {
             {t.uploadCv.dragDrop}
           </p>
           <p className="font-semibold text-(--accent-bg)">
-            PDF, DOCX up to {MAX_FILE_SIZE_MB}MB
+            {t.uploadCv.pdfUpTo}
           </p>
-          {/* File input supporting both PDF and DOCX formats */}
           <input
             ref={fileInputRef}
             type="file"
@@ -151,7 +149,6 @@ export default function UploadCvPage() {
             className="glass-card w-full border-2 border-(--pink) rounded-[20px] p-4 flex flex-col gap-4 text-left"
           >
             <div className="flex items-center gap-4">
-              {/* Dynamic file icon depending on whether file is PDF or DOCX */}
               <Icon
                 icon={
                   file.name.toLowerCase().endsWith(".docx")
