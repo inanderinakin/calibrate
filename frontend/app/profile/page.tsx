@@ -71,7 +71,8 @@ export default function ProfilePage() {
                 <Icon icon="weui:location-outlined" className="w-9 h-9 text-(--accent-bg) shrink-0" />
                 <div>
                   <p className="font-bold text-(--accent-bg)">{t.profile.location}</p>
-                  <p className="text-(--accent-bg)">Algeria</p>
+                  {/* TODO: replace with a real location once we collect one */}
+                  <p className="text-(--accent-bg)">—</p>
                 </div>
               </div>
 
