@@ -7,22 +7,32 @@ import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
 import AppShell from "@/components/AppShell";
 import StepIndicator from "@/components/StepIndicator";
-import { API_URL, errorMessage, saveAnalysis } from "@/lib/api";
+import { errorMessage, fetchWithTimeout, isTimeout, saveAnalysis } from "@/lib/api";
 import { session } from "@/lib/session";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
+
+const GAPS_TIMEOUT_MS = 30_000;
+const REPORT_TIMEOUT_MS = 180_000;
 
 export default function AnalyseCvPage() {
   const router = useRouter();
   const { language } = useLanguage();
   const t = getTranslations(language);
   const CHECKLIST = t.analyseCv.checklist;
-  const started = useRef(false);
+  const started = useRef(-1);
 
   const [step, setStep] = useState(2);
   const [error, setError] = useState<string | null>(null);
   const [cvUploaded, setCvUploaded] = useState<boolean | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+
+  function retry() {
+    setError(null);
+    setStep(2);
+    setAttempt((n) => n + 1);
+  }
 
   useEffect(() => {
     const cvSkills = session.getCvSkills();
@@ -33,9 +43,9 @@ export default function AnalyseCvPage() {
 
   useEffect(() => {
     if (!loaded || cvUploaded === null || !cvUploaded) return;
-    if (started.current) return;
+    if (started.current === attempt) return;
 
-    started.current = true;
+    started.current = attempt;
 
     const cvSkills = session.getCvSkills();
     const targetRoles = session.getTargetRoles();
@@ -46,14 +56,14 @@ export default function AnalyseCvPage() {
 
     async function run() {
       try {
-        const gapsRes = await fetch(`${API_URL}/compute_gaps`, {
+        const gapsRes = await fetchWithTimeout("/compute_gaps", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             cv_skills: cvSkills,
             target_roles: targetRoles,
           }),
-        });
+        }, GAPS_TIMEOUT_MS);
 
         if (!gapsRes.ok) {
           throw new Error(
@@ -69,11 +79,11 @@ export default function AnalyseCvPage() {
         session.setGaps(gaps);
         setStep(3);
 
-        const reportRes = await fetch(`${API_URL}/recommendations?language=${language}`, {
+        const reportRes = await fetchWithTimeout(`/recommendations?language=${language}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(gaps),
-        });
+        }, REPORT_TIMEOUT_MS);
 
         if (!reportRes.ok) {
           throw new Error(
@@ -98,15 +108,17 @@ export default function AnalyseCvPage() {
         }).catch(() => {});
       } catch (e) {
         setError(
-          e instanceof Error
-            ? e.message
-            : t.analyseCv.genericError
+          isTimeout(e)
+            ? t.analyseCv.timeoutError
+            : e instanceof Error
+              ? e.message
+              : t.analyseCv.genericError
         );
       }
     }
 
     run();
-  }, [loaded, cvUploaded]);
+  }, [loaded, cvUploaded, attempt]);
 
   /*
    * Loading state while checking whether a CV exists.
@@ -242,16 +254,30 @@ export default function AnalyseCvPage() {
 
         <div className="flex flex-col sm:flex-row items-center gap-4">
           {error ? (
-            <Link
-              href="/upload_cv"
-              className="btn-hover bg-(--accent) text-(--on-accent) rounded-[20px] px-8 py-3.5 font-bold text-lg flex items-center gap-3"
-            >
-              {t.analyseCv.startOver}
-              <Icon
-                icon="mdi-light:arrow-up"
-                className="w-6 h-6 rotate-90"
-              />
-            </Link>
+            <>
+              <button
+                type="button"
+                onClick={retry}
+                className="btn-hover bg-(--accent) text-(--on-accent) rounded-[20px] px-8 py-3.5 font-bold text-lg flex items-center gap-3"
+              >
+                {t.analyseCv.tryAgain}
+                <Icon
+                  icon="mdi:refresh"
+                  className="w-6 h-6"
+                />
+              </button>
+
+              <Link
+                href="/upload_cv"
+                className="btn-hover border-2 border-(--accent-bg) text-(--accent-bg) rounded-[20px] px-8 py-3.5 font-bold text-lg flex items-center gap-3"
+              >
+                {t.analyseCv.startOver}
+                <Icon
+                  icon="mdi-light:arrow-up"
+                  className="w-6 h-6 rotate-90"
+                />
+              </Link>
+            </>
           ) : (
             <motion.button
               type="button"
