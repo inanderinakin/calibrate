@@ -3,6 +3,7 @@
 import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -11,9 +12,15 @@ import { useRequireAuth } from "@/lib/useRequireAuth";
 
 export default function ProfilePage() {
   const allowed = useRequireAuth();
-  const { user } = useAuth();
+  const router = useRouter();
+  const { user, logout } = useAuth();
   const { language } = useLanguage();
   const t = getTranslations(language);
+
+  function handleLogout() {
+    logout();
+    router.push("/");
+  }
 
   const joinedDate = user?.joinedAt
     ? new Date(user.joinedAt).toLocaleDateString(undefined, {
@@ -108,6 +115,21 @@ export default function ProfilePage() {
             </Link>
           </div>
         </motion.div>
+
+        <motion.button
+          type="button"
+          onClick={handleLogout}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.97 }}
+          className="btn-hover self-start bg-[var(--accent)] text-[var(--on-accent)] rounded-[20px] px-8 py-3 font-medium flex items-center gap-2"
+        >
+          {t.profile.logout}
+
+          <Icon icon="material-symbols:logout-rounded" className="w-5 h-5" />
+        </motion.button>
       </div>
     </AppShell>
   );

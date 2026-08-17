@@ -8,6 +8,7 @@ export const profile = {
     joined: "Joined",
     achievements: "Achievements",
     editProfile: "Edit Profile",
+    logout: "Logout",
   },
   tr: {
     title: "Profil",
@@ -18,5 +19,6 @@ export const profile = {
     joined: "Katılım",
     achievements: "Başarılar",
     editProfile: "Profili Düzenle",
+    logout: "Çıkış Yap",
   },
 };
