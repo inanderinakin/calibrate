@@ -125,6 +125,29 @@ async function authedFetch(path: string, init: RequestInit = {}) {
   return await fetchWithTimeout(path, { ...init, headers: authHeaders() }, AUTH_TIMEOUT_MS);
 }
 
+export async function updateProfile(firstName: string, lastName: string) {
+  const res = await authedFetch("/profile", {
+    method: "POST",
+    body: JSON.stringify({ first_name: firstName, last_name: lastName }),
+  });
+
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not save your name"));
+  }
+
+  return await res.json();
+}
+
+export async function deleteAccount() {
+  const res = await authedFetch("/account", { method: "DELETE" });
+
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not delete your account"));
+  }
+
+  return await res.json();
+}
+
 export async function getCompletedSkills(): Promise<string[]> {
   const res = await authedFetch("/completed_skills");
 
