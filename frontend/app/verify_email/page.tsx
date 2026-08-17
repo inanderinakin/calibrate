@@ -63,7 +63,7 @@ function VerifyEmailForm() {
 
     try {
       await post_verify_email(email, code.trim());
-      router.push("/login");
+      router.replace("/account_created");
     }
     catch (err) {
       setError(err instanceof Error ? err.message : t.verifyEmail.genericError);
