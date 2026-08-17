@@ -8,6 +8,7 @@ export const login = {
     orContinueWith: "or continue with",
     noAccount: "Don't have an account?",
     signUpCta: "Click here to sign up",
+    timeoutError: "We could not reach the server. Check your connection and try again.",
     genericError: "We could not sign you in. Please try again.",
   },
   tr: {
@@ -19,6 +20,7 @@ export const login = {
     orContinueWith: "veya şununla devam et",
     noAccount: "Hesabınız yok mu?",
     signUpCta: "Kaydolmak için tıklayın",
+    timeoutError: "Sunucuya ulaşamadık. Bağlantınızı kontrol edip tekrar deneyin.",
     genericError: "Giriş yapılamadı. Lütfen tekrar deneyin.",
   },
 };

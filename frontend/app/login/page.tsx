@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
-import { post_login } from "@/lib/api";
+import { isTimeout, post_login } from "@/lib/api";
 import { tokens, readClaims } from "@/lib/tokens";
 import { resolveEntryPath } from "@/lib/entry";
 import BackButton from "@/components/BackButton";
@@ -46,10 +46,10 @@ export default function LoginPage() {
         studyField: "",
       });
 
-      router.push(await resolveEntryPath());
+      router.replace(await resolveEntryPath());
     }
     catch (e) {
-      setError(e instanceof Error ? e.message : t.login.genericError);
+      setError(isTimeout(e) ? t.login.timeoutError : e instanceof Error ? e.message : t.login.genericError);
       setSubmitting(false);
     }
   }
