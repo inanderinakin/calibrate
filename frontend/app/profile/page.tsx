@@ -8,6 +8,7 @@ import AppShell from "@/components/AppShell";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
+import { countryLabel } from "@/lib/countries";
 import { useRequireAuth } from "@/lib/useRequireAuth";
 
 export default function ProfilePage() {
@@ -77,9 +78,10 @@ export default function ProfilePage() {
               <div className="flex items-center gap-3">
                 <Icon icon="weui:location-outlined" className="w-9 h-9 text-(--accent-bg) shrink-0" />
                 <div>
-                  <p className="font-bold text-(--accent-bg)">{t.profile.location}</p>
-                  {/* TODO: replace with a real location once we collect one */}
-                  <p className="text-(--accent-bg)">—</p>
+                  <p className="font-bold text-(--accent-bg)">{t.profile.country}</p>
+                  <p className="text-(--accent-bg)">
+                    {countryLabel(user?.country ?? "", language) || "—"}
+                  </p>
                 </div>
               </div>
 

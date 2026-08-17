@@ -8,7 +8,10 @@ import { saveProfile } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
 import { post_signup } from "@/lib/api";
+import { studyFieldSuggestions } from "@/lib/studyFields";
+import { countryAliases, countrySuggestions, toStoredCountry } from "@/lib/countries";
 import BackButton from "@/components/BackButton";
+import SuggestInput from "@/components/SuggestInput";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -20,6 +23,7 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [studyField, setStudyField] = useState("");
+  const [country, setCountry] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -31,7 +35,13 @@ export default function SignupPage() {
     try {
       await post_signup(email, password, firstName, lastName);
 
-      saveProfile({ firstName, lastName, email, studyField });
+      saveProfile({
+        firstName,
+        lastName,
+        email,
+        studyField,
+        country: toStoredCountry(country, language),
+      });
 
       router.push(`/verify_email?email=${encodeURIComponent(email)}`);
     }
@@ -66,42 +76,96 @@ export default function SignupPage() {
           {t.signup.title}
         </motion.h1>
 
-        <input
+        {/* Names sit side by side on anything wider than a phone; the card is
+            only 448px, so on a phone they stack to keep each field usable. */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="flex flex-col gap-1.5">
+            <label
+              htmlFor="signup-first-name"
+              className="text-sm font-medium text-[var(--text-primary)]"
+            >
+              {t.signup.firstName}
+            </label>
+            <input
+              id="signup-first-name"
+              required
+              autoComplete="given-name"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              className="glass-input w-full rounded-lg border border-[var(--border-color)] px-4 py-2.5 text-[var(--text-primary)] outline-none focus:border-[var(--accent-2)]"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label
+              htmlFor="signup-last-name"
+              className="text-sm font-medium text-[var(--text-primary)]"
+            >
+              {t.signup.lastName}
+            </label>
+            <input
+              id="signup-last-name"
+              required
+              autoComplete="family-name"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              className="glass-input w-full rounded-lg border border-[var(--border-color)] px-4 py-2.5 text-[var(--text-primary)] outline-none focus:border-[var(--accent-2)]"
+            />
+          </div>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="signup-email"
+            className="text-sm font-medium text-[var(--text-primary)]"
+          >
+            {t.signup.email}
+          </label>
+          <input
+            id="signup-email"
+            required
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="glass-input w-full rounded-lg border border-[var(--border-color)] px-4 py-2.5 text-[var(--text-primary)] outline-none focus:border-[var(--accent-2)]"
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="signup-password"
+            className="text-sm font-medium text-[var(--text-primary)]"
+          >
+            {t.signup.password}
+          </label>
+          <input
+            id="signup-password"
+            required
+            type="password"
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="glass-input w-full rounded-lg border border-[var(--border-color)] px-4 py-2.5 text-[var(--text-primary)] outline-none focus:border-[var(--accent-2)]"
+          />
+        </div>
+
+        <SuggestInput
+          id="signup-study-field"
           required
-          placeholder={t.signup.firstName}
-          value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
-          className="glass-input rounded-lg border border-[var(--border-color)] px-4 py-2.5 text-[var(--text-primary)] outline-none focus:border-[var(--accent-2)]"
-        />
-        <input
-          required
-          placeholder={t.signup.lastName}
-          value={lastName}
-          onChange={(e) => setLastName(e.target.value)}
-          className="glass-input rounded-lg border border-[var(--border-color)] px-4 py-2.5 text-[var(--text-primary)] outline-none focus:border-[var(--accent-2)]"
-        />
-        <input
-          required
-          type="email"
-          placeholder={t.signup.email}
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="glass-input rounded-lg border border-[var(--border-color)] px-4 py-2.5 text-[var(--text-primary)] outline-none focus:border-[var(--accent-2)]"
-        />
-        <input
-          required
-          type="password"
-          placeholder={t.signup.password}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="glass-input rounded-lg border border-[var(--border-color)] px-4 py-2.5 text-[var(--text-primary)] outline-none focus:border-[var(--accent-2)]"
-        />
-        <input
-          required
-          placeholder={t.signup.fieldOfStudy}
+          label={t.signup.fieldOfStudy}
           value={studyField}
-          onChange={(e) => setStudyField(e.target.value)}
-          className="glass-input rounded-lg border border-[var(--border-color)] px-4 py-2.5 text-[var(--text-primary)] outline-none focus:border-[var(--accent-2)]"
+          onChange={setStudyField}
+          suggestions={studyFieldSuggestions(language)}
+        />
+
+        <SuggestInput
+          id="signup-country"
+          required
+          label={t.signup.country}
+          value={country}
+          onChange={setCountry}
+          suggestions={countrySuggestions(language)}
+          aliases={countryAliases(language)}
         />
 
         {error && (

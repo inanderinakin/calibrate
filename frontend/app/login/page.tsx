@@ -44,6 +44,7 @@ export default function LoginPage() {
         firstName: claims?.given_name ?? "",
         lastName: claims?.family_name ?? "",
         studyField: "",
+        country: "",
       });
 
       router.replace(await resolveEntryPath());
