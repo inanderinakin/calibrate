@@ -15,6 +15,13 @@ class VerifyEmailInfo(BaseModel):
     email: str
     code: str
 
+class ResendCodeInfo(BaseModel):
+    email: str
+
+class ProfileInfo(BaseModel):
+    first_name: str
+    last_name: str
+
 class CompletedSkills(BaseModel):
     skills: list[str]
 

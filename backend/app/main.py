@@ -19,10 +19,10 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from agent import get_recommendations
 from handlecv import compute_gaps, extract_skill_candidates, extract_cv_text
 from normalize import normalize
-from models import Analysis, CompletedSkills, GapResult, GapRequest, LoginInfo, NormalizedSkill, SignUpInfo, VerifyEmailInfo
+from models import Analysis, CompletedSkills, GapResult, GapRequest, LoginInfo, NormalizedSkill, ProfileInfo, ResendCodeInfo, SignUpInfo, VerifyEmailInfo
 from skills import PATTERNS, SKILL_CATEGORIES
 from handleposting import load_demand_profile, load_trends
-from storage import read_analysis, read_completed_skills, write_analysis, write_completed_skills
+from storage import delete_user_data, read_analysis, read_completed_skills, write_analysis, write_completed_skills
 from auth import verify_token
 
 profile = load_demand_profile()
@@ -64,6 +64,52 @@ async def root():
 @app.get("/me")
 def read_current_user(user_id: Annotated[str, Depends(verify_token_dependency)]):
     return {"user_id": user_id}
+
+@app.post("/profile")
+async def update_profile(profile: ProfileInfo, user_id: Annotated[str, Depends(verify_token_dependency)]):
+    first_name = profile.first_name.strip()
+    last_name = profile.last_name.strip()
+
+    if not first_name or not last_name:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="First and last name cannot be empty")
+
+    try:
+        await run_in_threadpool(
+            cognito_client.admin_update_user_attributes,
+            UserPoolId = os.getenv('USER_POOL'),
+            Username = user_id,
+            UserAttributes = [
+                {"Name": "given_name", "Value": first_name},
+                {"Name": "family_name", "Value": last_name},
+            ],
+        )
+    except ClientError as err:
+        print(f"Could not update the profile: {err}")
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="We could not save your name right now")
+
+    return {"first_name": first_name, "last_name": last_name}
+
+@app.delete("/account")
+async def delete_account(user_id: Annotated[str, Depends(verify_token_dependency)]):
+    # the saved data goes first: if the Cognito user went first and this failed,
+    # the row would be left behind with no way left to sign in and reach it.
+    try:
+        await run_in_threadpool(delete_user_data, user_id)
+    except ClientError as err:
+        print(f"Could not delete the saved data: {err}")
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="We could not delete your account right now")
+
+    try:
+        await run_in_threadpool(
+            cognito_client.admin_delete_user,
+            UserPoolId = os.getenv('USER_POOL'),
+            Username = user_id,
+        )
+    except ClientError as err:
+        print(f"Could not delete the Cognito user: {err}")
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Your saved data was removed but the account itself could not be deleted. Please contact us.")
+
+    return {"deleted": True}
 
 @app.get("/completed_skills")
 async def get_completed_skills(user_id: Annotated[str, Depends(verify_token_dependency)]):
@@ -120,8 +166,24 @@ async def sign_up(signup_info: SignUpInfo):
     except ClientError as err:
         code = err.response["Error"]["Code"]
 
+        # Cognito creates the user on sign_up, before the code is confirmed. Someone who
+        # closed the tab on the verification screen owns an unconfirmed account they can
+        # neither confirm nor sign up again with, so send them a fresh code instead.
         if code == "UsernameExistsException":
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="This email is already used")
+            # Resending only works on an unconfirmed account. A confirmed one throws
+            # here, which is exactly the case where the email really is taken, so the
+            # call doubles as the status check and needs no admin permission.
+            try:
+                resent = cognito_client.resend_confirmation_code(
+                    ClientId = os.getenv('APP_CLIENT'),
+                    Username = signup_info.email,
+                )
+            except ClientError as resend_err:
+                print(f"Could not resend the confirmation code: {resend_err}")
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="This email is already used")
+
+            return {"result": None, "detail": resent.get("CodeDeliveryDetails")}
+
         elif code == "InvalidPasswordException":
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Password doesn't fit the requirements")
         elif code == "InvalidParameterException":
@@ -133,6 +195,24 @@ async def sign_up(signup_info: SignUpInfo):
     delivery_detail = response.get("CodeDeliveryDetails")
 
     return {"result": result, "detail": delivery_detail}
+
+@app.post("/resend_code")
+async def resend_code(info: ResendCodeInfo):
+    try:
+        response = cognito_client.resend_confirmation_code(
+            ClientId = os.getenv('APP_CLIENT'),
+            Username = info.email,
+        )
+    except ClientError as err:
+        code = err.response["Error"]["Code"]
+
+        if code == "LimitExceededException":
+            raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Too many attempts. Please wait a little before asking for another code")
+
+        print(f"Could not resend the confirmation code: {err}")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="We could not send a new code to that address")
+
+    return {"detail": response.get("CodeDeliveryDetails")}
 
 @app.post("/verify_email")
 async def verify_email(verify_info: VerifyEmailInfo):
