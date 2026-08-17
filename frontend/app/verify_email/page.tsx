@@ -1,12 +1,14 @@
 "use client";
 
-import { Suspense, useState, FormEvent } from "react";
+import { Suspense, useEffect, useState, FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
-import { post_verify_email } from "@/lib/api";
+import { post_resend_code, post_verify_email } from "@/lib/api";
 import BackButton from "@/components/BackButton";
+
+const RESEND_AFTER_SECONDS = 60;
 
 function VerifyEmailForm() {
   const router = useRouter();
@@ -19,6 +21,34 @@ function VerifyEmailForm() {
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [secondsLeft, setSecondsLeft] = useState(RESEND_AFTER_SECONDS);
+  const [resending, setResending] = useState(false);
+  const [resent, setResent] = useState(false);
+
+  useEffect(() => {
+    if (secondsLeft <= 0) return;
+
+    const timer = setTimeout(() => setSecondsLeft((n) => n - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [secondsLeft]);
+
+  async function handleResend() {
+    setResending(true);
+    setError(null);
+    setResent(false);
+
+    try {
+      await post_resend_code(email);
+      setResent(true);
+      setSecondsLeft(RESEND_AFTER_SECONDS);
+    }
+    catch (err) {
+      setError(err instanceof Error ? err.message : t.verifyEmail.genericError);
+    }
+    finally {
+      setResending(false);
+    }
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -94,6 +124,27 @@ function VerifyEmailForm() {
       >
         {t.verifyEmail.submit}
       </motion.button>
+
+      {resent && !error && (
+        <p className="text-sm text-[var(--text-secondary)]">
+          {t.verifyEmail.codeResent}
+        </p>
+      )}
+
+      {secondsLeft > 0 ? (
+        <p className="text-sm text-[var(--text-secondary)]" aria-live="polite">
+          {t.verifyEmail.resendIn(secondsLeft)}
+        </p>
+      ) : (
+        <button
+          type="button"
+          onClick={handleResend}
+          disabled={resending || !email}
+          className="self-start text-sm font-bold text-[var(--accent-2)] underline disabled:opacity-60 disabled:no-underline"
+        >
+          {resending ? t.verifyEmail.resending : t.verifyEmail.resend}
+        </button>
+      )}
     </motion.form>
   );
 }

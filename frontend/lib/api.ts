@@ -174,12 +174,26 @@ export async function post_signup(
   return await res.json();
 }
 
+export async function post_resend_code(email: string) {
+  const res = await fetchWithTimeout("/resend_code", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  }, AUTH_TIMEOUT_MS);
+
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not send a new code"));
+  }
+
+  return await res.json();
+}
+
 export async function post_verify_email(email: string, code: string) {
-  const res = await fetch(`${API_URL}/verify_email`, {
+  const res = await fetchWithTimeout("/verify_email", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, code }),
-  });
+  }, AUTH_TIMEOUT_MS);
 
   if (!res.ok) {
     throw new Error(await errorMessage(res, "Confirmation failed"));
