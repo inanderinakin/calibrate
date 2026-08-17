@@ -300,10 +300,8 @@ def scrape_posting(url: str, session: requests.Session) -> dict | None:
         for img in desc.find_all("img"):
             img.decompose()
         posting["description_text"] = desc.get_text(separator="\n", strip=True)
-        posting["description_html"] = desc.decode_contents()
     else:
         posting["description_text"] = None
-        posting["description_html"] = None
 
     posting["candidate_criteria"] = {}
     if posting["experience_level"]:

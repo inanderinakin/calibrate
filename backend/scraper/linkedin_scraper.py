@@ -189,7 +189,6 @@ def event_to_posting(data: EventData) -> dict:
         "job_status": None,
         "features": [],
         "description_text": data.description,
-        "description_html": data.description_html,
         "candidate_criteria": {},
     }
 

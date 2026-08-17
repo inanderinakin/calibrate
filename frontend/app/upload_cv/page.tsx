@@ -6,7 +6,7 @@ import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
 import AppShell from "@/components/AppShell";
 import StepIndicator from "@/components/StepIndicator";
-import { uploadCv } from "@/lib/api";
+import { isTimeout, persistSession, uploadCv } from "@/lib/api";
 import { session } from "@/lib/session";
 import type { NormalizedSkill } from "@/lib/types";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -19,25 +19,46 @@ export default function UploadCvPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [progress, setProgress] = useState(0);
+  const [skillCount, setSkillCount] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   function handleFile(f: File | null) {
     if (!f) return;
-    setError(null);
-    setFile(f);
-  }
 
-  function handleInputChange(e: ChangeEvent<HTMLInputElement>) {
-    handleFile(e.target.files?.[0] ?? null);
+    // Validate DOCX format using MIME type and file extension fallback
+    const isValidDocx =
+      f.type ===
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+      f.name.toLowerCase().endsWith(".docx");
+
+    // Validate PDF format using MIME type and file extension fallback
+    const isValidPdf =
+      f.type === "application/pdf" ||
+      f.name.toLowerCase().endsWith(".pdf");
+
+    if (!isValidDocx && !isValidPdf) {
+      setError("Please upload a valid PDF or DOCX file.");
+      return;
+    }
+
+    setError(null);
+    setSkillCount(null);
+    setFile(f);
   }
 
   function handleRemove() {
     setFile(null);
+    setSkillCount(null);
     setError(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+    session.setCvSkills([]);
+
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  function handleInputChange(e: ChangeEvent<HTMLInputElement>) {
+    handleFile(e.target.files?.[0] ?? null);
+    // Reset input value to allow selecting the same file consecutively
+    e.target.value = "";
   }
 
   function handleDrop(e: React.DragEvent<HTMLDivElement>) {
@@ -45,49 +66,33 @@ export default function UploadCvPage() {
     handleFile(e.dataTransfer.files?.[0] ?? null);
   }
 
- async function handleContinue() {
-  if (!file) return;
+  async function handleContinue() {
+    if (!file) return;
 
-  setIsUploading(true);
-  setError(null);
-  setProgress(0);
+    setIsUploading(true);
+    setError(null);
 
-  // The backend reads the CV synchronously and cannot report progress, so we
-  // track the reading process client-side in near-real-time: the bar creeps up
-  // while the CV text is being extracted and jumps to 100% the moment the
-  // response arrives.
-  const timer = setInterval(() => {
-    setProgress((current) =>
-      current >= 90 ? current : Math.min(90, current + Math.random() * 6 + 2)
-    );
-  }, 150);
+    try {
+      const data = await uploadCv(file);
 
-  try {
-    const data = await uploadCv(file);
+      const skills: NormalizedSkill[] = data.skills ?? [];
 
-    const skills: NormalizedSkill[] = data.skills ?? [];
+      if (skills.length === 0) {
+        throw new Error(t.uploadCv.noSkillsFound);
+      }
 
-    if (skills.length === 0) {
-      throw new Error(t.uploadCv.noSkillsFound);
+      session.setCvSkills(skills);
+      session.clearDerived();
+      persistSession().catch(() => {});
+      setSkillCount(skills.length);
     }
-
-    clearInterval(timer);
-    setProgress(100);
-
-    session.setCvSkills(skills);
-
-    setTimeout(() => router.push("/select_role"), 600);
-  } catch (e) {
-    clearInterval(timer);
-    setError(
-      e instanceof Error
-        ? e.message
-        : "Something went wrong. Please try again."
-    );
-  } finally {
-    setIsUploading(false);
+    catch (e) {
+      setError(isTimeout(e) ? t.uploadCv.timeoutError : e instanceof Error ? e.message : t.uploadCv.genericError);
+    }
+    finally {
+      setIsUploading(false);
+    }
   }
-}
 
   return (
     <AppShell backHref="/">
@@ -119,10 +124,11 @@ export default function UploadCvPage() {
           <p className="font-semibold text-(--accent-bg)">
             {t.uploadCv.pdfUpTo}
           </p>
+          {/* File input supporting both PDF and DOCX formats */}
           <input
             ref={fileInputRef}
             type="file"
-            accept=".pdf"
+            accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             onChange={handleInputChange}
             className="hidden"
           />
@@ -148,13 +154,14 @@ export default function UploadCvPage() {
                 type="button"
                 onClick={handleRemove}
                 disabled={isUploading}
-                aria-label="Remove selected CV"
+                aria-label={t.uploadCv.removeCv}
+                title={t.uploadCv.removeCv}
                 whileHover={!isUploading ? { scale: 1.05 } : undefined}
                 whileTap={!isUploading ? { scale: 0.95 } : undefined}
                 className="flex shrink-0 items-center gap-1.5 rounded-[20px] border-2 border-(--accent-2) px-3 py-1.5 text-sm font-bold text-(--accent-2) disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <Icon icon="mdi:trash-can-outline" className="h-5 w-5" />
-                <span className="hidden sm:inline">Remove</span>
+                <span className="hidden sm:inline">{t.uploadCv.remove}</span>
               </motion.button>
             </div>
 
@@ -163,20 +170,19 @@ export default function UploadCvPage() {
                 <p className="font-light text-(--text-primary)">
                   {t.uploadCv.reading}
                 </p>
-                <div className="flex items-center gap-3">
-                  <div className="h-2.5 flex-1 rounded-full bg-(--hover-bg) overflow-hidden">
-                    <motion.div
-                      className="h-full rounded-full bg-(--accent)"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${progress}%` }}
-                      transition={{ duration: 0.3, ease: "easeOut" }}
-                    />
-                  </div>
-                  <span className="w-10 text-right text-sm font-bold text-(--text-primary)">
-                    {Math.round(progress)}%
-                  </span>
+                <div className="h-2.5 rounded-full bg-(--hover-bg) overflow-hidden">
+                  <div className="h-full w-1/3 rounded-full bg-(--accent) animate-indeterminate" />
                 </div>
               </>
+            )}
+
+            {skillCount !== null && (
+              <div className="flex items-center gap-2 text-(--text-primary)">
+                <Icon icon="mdi:check-circle-outline" className="w-6 h-6 shrink-0" />
+                <p className="font-semibold">
+                  {t.uploadCv.cvRead(skillCount)}
+                </p>
+              </div>
             )}
           </motion.div>
         )}
@@ -190,12 +196,12 @@ export default function UploadCvPage() {
         <motion.button
           type="button"
           disabled={!file || isUploading}
-          onClick={handleContinue}
+          onClick={skillCount !== null ? () => router.push("/select_role") : handleContinue}
           whileHover={file && !isUploading ? { scale: 1.03 } : undefined}
           whileTap={file && !isUploading ? { scale: 0.97 } : undefined}
           className="bg-(--accent) text-(--on-accent) rounded-[20px] px-10 py-3.5 font-black text-xl flex items-center gap-3 disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          {isUploading ? t.uploadCv.analysing : t.uploadCv.continue}
+          {isUploading ? t.uploadCv.analysing : skillCount !== null ? t.uploadCv.selectRole : t.uploadCv.continue}
           <Icon icon="mdi-light:arrow-up" className="w-6 h-6 rotate-90" />
         </motion.button>
 

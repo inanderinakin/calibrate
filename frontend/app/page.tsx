@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { resolveEntryPath } from "@/lib/entry";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations, type Translations } from "@/lib/translations";
 
@@ -83,14 +86,29 @@ function IntroPage({ onContinue, t }: { onContinue: () => void; t: Translations 
               className="w-7 h-7 rotate-90"
             />
           </motion.button>
+
         </div>
       </div>
     </main>
   );
 }
 
-function MainLandingPage({ onBack, t }: { onBack?: () => void; t: Translations }) {
+function MainLandingPage({ t, onBack }: { t: Translations; onBack?: () => void }) {
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const [isDark, setIsDark] = useState(false);
+  const [navigating, setNavigating] = useState(false);
+
+  async function handleContinue() {
+    setNavigating(true);
+
+    try {
+      router.push(await resolveEntryPath());
+    }
+    catch {
+      setNavigating(false);
+    }
+  }
 
   useEffect(() => {
     const updateTheme = () => {
@@ -119,13 +137,14 @@ function MainLandingPage({ onBack, t }: { onBack?: () => void; t: Translations }
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="mx-auto min-h-screen w-full max-w-[1440px] px-7 py-5 sm:px-10 md:px-12 lg:px-16"
+        className="mx-auto flex min-h-screen w-full max-w-[1440px] flex-col px-7 py-5 sm:px-10 md:px-12 lg:px-16 2xl:max-w-[1680px]"
       >
+
         {/* HEADER */}
         <header className="flex items-center justify-between">
           <Link
             href="/"
-            className="text-left text-[16px] font-black tracking-[-0.03em] text-[var(--landing-accent)] sm:text-[18px]"
+            className="text-left text-[16px] font-black tracking-[-0.03em] text-[var(--landing-accent)] sm:text-[18px] lg:text-[22px]"
           >
             Calibrate
           </Link>
@@ -149,44 +168,51 @@ function MainLandingPage({ onBack, t }: { onBack?: () => void; t: Translations }
               </motion.button>
             )}
 
-            <Link
-              href="/login"
-              className="btn-hover rounded-lg bg-[var(--accent-bg)] text-[var(--accent-text)] px-4 py-1.5 text-[10px] font-medium leading-none sm:px-5 sm:py-2 sm:text-[11px]"
-            >
-              {t.landing.login}
-            </Link>
+            {isAuthenticated ? (
+              <button
+                type="button"
+                onClick={handleContinue}
+                disabled={navigating}
+                className="btn-hover flex items-center gap-1.5 rounded-lg bg-[var(--accent-bg)] text-[var(--accent-text)] px-4 py-1.5 text-[13px] font-medium leading-none disabled:opacity-70 sm:px-5 sm:py-2 lg:px-6 lg:py-2.5"
+              >
+                {navigating && (
+                  <Icon icon="cuida:loading-left-outline" className="h-3 w-3 animate-spin-ccw" />
+                )}
+                {t.landing.continueToApp}
+              </button>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="btn-hover rounded-lg bg-[var(--accent-bg)] text-[var(--accent-text)] px-4 py-1.5 text-[13px] font-medium leading-none sm:px-5 sm:py-2 lg:px-6 lg:py-2.5"
+                >
+                  {t.landing.login}
+                </Link>
 
-            <Link
-              href="/signup"
-              className="btn-hover rounded-lg border border-[var(--landing-accent)] bg-transparent px-4 py-1.5 text-[10px] font-medium leading-none text-[var(--landing-accent)] sm:px-5 sm:py-2 sm:text-[11px]"
-            >
-              {t.landing.signIn}
-            </Link>
-
-            <button
-              type="button"
-              aria-label={t.landing.openMenu}
-              className="ml-0.5 flex h-7 w-7 items-center justify-center text-[var(--landing-accent)] sm:h-8 sm:w-8"
-            >
-              <Icon
-                icon="material-symbols:menu-rounded"
-                width={20}
-                height={20}
-              />
-            </button>
+                <Link
+                  href="/signup"
+                  className="btn-hover rounded-lg border border-[var(--landing-accent)] bg-transparent px-4 py-1.5 text-[13px] font-medium leading-none text-[var(--landing-accent)] sm:px-5 sm:py-2 lg:px-6 lg:py-2.5"
+                >
+                  {t.landing.signIn}
+                </Link>
+              </>
+            )}
           </nav>
         </header>
 
+        <div className="flex flex-1 flex-col justify-center gap-12 lg:gap-16">
+
         {/* HERO */}
-        <section className="grid grid-cols-1 gap-8 pt-10 sm:pt-14 lg:grid-cols-[0.8fr_1.2fr] lg:items-start lg:gap-8 lg:pt-11">
+        <section className="grid grid-cols-1 items-center gap-8 pt-10 sm:pt-14 lg:grid-cols-[1fr_1.3fr] lg:gap-12 lg:pt-0">
+
           {/* LEFT SIDE */}
           <motion.div
             initial={{ opacity: 0, x: -24 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="max-w-[310px]"
+            className="max-w-[310px] lg:max-w-[440px]"
           >
-            <h1 className="text-[32px] font-black leading-[0.98] tracking-[-0.045em] text-[var(--landing-accent)] sm:text-[39px]">
+            <h1 className="text-[32px] font-black leading-[0.98] tracking-[-0.045em] text-[var(--landing-accent)] sm:text-[39px] lg:text-[56px] 2xl:text-[64px]">
               {t.landing.heroLine1} <span className="text-[var(--accent-2)]">{t.landing.heroWordCv}</span>
               <br />
               {t.landing.heroLine2} <span className="text-[var(--accent-2)]">{t.landing.heroWordAi}</span>
@@ -196,7 +222,7 @@ function MainLandingPage({ onBack, t }: { onBack?: () => void; t: Translations }
               </span>
             </h1>
 
-            <p className="mt-4 max-w-[230px] text-[11px] font-bold leading-[1.35] text-[var(--landing-accent)] sm:text-[12px]">
+            <p className="mt-4 max-w-[230px] text-[14px] font-bold leading-[1.35] text-[var(--landing-accent)] sm:text-[15px] lg:mt-6 lg:max-w-[330px] lg:text-[17px]">
               {t.landing.heroSubtitle}
             </p>
           </motion.div>
@@ -206,7 +232,7 @@ function MainLandingPage({ onBack, t }: { onBack?: () => void; t: Translations }
             initial={{ opacity: 0, x: 24 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.15, ease: "easeOut" }}
-            className="w-full flex items-start justify-center"
+            className="w-full flex items-center justify-center"
           >
             <Image
               src={workflowImage}
@@ -214,7 +240,7 @@ function MainLandingPage({ onBack, t }: { onBack?: () => void; t: Translations }
               width={1000}
               height={400}
               priority
-              className="w-full h-auto object-contain"
+              className="w-full h-auto max-h-[46vh] object-contain"
             />
           </motion.div>
         </section>
@@ -225,7 +251,7 @@ function MainLandingPage({ onBack, t }: { onBack?: () => void; t: Translations }
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, amount: 0.2 }}
-          className="mt-9 grid grid-cols-1 gap-1.5 sm:grid-cols-2 sm:gap-2 lg:mt-10"
+          className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 sm:gap-2 lg:gap-3"
         >
           {t.landing.features.map((feature, i) => (
             <motion.article
@@ -233,61 +259,56 @@ function MainLandingPage({ onBack, t }: { onBack?: () => void; t: Translations }
               variants={staggerItem}
               transition={{ type: "spring", stiffness: 260, damping: 24 }}
               whileHover={{ scale: 1.02 }}
-              className="glass-card flex min-h-[54px] items-center gap-3 rounded-[5px] border border-[var(--landing-accent)] px-3 py-2 sm:min-h-[62px] sm:gap-4 sm:px-4"
+              className="glass-card flex min-h-[54px] items-center gap-3 rounded-[5px] border border-[var(--landing-accent)] px-3 py-2 sm:min-h-[62px] sm:gap-4 sm:px-4 lg:min-h-[78px] lg:gap-5 lg:rounded-lg lg:px-6"
             >
               <Icon
                 icon={FEATURE_ICONS[i]}
                 width={28}
                 height={28}
-                className="shrink-0 text-[var(--landing-accent)] sm:h-8 sm:w-8"
+                className="shrink-0 text-[var(--landing-accent)] sm:h-8 sm:w-8 lg:h-10 lg:w-10"
               />
 
               <div className="min-w-0">
-                <h2 className="text-[9px] font-black leading-tight text-[var(--landing-accent)] sm:text-[10px]">
+                <h2 className="text-[14px] font-black leading-tight text-[var(--landing-accent)] lg:text-[15px]">
                   {feature.title}
                 </h2>
 
-                <p className="mt-0.5 text-[6px] font-medium leading-[1.25] text-[var(--landing-accent)] opacity-80 sm:text-[7px]">
+                <p className="mt-0.5 text-[12px] font-medium leading-[1.25] text-[var(--landing-accent)] opacity-80 lg:mt-1 lg:text-[13px]">
                   {feature.description}
                 </p>
               </div>
             </motion.article>
           ))}
         </motion.section>
-
-        {/* FOOTER */}
-        <motion.footer
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="flex flex-col items-center justify-center pt-8 pb-3 sm:pt-10"
-        >
-          <p className="text-[5px] font-black tracking-wide text-[var(--landing-accent)] sm:text-[6px]">
-            {t.landing.trustedBy}
-          </p>
-
-          <div className="mt-0.5 flex items-center gap-1 text-[var(--landing-accent)]">
-            <Icon
-              icon="simple-icons:amazon"
-              width={11}
-              height={11}
-            />
-
-            <span className="text-[6px] font-black">
-              amazon
-            </span>
-          </div>
-        </motion.footer>
+        </div>
       </motion.div>
     </main>
   );
 }
 
 export default function LandingPage() {
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const [showIntro, setShowIntro] = useState(true);
+  const [redirecting, setRedirecting] = useState(true);
   const { language } = useLanguage();
   const t = getTranslations(language);
+
+  // A signed-in user has no use for the pitch. Send them where they left off.
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setRedirecting(false);
+      return;
+    }
+
+    resolveEntryPath()
+      .then((path) => router.replace(path))
+      .catch(() => setRedirecting(false));
+  }, [isAuthenticated, router]);
+
+  if (redirecting && isAuthenticated) {
+    return <main className="min-h-screen bg-[var(--page-bg)]" />;
+  }
 
   if (showIntro) {
     return (
@@ -300,8 +321,8 @@ export default function LandingPage() {
 
   return (
     <MainLandingPage
-      onBack={() => setShowIntro(true)}
       t={t}
+      onBack={() => setShowIntro(true)}
     />
   );
 }

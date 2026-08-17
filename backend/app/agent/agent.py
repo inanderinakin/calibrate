@@ -2,26 +2,31 @@ import json
 from pathlib import Path
 from strands import Agent, tool
 from dotenv import load_dotenv
-from models import GapResult, Report
+from models import GapResult, NormalizedSkill, Report
+from handleposting import load_demand_profile
 
 with open(Path(__file__).parent.parent / "resources.json") as resources_json_file:
     resources_json = json.load(resources_json_file)
 
+demand_profile = load_demand_profile()
+
 load_dotenv()
 
-def load_role_demand(role: str) -> list[dict] | None:
+def load_role_demand(role: str) -> list[NormalizedSkill] | None:
     """The single source of demand data (later: reads the aggregator's artifacts)."""
-    with open((Path(__file__).parent.parent / "demand_profile.json")) as json_file:
-        json_data = json.load(json_file)
-        return json_data[role]
+    role_data = demand_profile.get(role)
+
+    if role_data is None:
+        return None
+
+    return role_data["skills"]
 
 @tool
 def get_role_demand(role: str):
-    """This tool returns the market demand numbers for a role. Role format should be plain"""
+    """This tool returns every demanded skill for one job role, with that skill's market frequency and trend. The argument is a job role taken from target_roles, such as Backend Engineer. It is never a skill name."""
     output = load_role_demand(role)
-
     if output is None:
-        return f"We got no information for {role}"
+        return f"{role} is not a role. Valid roles are: {', '.join(demand_profile)}"
 
     return output
 
@@ -42,8 +47,10 @@ def get_recommendations(gaps: GapResult, language: str = "en"):
 
     # callback handler none is to block the agent code to print the message to console.
     agent = Agent(model="global.anthropic.claude-sonnet-4-6", tools=[get_role_demand, get_learning_resources], callback_handler = None, structured_output_model = Report,
-                system_prompt = ("Only use data returned by the tools. Never invent demand figures or resources."
-                                "For each gap, get it's role demand to get its market frequency and trend, Get the learning resources for that skill, then produce a ranked list (most in-demand gaps first) of explainable recommendations."
+                system_prompt = ("Only use data returned by the tools. Never invent demand figures or resources. "
+                                "Call get_role_demand once for every role in target_roles, passing that role name and never a skill name, and read each gap's market frequency and trend out of the list it returns. "
+                                "Call get_learning_resources once for each gap skill. "
+                                "Then produce a ranked list (most in-demand gaps first) of explainable recommendations. "
                                 "Every recommendation must state its market-frequency reason ('X appears in 38 percent of postings…')."
                                 "Never show raw numeric scores to the user."
                                 "Rank strictly by market demand percentage, highest first."
@@ -57,7 +64,7 @@ def get_recommendations(gaps: GapResult, language: str = "en"):
     demand: dict[str, float] = {}
     for role in gaps.target_roles:
         for item in load_role_demand(role) or []:
-            demand[item["skill"]] = max(demand.get(item["skill"], 0.0), float(item["demand_percentage"]))
+            demand[item.skill] = max(demand.get(item.skill, 0.0), float(item.demand_percentage))
 
     report.recommendations.sort(key=lambda r: demand.get(r.skill, 0.0), reverse=True)
     for i, rec in enumerate(report.recommendations, start=1):
@@ -75,7 +82,7 @@ if __name__ == "__main__":
             ]
         },
         "matched_data": {
-            "Data Scientist": {"matched_demanded": 3, "total_demanded": 5, "ratio": 0.6}
+            "Data Scientist": {"matched_demanded": 3, "total_demanded": 5, "ratio": 0.6, "postings_count": 213}
         }
     }
     parsedData = GapResult(**gaps)

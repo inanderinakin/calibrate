@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import AppShell from "@/components/AppShell";
 import StepIndicator from "@/components/StepIndicator";
 import { session } from "@/lib/session";
+import { persistSession } from "@/lib/api";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
 
@@ -22,6 +23,8 @@ const ROLES = [
   { id: "mobile", apiName: "Mobile Engineer", icon: "mdi:cellphone" },
   { id: "qa", apiName: "QA Engineer", icon: "mdi:bug-check" },
   { id: "software", apiName: "Software Developer", icon: "mdi:laptop" },
+  { id: "it-support", apiName: "IT Support Specialist", icon: "mdi:headset" },
+  { id: "erp", apiName: "ERP Consultant", icon: "mdi:office-building-cog" },
 ] as const;
 
 export default function SelectRolePage() {
@@ -50,6 +53,7 @@ export default function SelectRolePage() {
     if (selected.length === 0) return;
 
     session.setTargetRoles(selected);
+    persistSession().catch(() => {});
     router.push("/analyse_cv");
   }
 

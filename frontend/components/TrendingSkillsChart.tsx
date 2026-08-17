@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { TrendsPayload } from "@/lib/types";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
@@ -20,14 +20,16 @@ function weekLabel(week: string, months: readonly string[]) {
   return `${months[Number(month) - 1]} ${Number(day)}`;
 }
 
-function axisScale(peak: number) {
+function axisScale(values: number[]) {
+  const peak = Math.max(0, ...values);
   const step = [0.01, 0.02, 0.05, 0.1, 0.2].find((candidate) => peak / candidate <= 5) ?? 0.25;
   const max = Math.max(step, Math.ceil(peak / step) * step);
+
   const ticks = [];
   for (let value = 0; value <= max + 1e-9; value += step) {
     ticks.push(Number(value.toFixed(4)));
   }
-  return { max, ticks };
+  return { min: 0, max, ticks };
 }
 
 function bareName(value: string) {
@@ -37,9 +39,13 @@ function bareName(value: string) {
 export default function TrendingSkillsChart({
   data,
   missing,
+  focus,
+  roles,
 }: {
   data: TrendsPayload | null;
   missing?: string[];
+  focus?: string | null;
+  roles?: string[];
 }) {
   const { language } = useLanguage();
   const translations = getTranslations(language);
@@ -48,38 +54,120 @@ export default function TrendingSkillsChart({
   const [skill, setSkill] = useState<string | null>(null);
   const [range, setRange] = useState(RANGES[1].label);
   const [hover, setHover] = useState<number | null>(null);
+  const [shown, setShown] = useState<number[]>([]);
+  const [bounds, setBounds] = useState<{ min: number; max: number } | null>(null);
+  const shownRef = useRef<number[]>([]);
+  const boundsRef = useRef<{ min: number; max: number } | null>(null);
+
+  const role = roles?.find((name) => data?.roles?.[name]) ?? null;
+
+  const view = useMemo(() => {
+    const entry = role ? data?.roles?.[role] : null;
+    if (entry) return entry;
+    return data ? { weeks: data.weeks, series: data.series } : null;
+  }, [data, role]);
 
   const skills = useMemo(() => {
-    if (!data) return [];
-    const all = Object.keys(data.series).sort();
+    if (!view) return [];
+    const all = Object.keys(view.series).sort();
     if (!missing?.length) return all;
 
     const wanted = new Set(missing.map(bareName));
     const yours = all.filter((term) => wanted.has(bareName(term)));
     return yours.length ? yours : all;
-  }, [data, missing]);
+  }, [view, missing]);
 
   const busiest = useMemo(() => {
-    if (!data) return null;
-    const latest = (term: string) => data.series[term]?.[data.series[term].length - 1] ?? 0;
+    if (!view) return null;
+    const latest = (term: string) => view.series[term]?.[view.series[term].length - 1] ?? 0;
     return [...skills].sort((a, b) => latest(b) - latest(a))[0] ?? null;
-  }, [data, skills]);
+  }, [view, skills]);
 
-  const selected = skill && data?.series[skill] ? skill : busiest;
+  const focusKey = useMemo(() => {
+    if (!focus) return null;
+    const wanted = bareName(focus);
+    return skills.find((term) => bareName(term) === wanted) ?? null;
+  }, [focus, skills]);
 
-  if (!data || !selected) {
+  useEffect(() => {
+    if (focusKey) setSkill(focusKey);
+  }, [focusKey]);
+
+  const selected = skill && view?.series[skill] ? skill : busiest;
+  const span = RANGES.find((entry) => entry.label === range)?.weeks ?? 13;
+
+  const actual = useMemo(
+    () => (view && selected ? view.series[selected].slice(-span) : []),
+    [view, selected, span]
+  );
+
+  const actualTotals = useMemo(
+    () => (view && "totals" in view ? view.totals.slice(-span) : []),
+    [view, span]
+  );
+
+  useEffect(() => {
+    if (actual.length === 0) return;
+
+    const from = shownRef.current;
+    const to = axisScale(actual);
+    const fromBounds = boundsRef.current ?? to;
+
+    const snap =
+      from.length !== actual.length ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (snap) {
+      shownRef.current = actual;
+      boundsRef.current = to;
+      setShown(actual);
+      setBounds(to);
+      return;
+    }
+
+    const start = performance.now();
+    let frame = 0;
+
+    const step = (now: number) => {
+      const t = Math.min(1, (now - start) / 450);
+      const eased = 1 - Math.pow(1 - t, 3);
+
+      const next = from.map((v, i) => v + (actual[i] - v) * eased);
+      const nextBounds = {
+        min: fromBounds.min + (to.min - fromBounds.min) * eased,
+        max: fromBounds.max + (to.max - fromBounds.max) * eased,
+      };
+
+      shownRef.current = next;
+      boundsRef.current = nextBounds;
+      setShown(next);
+      setBounds(nextBounds);
+
+      if (t < 1) frame = requestAnimationFrame(step);
+    };
+
+    frame = requestAnimationFrame(step);
+
+    return () => cancelAnimationFrame(frame);
+  }, [actual]);
+
+  if (!data || !view || !selected) {
     return <p className="text-(--text-secondary)">{t.loading}</p>;
   }
 
-  const span = RANGES.find((entry) => entry.label === range)?.weeks ?? 13;
-  const weeks = data.weeks.slice(-span);
-  const values = data.series[selected].slice(-span);
+  const weeks = view.weeks.slice(-span);
+  const values = shown.length === actual.length ? shown : actual;
 
-  const { max, ticks } = axisScale(Math.max(...values));
+  const scale = axisScale(actual);
+  const axis = bounds ?? scale;
+  const ticks = scale.ticks.filter(
+    (tick) => tick >= axis.min - 1e-9 && tick <= axis.max + 1e-9
+  );
   const innerW = WIDTH - PAD.left - PAD.right;
   const innerH = HEIGHT - PAD.top - PAD.bottom;
   const x = (i: number) => PAD.left + (values.length === 1 ? innerW / 2 : (innerW * i) / (values.length - 1));
-  const y = (v: number) => PAD.top + innerH - (v / max) * innerH;
+  const y = (v: number) =>
+    PAD.top + innerH - ((v - axis.min) / (axis.max - axis.min)) * innerH;
 
   const points = values.map((v, i) => `${x(i)},${y(v)}`).join(" ");
   const active = hover ?? values.length - 1;
@@ -126,8 +214,25 @@ export default function TrendingSkillsChart({
       <div className="relative">
         <svg
           viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-          className="w-full"
+          className="w-full rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-(--accent-bg)"
+          role="img"
+          aria-label={t.chartLabel(selected, weeks.length)}
+          tabIndex={0}
           onMouseLeave={() => setHover(null)}
+          onBlur={() => setHover(null)}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+              e.preventDefault();
+              const step = e.key === "ArrowRight" ? 1 : -1;
+              setHover((current) => {
+                const next = (current ?? values.length - 1) + step;
+                return Math.min(Math.max(next, 0), values.length - 1);
+              });
+            }
+            else if (e.key === "Escape") {
+              setHover(null);
+            }
+          }}
         >
           {ticks.map((tick) => (
             <g key={tick}>
@@ -203,7 +308,12 @@ export default function TrendingSkillsChart({
             fontSize={13}
             fontWeight={700}
           >
-            {formatPercent(Math.round(values[values.length - 1] * 100), language)}
+            {formatPercent(Math.round(actual[actual.length - 1] * 100), language)}
+            {actualTotals.length > 0 && (
+              <tspan className="fill-(--text-muted) font-normal text-[10px]" dx="4">
+                (n={actualTotals[actualTotals.length - 1]})
+              </tspan>
+            )}
           </text>
 
           {values.map((v, i) => (
@@ -215,9 +325,20 @@ export default function TrendingSkillsChart({
               height={innerH}
               fill="transparent"
               onMouseEnter={() => setHover(i)}
+              onPointerDown={() => setHover(i)}
             />
           ))}
         </svg>
+
+        <ul className="sr-only">
+          {weeks.map((week, i) => (
+            <li key={`sr-${week}`}>
+              {t.weekOf} {weekLabel(week, translations.common.months)}:{" "}
+              {formatPercent(Math.round(actual[i] * 100), language)}
+              {actualTotals.length > 0 && ` (n=${actualTotals[i]})`}
+            </li>
+          ))}
+        </ul>
 
         {hover !== null && (
           <div
@@ -226,14 +347,19 @@ export default function TrendingSkillsChart({
           >
             <div className="font-bold text-(--text-primary)">{t.weekOf} {weekLabel(weeks[hover], translations.common.months)}</div>
             <div className="text-(--text-muted)">
-              {t.postingsShare(selected, Math.round(values[hover] * 100))}
+              {role
+                ? t.roleShare(selected, Math.round(actual[hover] * 100), role)
+                : t.postingsShare(selected, Math.round(actual[hover] * 100))}
+              {actualTotals.length > 0 && ` (n=${actualTotals[hover]})`}
             </div>
           </div>
         )}
       </div>
 
       <p className="text-xs text-(--text-muted)">
-        {t.shareOfPostings(selected, data.sources)}
+        {role
+          ? t.roleCaption(selected, role)
+          : t.shareOfPostings(selected, data.sources)}
       </p>
     </div>
   );

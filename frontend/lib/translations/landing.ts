@@ -2,6 +2,7 @@ export const landing = {
   en: {
     tagline: "Your AI-Powered CV analyser",
     startNow: "Start Now",
+    continueToApp: "Continue",
     login: "Login",
     signIn: "Sign in",
     heroLine1: "Your",
@@ -11,7 +12,6 @@ export const landing = {
     heroWordMatch: "Perfect Match.",
     heroSubtitle: "Upload your CV, discover skill gaps, get personalized learning roadmaps.",
     trustedBy: "TRUSTED BY PROFESSIONALS",
-    openMenu: "Open menu",
     workflowImageAlt: "Calibrate career workflow",
     features: [
       { title: "AI-Powered Analysis", description: "Advanced AI analyses your CV and highlights your strengths." },
@@ -23,6 +23,7 @@ export const landing = {
   tr: {
     tagline: "Yapay Zeka Destekli CV Analistiniz",
     startNow: "Hemen Başla",
+    continueToApp: "Devam et",
     login: "Giriş Yap",
     signIn: "Kayıt Ol",
     heroLine1: "Sizin",
@@ -32,7 +33,6 @@ export const landing = {
     heroWordMatch: "Mükemmel Eşleşme.",
     heroSubtitle: "CV'nizi yükleyin, beceri eksiklerinizi keşfedin, kişiselleştirilmiş öğrenme yol haritaları alın.",
     trustedBy: "PROFESYONELLER TARAFINDAN GÜVENİLİYOR",
-    openMenu: "Menüyü aç",
     workflowImageAlt: "Calibrate kariyer iş akışı",
     features: [
       { title: "Yapay Zeka Destekli Analiz", description: "Gelişmiş yapay zeka CV'nizi analiz eder ve güçlü yönlerinizi ortaya çıkarır." },

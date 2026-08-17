@@ -1,13 +1,18 @@
 "use client";
 
 import { useState, FormEvent } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Icon } from "@iconify/react";
 import { useAuth } from "@/contexts/AuthContext";
-import BackButton from "@/components/BackButton";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
+import { post_login } from "@/lib/api";
+import { tokens, readClaims } from "@/lib/tokens";
+import { resolveEntryPath } from "@/lib/entry";
+import BackButton from "@/components/BackButton";
+import { Icon } from "@iconify/react";
+import { signInWith } from "@/lib/hostedUi";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,33 +22,36 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    setError(null);
+    setSubmitting(true);
 
-    // TODO: call the real auth endpoint and login(res.user) with its response.
-    // For now restore the saved profile so the account information that was
-    // updated in Settings survives a logout.
-    login({
-      email,
-      firstName: "",
-      lastName: "",
-      studyField: "",
-    });
+    try {
+      const response = await post_login(
+        email,
+        password,
+      );
+      tokens.set(response.id_token, response.refresh_token);
 
-    router.push("/upload_cv");
-  }
+      const claims = readClaims(response.id_token);
 
-  function handleSocialLogin(provider: string) {
-    // TODO: wire this up to a real OAuth flow once the backend exists.
-    login({
-      email: `${provider.toLowerCase()}@example.com`,
-      firstName: "",
-      lastName: "",
-      studyField: "",
-    });
+      login({
+        email: claims?.email ?? email,
+        firstName: claims?.given_name ?? "",
+        lastName: claims?.family_name ?? "",
+        studyField: "",
+      });
 
-    router.push("/upload_cv");
+      router.push(await resolveEntryPath());
+    }
+    catch (e) {
+      setError(e instanceof Error ? e.message : t.login.genericError);
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -87,13 +95,31 @@ export default function LoginPage() {
           className="glass-input rounded-lg border border-[var(--border-color)] px-4 py-2.5 text-[var(--text-primary)] outline-none focus:border-[var(--accent-2)]"
         />
 
+        {error && (
+          <p
+            role="alert"
+            className="rounded-lg border border-[var(--accent-2)] px-4 py-2.5 text-sm font-medium text-[var(--text-primary)]"
+          >
+            {error}
+          </p>
+        )}
+
         <motion.button
           type="submit"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.97 }}
-          className="rounded-lg bg-[var(--accent-bg)] text-[var(--accent-text)] py-2.5 font-medium mt-2"
+          disabled={submitting}
+          aria-busy={submitting}
+          whileHover={submitting ? undefined : { scale: 1.02 }}
+          whileTap={submitting ? undefined : { scale: 0.97 }}
+          className="flex items-center justify-center rounded-lg bg-[var(--accent-bg)] text-[var(--accent-text)] py-2.5 font-medium mt-2 disabled:opacity-70"
         >
-          {t.login.submit}
+          {submitting ? (
+            <>
+              <Icon icon="cuida:loading-left-outline" className="h-5 w-5 animate-spin-ccw" />
+              <span className="sr-only">{t.login.signingIn}</span>
+            </>
+          ) : (
+            t.login.submit
+          )}
         </motion.button>
 
         <div className="flex items-center gap-3 mt-1">
@@ -104,29 +130,26 @@ export default function LoginPage() {
           <div className="h-px flex-1 bg-[var(--text-muted)]" />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <motion.button
-            type="button"
-            onClick={() => handleSocialLogin("Google")}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.97 }}
-            className="flex items-center justify-center gap-2 rounded-lg border border-[var(--border-color)] bg-[var(--card-bg)] px-4 py-2.5 font-medium text-[var(--text-primary)]"
-          >
-            <Icon icon="flat-color-icons:google" className="h-5 w-5" />
-            {t.login.google}
-          </motion.button>
+        <motion.button
+          type="button"
+          onClick={() => signInWith("Google")}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.97 }}
+          className="flex items-center justify-center gap-2 rounded-lg border border-[var(--border-color)] bg-[var(--card-bg)] px-4 py-2.5 font-medium text-[var(--text-primary)]"
+        >
+          <Icon icon="flat-color-icons:google" className="h-5 w-5" />
+          Google
+        </motion.button>
 
-          <motion.button
-            type="button"
-            onClick={() => handleSocialLogin("GitHub")}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.97 }}
-            className="flex items-center justify-center gap-2 rounded-lg border border-[var(--border-color)] bg-[var(--card-bg)] px-4 py-2.5 font-medium text-[var(--text-primary)]"
+        <p className="mt-1 text-center text-sm text-[var(--text-muted)]">
+          {t.login.noAccount}{" "}
+          <Link
+            href="/signup"
+            className="font-medium text-[var(--accent-2)] underline"
           >
-            <Icon icon="mdi:github" className="h-5 w-5" />
-            {t.login.github}
-          </motion.button>
-        </div>
+            {t.login.signUpCta}
+          </Link>
+        </p>
         </motion.form>
       </div>
     </main>

@@ -471,10 +471,8 @@ def scrape_posting(url: str, page: "playwright Page", referer: str | None = None
     desc = soup.find("div", class_="job-detail-container-description")
     if desc:
         posting["description_text"] = desc.get_text(separator="\n", strip=True)
-        posting["description_html"] = desc.decode_contents()
     else:
         posting["description_text"] = None
-        posting["description_html"] = None
 
     posting["candidate_criteria"] = _parse_candidate_criteria(soup)
 

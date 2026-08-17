@@ -8,7 +8,7 @@ ROLE_PATTERNS = {
         "systems engineer", "sistem uzman", "network uzman", "sistem destek",
         "network destek", "siber güvenlik", "bilgi güvenliği", "cyber security",
         "information security", "network mühendisi", "ağ ve güvenlik",
-        "network güvenlik", "ağ güvenliği", "sistem mühendis", "cyber-security"
+        "network güvenlik", "ağ güvenliği", "sistem mühendis", "cyber-security",
     ],
     "ML Engineer": [
         "makine öğrenme", "machine learning", "yapay zeka mühendisi", "ai engineer",
@@ -41,7 +41,80 @@ ROLE_PATTERNS = {
         "ux/ui", "ux tasarım", "ui tasarım", "ui/ux",
         "web geliştir", "web tasarım", "web arayüz",
     ],
+    # IT Support Specialist and ERP Consultant are intentionally left empty
+    # here -- see TITLE_ONLY_PATTERNS below for why.
+    "IT Support Specialist": [],
+    "ERP Consultant": [],
 }
+
+# Job-title phrases that are too generic to trust in description text (e.g.
+# "Linux ve sanallaştırma bilgisi tercih sebebidir" is a routine nice-to-have
+# line in plenty of unrelated postings, but nobody titles a posting "Sistem
+# ve Ağ Uzmanı" unless the job actually is that). Scored against the title
+# only, never the description.
+#
+# Note: only the DevOps-engineering-flavored infra terms are here (cloud
+# ops, virtualization, infra engineering). Pure sysadmin/network-technician/
+# DBA titles ("network teknisyen", "veritabanı yönetici", "dba", "sistem
+# yönetim", "linux sistem"...) were deliberately left out -- that's IT
+# operations/support, not a software-engineering discipline this product
+# tracks, so those postings stay Unclassified rather than being folded into
+# DevOps or given their own role.
+#
+# IT Support Specialist and ERP Consultant are entirely title-only: words
+# like "destek" (support) or "erp" show up constantly as throwaway
+# description mentions on completely unrelated software-engineer postings
+# ("ERP sistemleriyle entegrasyon deneyimi" as one bullet among many), which
+# was flipping generic "Yazılım Uzmanı"/"Senior Java Developer" postings
+# into these roles when scored against description text. Nobody titles a
+# posting "ERP Uzmanı" or "Yazılım Destek Uzmanı" unless it actually is one.
+# IT Support Specialist and ERP Consultant are entirely title-only (see
+# above), and title-only phrases that mention IT/ERP but say nothing about
+# the actual job function on their own -- "Bilişim Teknolojileri Öğretmeni"
+# (IT teacher), "Satış Yöneticisi (Bilişim Teknolojileri...)" (sales manager
+# at an IT company), "Muhasebe Uzmanı (Logo ERP Deneyimli)" (accountant who
+# uses ERP software) -- get rejected by NON_TECH_CONFLICT_KW below regardless
+# of which of these terms matched. One rule for all of them, not a tier of
+# "safe" vs "needs a conflict check" terms -- a split like that only holds
+# until the next term that turns out to need it too (this list used to split
+# "erp"/"bilgi teknoloji" out as special-cased "weak" signals and still let
+# "Yazılım Satış Uzmanı" through, because "help desk" etc. were considered
+# unconditionally "strong").
+TITLE_ONLY_PATTERNS: dict[str, list[str]] = {
+    "DevOps": [
+        "cybersecurity", "cloud operations", "cloud ops", "bulut sistem",
+        "sanallaştırma", "virtualization", "altyapı mühendis",
+    ],
+    "IT Support Specialist": [
+        "help desk", "helpdesk", "service desk", "technical support",
+        "teknik destek", "support engineer", "support specialist",
+        "support technician", "it support", "it consultant", "it analyst",
+        "field service engineer", "director of information technology",
+        "it infrastructure", "it operations", "information technology specialist",
+        "it audit", "audit assistant", "bilgi işlem", "bilgi islem",
+        "it specialist", "it uzman", "it destek", "it yönetici", "it sorumlu",
+        "it manager", "uygulama destek", "destek uzman", "destek eleman",
+        "destek asistan", "it saha", "it envanter", "it satınalma",
+        "it kontrol", "bilgi teknoloji", "bt uygulama", "bt hizmet",
+        "bt kurumsal", "bilişim teknoloji",
+    ],
+    "ERP Consultant": [
+        "erp", "abap", "netsis", "sap consultant", "sap danışman", "sap uzman",
+        "sap developer", "sap modül", "sap abap", "sap fico", "sap mm",
+        "sap sd", "sap pp", "sap bw", "kurumsal uygulamalar uzman",
+    ],
+}
+
+# Job-function words that always win over a title-only match above -- same
+# principle as relevance.py's NON_CS_TITLE_KW, kept as a separate copy here
+# (not imported) because relevance.py already imports map_to_role from this
+# module, and importing back would create a circular import.
+NON_TECH_CONFLICT_KW = [
+    "satış", "satis", "pazarlama", "sales", "marketing",
+    "muhasebe", "mali müşavir", "bordro", "ön muhasebe",
+    "öğretmen", "ogretmen", "öğretim", "eğitmen", "egitmen", "akademisyen",
+    "garson", "aşçı", "otel", "resepsiyon", "barista",
+]
 
 DEFAULT_ROLE = "Unclassified"
 GENERIC_ROLE = "Software Developer"
@@ -61,7 +134,16 @@ _COMPILED = {
     for role, patterns in ROLE_PATTERNS.items()
 }
 
+_COMPILED_TITLE_ONLY = {
+    role: [re.compile(r"(?<!\w)" + re.escape(p.strip()), re.IGNORECASE) for p in patterns]
+    for role, patterns in TITLE_ONLY_PATTERNS.items()
+}
+
 _GENERIC = [re.compile(r"(?<!\w)" + re.escape(p), re.IGNORECASE) for p in GENERIC_PATTERNS]
+
+_COMPILED_NON_TECH_CONFLICT = [
+    re.compile(r"(?<!\w)" + re.escape(p), re.IGNORECASE) for p in NON_TECH_CONFLICT_KW
+]
 
 
 def _normalize(text: str | None) -> str:
@@ -90,11 +172,14 @@ def map_to_role(title: str, description: str | None = None) -> str:
     """
     t = _normalize(title)
     d = _normalize(description)
+    has_conflict = bool(t) and any(rx.search(t) for rx in _COMPILED_NON_TECH_CONFLICT)
 
     scores: dict[str, int] = {}
     title_hits: dict[str, int] = {}
     for role in ROLE_PATTERNS:
         ts = _score(t, role) if t else 0
+        if not has_conflict:
+            ts += sum(1 for rx in _COMPILED_TITLE_ONLY.get(role, ()) if t and rx.search(t))
         ds = _score(d, role) if d else 0
         title_hits[role] = ts
         scores[role] = ts * TITLE_WEIGHT + ds * DESC_WEIGHT

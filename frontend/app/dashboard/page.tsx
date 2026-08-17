@@ -7,9 +7,11 @@ import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
 import AppShell from "@/components/AppShell";
 import TrendingSkillsChart from "@/components/TrendingSkillsChart";
+import { ChartSkeleton, DashboardSkeleton } from "@/components/Skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { API_URL } from "@/lib/api";
 import { session } from "@/lib/session";
+import { useRestoreAnalysis } from "@/lib/useRestoreAnalysis";
 import type { Gap, GapResult, Trend, TrendsPayload } from "@/lib/types";
 import { getDisplaySkillName } from "@/lib/escoMapper";
 import { getCategoryLabel } from "@/lib/skillCategories";
@@ -23,6 +25,7 @@ type Skill = {
   trend: Trend;
   closestCvSkill: string | null;
   icon: string;
+  postingsCount: number;
 };
 
 const skillIcons: Record<string, string> = {
@@ -105,11 +108,17 @@ export default function DashboardPage() {
   const [trendsFailed, setTrendsFailed] = useState(false);
   const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
   const [focusSkills, setFocusSkills] = useState<string[]>([]);
+  const restored = useRestoreAnalysis();
+  const [hasRoadmap, setHasRoadmap] = useState(false);
+  const [showMethodology, setShowMethodology] = useState(false);
 
   useEffect(() => {
+    if (!restored) return;
+
     setGaps(session.getGaps());
+    setHasRoadmap(session.getReport() !== null);
     setLoaded(true);
-  }, []);
+  }, [restored]);
 
   useEffect(() => {
     fetch(`${API_URL}/trends`)
@@ -119,7 +128,11 @@ export default function DashboardPage() {
   }, []);
 
   if (!loaded) {
-    return <AppShell backHref="/analyse_cv" />;
+    return (
+      <AppShell backHref="/analyse_cv">
+        <DashboardSkeleton />
+      </AppShell>
+    );
   }
 
   if (!gaps) {
@@ -171,22 +184,22 @@ export default function DashboardPage() {
 
   /* ---------------- MISSING SKILLS ---------------- */
 
-  const gapBySkill = new Map<string, Gap>();
+  const gapBySkill = new Map<string, { gap: Gap; role: string }>();
 
   for (const role of roles) {
     for (const gap of gaps.gaps[role] ?? []) {
       const seen = gapBySkill.get(gap.skill);
 
-      if (!seen || gap.demand_percentage > seen.demand_percentage) {
-        gapBySkill.set(gap.skill, gap);
+      if (!seen || gap.demand_percentage > seen.gap.demand_percentage) {
+        gapBySkill.set(gap.skill, { gap, role });
       }
     }
   }
 
   const missingSkills: Skill[] = [...gapBySkill.values()]
-    .sort((a, b) => b.demand_percentage - a.demand_percentage)
+    .sort((a, b) => b.gap.demand_percentage - a.gap.demand_percentage)
     .slice(0, 5)
-    .map((gap) => {
+    .map(({ gap, role }) => {
       const name = getDisplaySkillName(gap.skill);
       return {
         name,
@@ -195,6 +208,7 @@ export default function DashboardPage() {
         trend: gap.trend,
         closestCvSkill: gap.closest_cv_skill,
         icon: getSkillIcon(name),
+        postingsCount: gaps.matched_data[role]?.postings_count ?? 0,
       };
     });
 
@@ -358,6 +372,8 @@ export default function DashboardPage() {
 
                 <button
                   type="button"
+                  onClick={() => setShowMethodology((open) => !open)}
+                  aria-expanded={showMethodology}
                   className="flex items-center gap-2 rounded-lg border border-black/15 px-4 py-2 text-sm font-medium text-[var(--accent-2)]"
                 >
                   {t.dashboard.whyTheseSkills}
@@ -367,6 +383,38 @@ export default function DashboardPage() {
                   />
                 </button>
               </div>
+
+              {showMethodology && (
+                <div className="mb-5 rounded-[16px] border border-[var(--accent-2)] p-4">
+                  <p className="font-black text-[var(--text-primary)]">
+                    {t.dashboard.methodologyTitle}
+                  </p>
+
+                  <ul className="mt-2 space-y-1 text-sm text-[var(--text-secondary)]">
+                    {roles.map((role) => (
+                      <li key={role}>
+                        {t.dashboard.methodologyPostings(
+                          role,
+                          gaps.matched_data[role]?.postings_count ?? 0
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                    {t.dashboard.methodologyRule}
+                  </p>
+
+                  {trends?.recent_window && (
+                    <p className="mt-1 text-sm text-[var(--text-muted)]">
+                      {t.dashboard.methodologyWindow(
+                        trends.recent_window.start,
+                        trends.recent_window.end
+                      )}
+                    </p>
+                  )}
+                </div>
+              )}
 
               {missingSkills.length === 0 ? (
                 <p className="text-[var(--text-muted)]">
@@ -415,7 +463,7 @@ export default function DashboardPage() {
                         </span>
 
                         <p className="text-xs text-[var(--text-muted)]">
-                          {t.dashboard.ofPostings}
+                          {t.dashboard.basedOnPostings(skill.postingsCount)}
                         </p>
                       </div>
                     </button>
@@ -450,6 +498,10 @@ export default function DashboardPage() {
 
                 <p className="mt-1 text-base text-[var(--text-secondary)]">
                   {t.dashboard.selectSkillPrompt}
+                </p>
+
+                <p className="mt-1 text-sm text-[var(--text-muted)]">
+                  {t.dashboard.focusNote}
                 </p>
               </div>
             </div>
@@ -497,7 +549,7 @@ export default function DashboardPage() {
                         </h3>
 
                         <p className="text-sm text-[var(--text-muted)]">
-                          {t.dashboard.marketDemand}
+                          {t.dashboard.demandInYourRoles}
                         </p>
 
                         <p className="text-base font-black text-[var(--accent-2)]">
@@ -573,9 +625,9 @@ export default function DashboardPage() {
 
             <div className="mb-5 flex items-center gap-2">
               <h2 className="text-2xl font-black text-[var(--text-primary)]">
-                {t.dashboard.marketTrends}
+                {t.dashboard.demandInYourRoles}
               </h2>
-              <span title={t.dashboard.marketTrendsInfo}>
+              <span title={t.dashboard.demandInYourRolesInfo}>
                 <Icon
                   icon="mdi:information-outline"
                   className="h-5 w-5 text-[var(--text-muted)]"
@@ -587,8 +639,15 @@ export default function DashboardPage() {
               <p className="text-[var(--text-secondary)]">
                 {t.dashboard.marketTrendsUnavailable}
               </p>
+            ) : !trends ? (
+              <ChartSkeleton />
             ) : (
-              <TrendingSkillsChart data={trends} missing={missingSkillNames} />
+              <TrendingSkillsChart
+                data={trends}
+                missing={missingSkillNames}
+                focus={selectedSkill}
+                roles={roles}
+              />
             )}
           </motion.section>
 
@@ -629,7 +688,7 @@ export default function DashboardPage() {
                   </p>
 
                   <p className="text-base font-black text-[var(--text-primary)]">
-                    {selected ? t.dashboard.marketDemandValue(selected.demand) : "—"}
+                    {selected ? t.dashboard.demandInYourRolesValue(selected.demand) : "—"}
                   </p>
                 </div>
               </div>
@@ -696,7 +755,7 @@ export default function DashboardPage() {
             </div>
           </motion.section>
 
-            {/* PROFILE SUMMARY */}
+          {/* PROFILE SUMMARY */}
           <motion.section
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -704,7 +763,6 @@ export default function DashboardPage() {
             transition={{ duration: 0.5 }}
             className="mt-5"
           >
-
             <div className="glass-card rounded-[20px] p-5 w-full">
 
               <div className="mb-4 flex items-center gap-3">
@@ -755,51 +813,27 @@ export default function DashboardPage() {
                   </a>
                 </div>
               </div>
-
-              <Link
-                href="/profile"
-                className="btn-hover mt-4 flex items-center justify-center gap-2 rounded-[18px] border-2 border-[var(--accent-bg)] py-2.5 text-center font-black text-[var(--accent-bg)]"
-              >
-                {t.dashboard.viewFullProfile}
-
-                <Icon
-                  icon="weui:arrow-outlined"
-                  className="h-4 w-4 rotate-90"
-                />
-              </Link>
             </div>
-
-            {/* QUICK ROADMAP */}
-            <Link
-              href="/roadmap"
-              className="flex items-center justify-between rounded-[20px] bg-[var(--accent)] px-6 py-5 shadow-lg transition hover:scale-[1.01]"
-            >
-              <span className="text-xl font-black text-[var(--on-accent)]">
-                {t.dashboard.getYourRoadmap}
-              </span>
-
-              <Icon
-                icon="mdi-light:arrow-up"
-                className="h-9 w-9 rotate-90 text-[var(--on-accent)]"
-              />
-            </Link>
           </motion.section>
 
           {/* GENERATE BUTTON */}
           <div className="flex justify-center py-6">
             <motion.button
               type="button"
-              onClick={() => router.push("/roadmap")}
+              onClick={() => {
+                session.setFocusSkills(focusSkills);
+                router.push("/roadmap");
+              }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.97 }}
               className="flex min-w-[390px] items-center justify-center gap-4 rounded-[18px] bg-[var(--accent-2)] px-10 py-4 text-xl font-black text-[var(--on-accent)] shadow-[0_5px_12px_rgba(0,0,0,0.2)] transition hover:scale-[1.01] active:scale-[0.99]"
             >
               <Icon
-                icon="mdi:auto-fix"
+                icon={hasRoadmap ? "mdi:map-outline" : "mdi:auto-fix"}
                 className="h-6 w-6"
               />
 
-              {t.dashboard.generateRoadmap}
+              {hasRoadmap ? t.dashboard.viewRoadmap : t.dashboard.generateRoadmap}
 
               <Icon
                 icon="mdi:arrow-right"

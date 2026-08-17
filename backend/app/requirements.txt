@@ -8,3 +8,4 @@ numpy==2.5.1
 pandas==3.0.3
 python-dotenv==1.2.2
 strands-agents==1.45.0
+pyjwt==2.13.0

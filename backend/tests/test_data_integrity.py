@@ -1,0 +1,62 @@
+import json
+import sys
+from pathlib import Path
+
+# Add backend/app to Python path to import skills
+app_dir = Path(__file__).parent.parent / "app"
+sys.path.insert(0, str(app_dir))
+
+from skills import PATTERNS
+
+def load_json_artifact(filename):
+    path = app_dir / filename
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+def skills_of(role_data):
+    """The profile stores either a plain list of skills or {skills, postings_count}."""
+    if isinstance(role_data, list):
+        return role_data
+    return role_data.get("skills", [])
+
+def test_every_profile_skill_exists_in_keyword_list():
+    """Check that every skill demanded in a profile exists in the keyword patterns."""
+    demand_profile = load_json_artifact("demand_profile.json")
+    
+    missing_skills = []
+    for role, role_data in demand_profile.items():
+        for skill_entry in skills_of(role_data):
+            skill_name = skill_entry["skill"]
+            if skill_name not in PATTERNS:
+                missing_skills.append(f"{skill_name} (in {role})")
+                
+    assert not missing_skills, f"Found demanded skills missing from PATTERNS: {', '.join(missing_skills)}"
+
+def test_every_profile_skill_has_a_resource():
+    """Check that every demanded skill has an entry in resources.json."""
+    demand_profile = load_json_artifact("demand_profile.json")
+    resources = load_json_artifact("resources.json")
+    
+    unique_demanded_skills = set()
+    for role_data in demand_profile.values():
+        for skill_entry in skills_of(role_data):
+            unique_demanded_skills.add(skill_entry["skill"])
+            
+    missing_resources = [skill for skill in unique_demanded_skills if skill not in resources]
+    
+    assert not missing_resources, f"Found demanded skills missing from resources.json: {', '.join(missing_resources)}"
+
+def test_trends_are_not_100_percent_stable():
+    """Check that not every trend in trends.json is marked as 'Stable'."""
+    trends = load_json_artifact("trends.json")
+    
+    # Extract the 'trend' value for every skill in the array
+    all_trends = [skill_data.get("trend", "Stable") for skill_data in trends.get("skills", [])]
+    
+    # If the list is empty, that's also a problem (no trend data)
+    assert len(all_trends) > 0, "No skills found in trends.json"
+    
+    # Check if ANY trend is not 'Stable'
+    has_unstable_trend = any(trend != "Stable" for trend in all_trends)
+    
+    assert has_unstable_trend, "All trends are marked as 100% Stable, which indicates a pipeline regression."

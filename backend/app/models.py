@@ -1,10 +1,34 @@
 from typing import Literal
 from pydantic import BaseModel
 
+class LoginInfo(BaseModel):
+    email: str
+    password: str
+
+class SignUpInfo(BaseModel):
+    email: str
+    password: str
+    first_name: str
+    last_name: str
+
+class VerifyEmailInfo(BaseModel):
+    email: str
+    code: str
+
+class CompletedSkills(BaseModel):
+    skills: list[str]
+
+class Analysis(BaseModel):
+    cv_skills: list["NormalizedSkill"] = []
+    target_roles: list[str] = []
+    gaps: "GapResult | None" = None
+    report: "Report | None" = None
+
 class MatchData(BaseModel):
     matched_demanded: int
     total_demanded: int
     ratio: float
+    postings_count: int
 
 class Gap(BaseModel): 
     skill: str
