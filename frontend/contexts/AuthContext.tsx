@@ -14,6 +14,8 @@ export interface AuthUser {
   lastName: string;
   email: string;
   studyField: string;
+  /** ISO alpha-2 code where we recognise the country, else the typed text. */
+  country: string;
   joinedAt?: string;
 }
 
@@ -46,6 +48,12 @@ function readProfile(): AuthUser | null {
 export function clearStoredUser() {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(STORAGE_KEY);
+}
+
+export function clearStoredProfile() {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(STORAGE_KEY);
+  window.localStorage.removeItem(PROFILE_KEY);
 }
 
 export function saveProfile(profile: AuthUser) {
@@ -92,6 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ...(newUser.firstName ? {} : { firstName: saved?.firstName ?? "" }),
       ...(newUser.lastName ? {} : { lastName: saved?.lastName ?? "" }),
       ...(newUser.studyField ? {} : { studyField: saved?.studyField ?? "" }),
+      ...(newUser.country ? {} : { country: saved?.country ?? "" }),
       joinedAt: newUser.joinedAt ?? saved?.joinedAt ?? new Date().toISOString(),
     };
 

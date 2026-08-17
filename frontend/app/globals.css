@@ -38,6 +38,9 @@
 
   --chart-line: var(--burgundy);
   --chart-grid: rgba(0, 0, 0, 0.1);
+
+  --danger: #c0271c;
+  --on-danger: #ffffff;
 }
 
 .dark {
@@ -70,6 +73,10 @@
   /* Own step, not a flip of the burgundy: clears 3:1 on the blue card surface */
   --chart-line: #789ACA;
   --chart-grid: rgba(248, 241, 231, 0.16);
+
+  /* Lighter than the light-mode red so it stays legible on the dark card */
+  --danger: #e8564a;
+  --on-danger: #1a0a08;
 }
 
 /*

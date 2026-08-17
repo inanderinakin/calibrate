@@ -5,8 +5,11 @@ export const signup = {
     lastName: "Last name",
     email: "Email",
     fieldOfStudy: "Field of study",
+    country: "Country",
     password: "Password",
     submit: "Sign up",
+    haveAccount: "Already have an account?",
+    logInCta: "Click here to log in",
     genericError: "We could not create your account. Please try again.",
   },
   tr: {
@@ -15,8 +18,11 @@ export const signup = {
     lastName: "Soyad",
     email: "E-posta",
     fieldOfStudy: "Çalışma Alanı",
+    country: "Ülke",
     password: "Şifre",
     submit: "Kayıt Ol",
+    haveAccount: "Zaten hesabınız var mı?",
+    logInCta: "Giriş yapmak için tıklayın",
     genericError: "Hesabınız oluşturulamadı. Lütfen tekrar deneyin.",
   },
 };
