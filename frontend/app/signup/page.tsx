@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, FormEvent } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { saveProfile } from "@/contexts/AuthContext";
@@ -121,6 +122,16 @@ export default function SignupPage() {
         >
           {t.signup.submit}
         </motion.button>
+
+        <p className="mt-1 text-center text-sm text-[var(--text-muted)]">
+          {t.signup.haveAccount}{" "}
+          <Link
+            href="/login"
+            className="font-medium text-[var(--accent-2)] underline"
+          >
+            {t.signup.logInCta}
+          </Link>
+        </p>
         </motion.form>
       </div>
     </main>
