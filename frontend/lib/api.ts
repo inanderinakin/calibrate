@@ -230,6 +230,7 @@ export interface SavedAnalysis {
   target_roles: string[];
   gaps: GapResult | null;
   report: Report | null;
+  cv_filename: string | null;
 }
 
 export async function getAnalysis(): Promise<SavedAnalysis | null> {
@@ -268,6 +269,7 @@ export async function persistSession() {
     target_roles: session.getTargetRoles() ?? [],
     gaps: session.getGaps(),
     report: session.getReport(),
+    cv_filename: session.getCvFilename(),
   });
 }
 
