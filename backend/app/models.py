@@ -102,3 +102,12 @@ class Posting(BaseModel):
     closing_date: str | None = None
     days_open: int | None = None
     skills: list[str] = []
+
+class SkillVerdict(BaseModel):
+    skill: str
+    supported: bool
+    # The words from the CV that back the skill up. Empty when nothing does.
+    evidence: str = ""
+
+class SkillVerdicts(BaseModel):
+    verdicts: list[SkillVerdict]

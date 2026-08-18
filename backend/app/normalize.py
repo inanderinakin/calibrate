@@ -3,6 +3,7 @@ from pathlib import Path
 from normalizer.embedding_matcher import build_catalog, load_or_build_vectors, match_candidates
 from normalizer.esco_utils import EscoNormalizer
 from models import NormalizedSkill
+from skills import SKILL_STOPLIST
 
 pairs, uri_to_label, uri_to_category = build_catalog()
 vectors = load_or_build_vectors(pairs = pairs)
@@ -70,8 +71,11 @@ def normalize(candidates = list[str]) -> list[NormalizedSkill]:
 
     deduped = {}
     for skill in combined_skills:
+        if skill.skill in SKILL_STOPLIST:
+            continue
+
         deduped[skill.skill] = skill
-    
+
     return list(deduped.values())
 
     

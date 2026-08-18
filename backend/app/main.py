@@ -16,7 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.concurrency import run_in_threadpool
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from agent import get_recommendations
+from agent import get_recommendations, verify_skills
 from handlecv import compute_gaps, extract_skill_candidates, extract_cv_text, extract_docx_text
 from normalize import normalize
 from models import Analysis, CompletedSkills, GapResult, GapRequest, LoginInfo, NormalizedSkill, ProfileInfo, ResendCodeInfo, SignUpInfo, VerifyEmailInfo
@@ -29,6 +29,7 @@ profile = load_demand_profile()
 trends = load_trends()
 postings = load_postings()
 agent_timeout_seconds = 240
+verifier_timeout_seconds = 30
 app = FastAPI()
 security = HTTPBearer()
 cognito_client = boto3.client("cognito-idp")
@@ -349,6 +350,21 @@ async def upload_cv(file: UploadFile = File(...)):
 
         skills.append(skill)
         covered.add(base_skill_name(skill.skill))
+
+    # Similarity is not the same thing as truth: a Turkish word fragment can score
+    # higher against an ESCO label than a real skill does. The verifier reads the CV
+    # and drops anything it cannot quote for. It only ever removes, so if it is
+    # unavailable the honest fallback is the unverified list -- a noisier CV beats a
+    # failed upload.
+    try:
+        skills, _ = await asyncio.wait_for(
+            run_in_threadpool(verify_skills, skills, lines),
+            timeout = verifier_timeout_seconds,
+        )
+    except asyncio.TimeoutError:
+        print("Skill verification timed out, returning the unverified skills")
+    except Exception as err:
+        print(f"Skill verification failed: {type(err).__name__}: {err}")
 
     return {"filename": safe_name, "skills": skills}
 
