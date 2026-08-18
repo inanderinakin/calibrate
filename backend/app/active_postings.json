@@ -1,11 +1,11 @@
 {
- "generated_at": "2026-08-18T18:33:28+00:00",
+ "generated_at": "2026-08-18T21:44:44+00:00",
  "counts": {
   "stored": 3239,
-  "active": 2059,
-  "reachable": 1513,
-  "shown": 1490,
-  "unverified": 504
+  "active": 2048,
+  "reachable": 1504,
+  "shown": 1481,
+  "unverified": 502
  },
  "roles": [
   "Backend Engineer",
@@ -38,8 +38,8 @@
   "CI/CD",
   "PostgreSQL",
   "Docker",
-  "Linux",
   "LLM",
+  "Linux",
   "Windows",
   "Cybersecurity",
   "Redis",
@@ -50,11 +50,11 @@
   "Microsoft 365",
   "Android",
   "Kubernetes",
-  "Firewall",
   "Node.js",
+  "Firewall",
   "iOS",
-  "Active Directory",
   "Angular",
+  "Active Directory",
   "MongoDB",
   "PyTorch",
   "Kotlin",
@@ -67,17 +67,17 @@
   "Power BI",
   "MySQL",
   "Swift",
-  "TensorFlow",
   "Vue",
+  "TensorFlow",
   "Terraform",
   "Excel",
   "Jenkins",
-  "Golang",
   "Windows Server",
   "PHP",
-  "React Native",
   "CRM",
   "Spark",
+  "React Native",
+  "Golang",
   "NLP",
   "Pandas",
   "ITIL",
@@ -3457,7 +3457,7 @@
    "position_level": "specialist",
    "date_posted": "2026-08-05",
    "closing_date": "2026-12-31",
-   "days_open": 135,
+   "days_open": 134,
    "skills": [
     "Windows",
     "Active Directory",
@@ -3478,7 +3478,7 @@
    "position_level": "specialist",
    "date_posted": "2026-08-05",
    "closing_date": "2026-09-05",
-   "days_open": 18,
+   "days_open": 17,
    "skills": [
     "Windows",
     "Firewall",
@@ -3499,7 +3499,7 @@
    "position_level": "specialist",
    "date_posted": "2026-08-05",
    "closing_date": "2026-08-31",
-   "days_open": 13,
+   "days_open": 12,
    "skills": [
     "Windows",
     "Firewall",
@@ -3522,7 +3522,7 @@
    "position_level": "specialist",
    "date_posted": "2026-08-05",
    "closing_date": "2026-09-01",
-   "days_open": 14,
+   "days_open": 13,
    "skills": [
     "Networking"
    ]
@@ -3540,7 +3540,7 @@
    "position_level": "specialist",
    "date_posted": "2026-08-05",
    "closing_date": "2026-08-31",
-   "days_open": 13,
+   "days_open": 12,
    "skills": []
   },
   {
@@ -4351,7 +4351,7 @@
    "position_level": null,
    "date_posted": "2026-08-05",
    "closing_date": "2026-08-28",
-   "days_open": 10,
+   "days_open": 9,
    "skills": []
   },
   {
@@ -4921,7 +4921,7 @@
    "position_level": "midmanager",
    "date_posted": "2026-08-04",
    "closing_date": "2026-09-29",
-   "days_open": 42,
+   "days_open": 41,
    "skills": [
     "Python",
     "C++"
@@ -4940,7 +4940,7 @@
    "position_level": "staff",
    "date_posted": "2026-08-04",
    "closing_date": "2026-08-30",
-   "days_open": 12,
+   "days_open": 11,
    "skills": [
     "Windows",
     "Networking"
@@ -8431,7 +8431,7 @@
    "position_level": "midmanager",
    "date_posted": "2026-07-30",
    "closing_date": "2026-09-06",
-   "days_open": 19,
+   "days_open": 18,
    "skills": [
     "C#",
     ".NET",
@@ -9819,7 +9819,7 @@
    "position_level": "seniormanager",
    "date_posted": "2026-07-29",
    "closing_date": "2026-10-11",
-   "days_open": 54,
+   "days_open": 53,
    "skills": []
   },
   {
@@ -13985,7 +13985,7 @@
    "position_level": null,
    "date_posted": "2026-07-26",
    "closing_date": "2026-09-21",
-   "days_open": 34,
+   "days_open": 33,
    "skills": [
     "Android",
     "iOS",
@@ -14168,7 +14168,7 @@
    "position_level": null,
    "date_posted": "2026-07-25",
    "closing_date": "2026-08-23",
-   "days_open": 5,
+   "days_open": 4,
    "skills": [
     ".NET",
     "SQL",
@@ -14463,7 +14463,7 @@
    "position_level": "specialist",
    "date_posted": "2026-07-24",
    "closing_date": "2026-08-22",
-   "days_open": 4,
+   "days_open": 3,
    "skills": [
     "SQL",
     "Artificial Intelligence",
@@ -14483,7 +14483,7 @@
    "position_level": "specialist",
    "date_posted": "2026-07-24",
    "closing_date": "2026-08-22",
-   "days_open": 4,
+   "days_open": 3,
    "skills": [
     "Azure",
     "Linux",
@@ -14506,7 +14506,7 @@
    "position_level": "specialist",
    "date_posted": "2026-07-24",
    "closing_date": "2026-08-22",
-   "days_open": 4,
+   "days_open": 3,
    "skills": [
     "Azure",
     "Cybersecurity",
@@ -14527,7 +14527,7 @@
    "position_level": "specialist",
    "date_posted": "2026-07-24",
    "closing_date": "2026-08-22",
-   "days_open": 4,
+   "days_open": 3,
    "skills": [
     "Java",
     "JavaScript",
@@ -14550,7 +14550,7 @@
    "position_level": "specialist",
    "date_posted": "2026-07-24",
    "closing_date": "2026-08-22",
-   "days_open": 4,
+   "days_open": 3,
    "skills": [
     "PHP",
     "MySQL"
@@ -14569,7 +14569,7 @@
    "position_level": "specialist",
    "date_posted": "2026-07-24",
    "closing_date": "2026-08-22",
-   "days_open": 4,
+   "days_open": 3,
    "skills": [
     "SQL",
     "Artificial Intelligence",
@@ -14589,7 +14589,7 @@
    "position_level": "specialist",
    "date_posted": "2026-07-24",
    "closing_date": "2026-08-22",
-   "days_open": 4,
+   "days_open": 3,
    "skills": [
     "Artificial Intelligence"
    ]
@@ -14607,7 +14607,7 @@
    "position_level": "specialist",
    "date_posted": "2026-07-24",
    "closing_date": "2026-08-22",
-   "days_open": 4,
+   "days_open": 3,
    "skills": [
     "Linux",
     "Firewall",
@@ -14628,7 +14628,7 @@
    "position_level": "specialist",
    "date_posted": "2026-07-24",
    "closing_date": "2026-08-22",
-   "days_open": 4,
+   "days_open": 3,
    "skills": [
     "Linux",
     "Windows",
@@ -14651,7 +14651,7 @@
    "position_level": "midmanager",
    "date_posted": "2026-07-24",
    "closing_date": "2026-08-22",
-   "days_open": 4,
+   "days_open": 3,
    "skills": [
     "Cybersecurity",
     "ERP",
@@ -14671,7 +14671,7 @@
    "position_level": "midmanager",
    "date_posted": "2026-07-24",
    "closing_date": "2026-08-22",
-   "days_open": 4,
+   "days_open": 3,
    "skills": [
     "Cybersecurity",
     "ERP"
@@ -14690,7 +14690,7 @@
    "position_level": "assistant",
    "date_posted": "2026-07-24",
    "closing_date": "2026-08-22",
-   "days_open": 4,
+   "days_open": 3,
    "skills": [
     "Windows",
     "Networking",
@@ -14710,7 +14710,7 @@
    "position_level": "specialist",
    "date_posted": "2026-07-24",
    "closing_date": "2026-08-22",
-   "days_open": 4,
+   "days_open": 3,
    "skills": [
     "Linux",
     "Windows",
@@ -14731,7 +14731,7 @@
    "position_level": null,
    "date_posted": "2026-07-24",
    "closing_date": "2026-08-22",
-   "days_open": 4,
+   "days_open": 3,
    "skills": [
     "SQL",
     "Windows",
@@ -15875,7 +15875,7 @@
    "position_level": "specialist",
    "date_posted": "2026-07-23",
    "closing_date": "2026-08-21",
-   "days_open": 3,
+   "days_open": 2,
    "skills": [
     "JavaScript",
     "TypeScript",
@@ -15898,7 +15898,7 @@
    "position_level": "specialist",
    "date_posted": "2026-07-23",
    "closing_date": "2026-08-21",
-   "days_open": 3,
+   "days_open": 2,
    "skills": [
     "TypeScript",
     "React",
@@ -15921,7 +15921,7 @@
    "position_level": "specialist",
    "date_posted": "2026-07-23",
    "closing_date": "2026-08-21",
-   "days_open": 3,
+   "days_open": 2,
    "skills": [
     "SQL",
     "Excel"
@@ -15940,7 +15940,7 @@
    "position_level": null,
    "date_posted": "2026-07-23",
    "closing_date": "2026-08-21",
-   "days_open": 3,
+   "days_open": 2,
    "skills": [
     "Linux",
     "Windows",
@@ -15961,7 +15961,7 @@
    "position_level": "specialist",
    "date_posted": "2026-07-23",
    "closing_date": "2026-08-21",
-   "days_open": 3,
+   "days_open": 2,
    "skills": [
     "Azure",
     "Linux",
@@ -15984,7 +15984,7 @@
    "position_level": "specialist",
    "date_posted": "2026-07-23",
    "closing_date": "2026-08-21",
-   "days_open": 3,
+   "days_open": 2,
    "skills": [
     "SQL",
     "Azure",
@@ -17193,7 +17193,7 @@
    "position_level": "specialist",
    "date_posted": "2026-07-22",
    "closing_date": "2026-08-20",
-   "days_open": 2,
+   "days_open": 1,
    "skills": [
     "C++"
    ]
@@ -17211,7 +17211,7 @@
    "position_level": null,
    "date_posted": "2026-07-22",
    "closing_date": "2026-08-20",
-   "days_open": 2,
+   "days_open": 1,
    "skills": [
     "Python",
     ".NET",
@@ -17234,7 +17234,7 @@
    "position_level": "specialist",
    "date_posted": "2026-07-22",
    "closing_date": "2026-08-20",
-   "days_open": 2,
+   "days_open": 1,
    "skills": [
     "Microsoft 365",
     "Jira"
@@ -17253,7 +17253,7 @@
    "position_level": null,
    "date_posted": "2026-07-22",
    "closing_date": "2026-08-20",
-   "days_open": 2,
+   "days_open": 1,
    "skills": [
     "GCP",
     "Cybersecurity",
@@ -17274,7 +17274,7 @@
    "position_level": "assistant",
    "date_posted": "2026-07-22",
    "closing_date": "2026-08-20",
-   "days_open": 2,
+   "days_open": 1,
    "skills": [
     "Linux",
     "Windows",
@@ -17297,7 +17297,7 @@
    "position_level": "intern",
    "date_posted": "2026-07-22",
    "closing_date": "2026-08-20",
-   "days_open": 2,
+   "days_open": 1,
    "skills": []
   },
   {
@@ -17313,7 +17313,7 @@
    "position_level": "specialist",
    "date_posted": "2026-07-22",
    "closing_date": "2026-08-20",
-   "days_open": 2,
+   "days_open": 1,
    "skills": [
     "Windows",
     "Firewall",
@@ -18437,7 +18437,7 @@
    "position_level": null,
    "date_posted": "2026-07-21",
    "closing_date": "2026-08-19",
-   "days_open": 1,
+   "days_open": 0,
    "skills": [
     "Python"
    ]
@@ -18455,7 +18455,7 @@
    "position_level": "specialist",
    "date_posted": "2026-07-21",
    "closing_date": "2026-08-19",
-   "days_open": 1,
+   "days_open": 0,
    "skills": [
     "C++"
    ]
@@ -18473,7 +18473,7 @@
    "position_level": "specialist",
    "date_posted": "2026-07-21",
    "closing_date": "2026-08-19",
-   "days_open": 1,
+   "days_open": 0,
    "skills": [
     "JavaScript",
     "TypeScript",
@@ -18496,7 +18496,7 @@
    "position_level": "intern",
    "date_posted": "2026-07-21",
    "closing_date": "2026-08-19",
-   "days_open": 1,
+   "days_open": 0,
    "skills": [
     "Python"
    ]
@@ -18514,7 +18514,7 @@
    "position_level": "midmanager",
    "date_posted": "2026-07-21",
    "closing_date": "2026-08-19",
-   "days_open": 1,
+   "days_open": 0,
    "skills": [
     "Artificial Intelligence"
    ]
@@ -18532,7 +18532,7 @@
    "position_level": "specialist",
    "date_posted": "2026-07-21",
    "closing_date": "2026-08-19",
-   "days_open": 1,
+   "days_open": 0,
    "skills": [
     "Linux",
     "Windows",
@@ -18555,7 +18555,7 @@
    "position_level": "specialist",
    "date_posted": "2026-07-21",
    "closing_date": "2026-08-19",
-   "days_open": 1,
+   "days_open": 0,
    "skills": [
     "Power BI",
     "Excel"
@@ -18574,7 +18574,7 @@
    "position_level": "specialist",
    "date_posted": "2026-07-21",
    "closing_date": "2026-08-19",
-   "days_open": 1,
+   "days_open": 0,
    "skills": [
     "JavaScript",
     "TypeScript",
@@ -18597,7 +18597,7 @@
    "position_level": "specialist",
    "date_posted": "2026-07-21",
    "closing_date": "2026-08-19",
-   "days_open": 1,
+   "days_open": 0,
    "skills": [
     "SQL",
     "Power BI",
@@ -18619,7 +18619,7 @@
    "position_level": null,
    "date_posted": "2026-07-21",
    "closing_date": "2026-08-19",
-   "days_open": 1,
+   "days_open": 0,
    "skills": [
     "SAP"
    ]
@@ -18637,7 +18637,7 @@
    "position_level": null,
    "date_posted": "2026-07-21",
    "closing_date": "2026-08-19",
-   "days_open": 1,
+   "days_open": 0,
    "skills": [
     "Networking"
    ]
@@ -18655,7 +18655,7 @@
    "position_level": "specialist",
    "date_posted": "2026-07-21",
    "closing_date": "2026-08-19",
-   "days_open": 1,
+   "days_open": 0,
    "skills": [
     "Power BI",
     "ITIL",
@@ -18677,7 +18677,7 @@
    "position_level": "staff",
    "date_posted": "2026-07-21",
    "closing_date": "2026-08-19",
-   "days_open": 1,
+   "days_open": 0,
    "skills": [
     "Windows",
     "Networking",
@@ -19551,114 +19551,9 @@
    "position_level": "seniormanager",
    "date_posted": "2026-07-21",
    "closing_date": "2026-09-10",
-   "days_open": 23,
+   "days_open": 22,
    "skills": [
     "ERP"
-   ]
-  },
-  {
-   "id": "4507243",
-   "title": "Yapay Zeka ve Görüntü İşleme Uzmanı",
-   "company": "BİZE PROJE GELİŞTİRME A.Ş",
-   "city": "Bursa",
-   "role": "ML Engineer",
-   "source": "kariyer",
-   "url": "https://www.kariyer.net/is-ilani/bize-proje-gelistirme-a-s-yapay-zeka-ve-goruntu-isleme-uzmani-4507243",
-   "work_model": null,
-   "work_type": "fulltime",
-   "position_level": null,
-   "date_posted": "2026-07-20",
-   "closing_date": "2026-08-18",
-   "days_open": 0,
-   "skills": [
-    "Python",
-    "SQL",
-    "PostgreSQL",
-    "MongoDB",
-    "TensorFlow",
-    "PyTorch"
-   ]
-  },
-  {
-   "id": "4507201",
-   "title": "Kıdemli Siber Güvenlik Uzmanı",
-   "company": "EAE Elektrik Asansör Endüstri İnşaat San.ve Tic.",
-   "city": "Kocaeli",
-   "role": "DevOps",
-   "source": "kariyer",
-   "url": "https://www.kariyer.net/is-ilani/eae-elektrik-asansor-endustri-insaat-san-ve-tic-kidemli-siber-guvenlik-uzmani-4507201",
-   "work_model": null,
-   "work_type": "fulltime",
-   "position_level": null,
-   "date_posted": "2026-07-20",
-   "closing_date": "2026-08-18",
-   "days_open": 0,
-   "skills": [
-    "Firewall",
-    "Cybersecurity"
-   ]
-  },
-  {
-   "id": "4115754",
-   "title": "Helpdesk Uzman Yardımcısı",
-   "company": "EVERGREEN GEMİ ACENTELİĞİ ANONİM ŞİRKETİ",
-   "city": "İstanbul",
-   "role": "IT Support Specialist",
-   "source": "kariyer",
-   "url": "https://www.kariyer.net/is-ilani/evergreen-gemi-acenteligi-anonim-sirketi-helpdesk-uzman-yardimcisi-4115754",
-   "work_model": null,
-   "work_type": "fulltime",
-   "position_level": "assistant",
-   "date_posted": "2026-07-20",
-   "closing_date": "2026-08-18",
-   "days_open": 0,
-   "skills": [
-    "Linux",
-    "Windows",
-    "Firewall",
-    "Networking",
-    "Active Directory",
-    "Microsoft 365"
-   ]
-  },
-  {
-   "id": "4507349",
-   "title": "Bilgi Teknolojileri Uzmanı",
-   "company": "Yaşar Factoring",
-   "city": "İstanbul",
-   "role": "IT Support Specialist",
-   "source": "kariyer",
-   "url": "https://www.kariyer.net/is-ilani/yasar-factoring-bilgi-teknolojileri-uzmani-4507349",
-   "work_model": null,
-   "work_type": "fulltime",
-   "position_level": "specialist",
-   "date_posted": "2026-07-20",
-   "closing_date": "2026-08-18",
-   "days_open": 0,
-   "skills": [
-    "Linux",
-    "Firewall",
-    "Networking",
-    "Active Directory"
-   ]
-  },
-  {
-   "id": "4508142",
-   "title": "IT SAP FI & SD Consultant",
-   "company": "TÜRK PRYSMIAN KABLO VE SİSTEMLERİ A.Ş.",
-   "city": "Bursa",
-   "role": "ERP Consultant",
-   "source": "kariyer",
-   "url": "https://www.kariyer.net/is-ilani/turk-prysmian-kablo-ve-sistemleri-a-s-it-sap-fi-sd-consultant-4508142",
-   "work_model": null,
-   "work_type": "fulltime",
-   "position_level": "specialist",
-   "date_posted": "2026-07-20",
-   "closing_date": "2026-08-18",
-   "days_open": 0,
-   "skills": [
-    "SAP",
-    "ABAP"
    ]
   },
   {
@@ -21066,7 +20961,7 @@
    "position_level": null,
    "date_posted": "2026-07-18",
    "closing_date": "2026-11-03",
-   "days_open": 77,
+   "days_open": 76,
    "skills": [
     "Windows",
     "Networking",
@@ -23797,7 +23692,7 @@
    "position_level": null,
    "date_posted": "2026-07-16",
    "closing_date": "2026-09-07",
-   "days_open": 20,
+   "days_open": 19,
    "skills": [
     "Networking",
     "ERP",
@@ -24736,7 +24631,7 @@
    "position_level": "specialist",
    "date_posted": "2026-07-14",
    "closing_date": "2026-09-11",
-   "days_open": 24,
+   "days_open": 23,
    "skills": [
     "C#",
     "Angular",
@@ -25003,7 +24898,7 @@
    "position_level": "specialist",
    "date_posted": "2026-07-14",
    "closing_date": "2026-09-12",
-   "days_open": 25,
+   "days_open": 24,
    "skills": [
     "Windows",
     "Networking"
@@ -25022,7 +24917,7 @@
    "position_level": null,
    "date_posted": "2026-07-13",
    "closing_date": "2026-10-08",
-   "days_open": 51,
+   "days_open": 50,
    "skills": [
     "Artificial Intelligence",
     "Excel"
@@ -25041,7 +24936,7 @@
    "position_level": "specialist",
    "date_posted": "2026-07-13",
    "closing_date": "2026-09-10",
-   "days_open": 23,
+   "days_open": 22,
    "skills": []
   },
   {
@@ -25057,7 +24952,7 @@
    "position_level": null,
    "date_posted": "2026-07-13",
    "closing_date": "2026-09-08",
-   "days_open": 21,
+   "days_open": 20,
    "skills": [
     "Windows",
     "Networking",
@@ -26681,7 +26576,7 @@
    "position_level": null,
    "date_posted": "2026-07-10",
    "closing_date": "2026-11-04",
-   "days_open": 78,
+   "days_open": 77,
    "skills": [
     "Firewall",
     "Cybersecurity",
@@ -29482,7 +29377,7 @@
    "position_level": null,
    "date_posted": "2026-07-07",
    "closing_date": "2026-08-24",
-   "days_open": 6,
+   "days_open": 5,
    "skills": [
     "SQL",
     "SAP",
@@ -30243,7 +30138,7 @@
    "position_level": "specialist",
    "date_posted": "2026-07-06",
    "closing_date": "2026-09-03",
-   "days_open": 16,
+   "days_open": 15,
    "skills": [
     "Windows",
     "Firewall",
@@ -30264,7 +30159,7 @@
    "position_level": null,
    "date_posted": "2026-07-06",
    "closing_date": "2026-10-09",
-   "days_open": 52,
+   "days_open": 51,
    "skills": [
     "ERP"
    ]
@@ -31102,7 +30997,7 @@
    "position_level": "specialist",
    "date_posted": "2026-07-06",
    "closing_date": "2026-09-04",
-   "days_open": 17,
+   "days_open": 16,
    "skills": [
     "Java",
     "Kotlin"
@@ -31132,98 +31027,6 @@
    ]
   },
   {
-   "id": "4407645728",
-   "title": "AI Integration & Deployment Engineer",
-   "company": "Siemens",
-   "city": "Kocaeli",
-   "role": "Unclassified",
-   "source": "linkedin",
-   "url": "https://tr.linkedin.com/jobs/view/ai-integration-deployment-engineer-at-siemens-4407645728?position=19&pageNum=0&refId=KWMtgjHADe8%2FkpFxekNsFQ%3D%3D&trackingId=trepG3gqIJgZ7h1dzGQ7hQ%3D%3D",
-   "work_model": null,
-   "work_type": null,
-   "position_level": null,
-   "date_posted": "2026-07-04",
-   "closing_date": null,
-   "days_open": null,
-   "skills": [
-    "Python",
-    "JavaScript",
-    "SQL",
-    "MySQL",
-    "Artificial Intelligence",
-    "Azure"
-   ]
-  },
-  {
-   "id": "4373986293",
-   "title": "AI Engineer I (Remote)",
-   "company": "Sezzle",
-   "city": "Türkiye",
-   "role": "ML Engineer",
-   "source": "linkedin",
-   "url": "https://tr.linkedin.com/jobs/view/ai-engineer-i-remote-at-sezzle-4373986293?position=3&pageNum=10&refId=GCFQJLzpJnik1UEgQLVOmQ%3D%3D&trackingId=x6RZiSJiws7g0eIY2%2FkJnA%3D%3D",
-   "work_model": null,
-   "work_type": null,
-   "position_level": null,
-   "date_posted": "2026-07-04",
-   "closing_date": null,
-   "days_open": null,
-   "skills": [
-    "Python",
-    "Golang",
-    "React",
-    "SQL",
-    "LLM",
-    "NLP"
-   ]
-  },
-  {
-   "id": "4400295409",
-   "title": "Senior Security Infrastructure Engineer",
-   "company": "Sezzle",
-   "city": "Türkiye",
-   "role": "DevOps",
-   "source": "linkedin",
-   "url": "https://tr.linkedin.com/jobs/view/senior-security-infrastructure-engineer-at-sezzle-4400295409?position=53&pageNum=0&refId=mrGpX4HgjDxg%2BrAndF4MmQ%3D%3D&trackingId=7JmtlBerYSWZ7sKCxckXdg%3D%3D",
-   "work_model": null,
-   "work_type": null,
-   "position_level": null,
-   "date_posted": "2026-07-04",
-   "closing_date": null,
-   "days_open": null,
-   "skills": [
-    "Python",
-    "TypeScript",
-    "Golang",
-    "React",
-    "React Native",
-    "PostgreSQL"
-   ]
-  },
-  {
-   "id": "4446539931",
-   "title": "Senior Software Engineer, Windows/Desktop Applications - Ankara, Turkey",
-   "company": "Speechify",
-   "city": "Ankara",
-   "role": "Frontend Engineer",
-   "source": "linkedin",
-   "url": "https://tr.linkedin.com/jobs/view/senior-software-engineer-windows-desktop-applications-ankara-turkey-at-speechify-4446539931",
-   "work_model": null,
-   "work_type": "fulltime",
-   "position_level": "midsenior",
-   "date_posted": "2026-07-04",
-   "closing_date": null,
-   "days_open": null,
-   "skills": [
-    "C#",
-    "C++",
-    ".NET",
-    "Android",
-    "iOS",
-    "CI/CD"
-   ]
-  },
-  {
    "id": "1210140",
    "title": "IT Supervisor",
    "company": "Crowne Plaza İstanbul Zeytinburnu",
@@ -31236,7 +31039,7 @@
    "position_level": "specialist",
    "date_posted": "2026-07-04",
    "closing_date": "2026-08-31",
-   "days_open": 13,
+   "days_open": 12,
    "skills": [
     "Windows",
     "Cybersecurity",
@@ -31258,7 +31061,7 @@
    "position_level": null,
    "date_posted": "2026-07-01",
    "closing_date": "2026-09-19",
-   "days_open": 32,
+   "days_open": 31,
    "skills": [
     "JavaScript",
     "PHP",
@@ -31281,7 +31084,7 @@
    "position_level": "staff",
    "date_posted": "2026-06-30",
    "closing_date": "2026-08-28",
-   "days_open": 10,
+   "days_open": 9,
    "skills": [
     "Networking",
     "SAP",
@@ -31302,7 +31105,7 @@
    "position_level": "specialist",
    "date_posted": "2026-06-29",
    "closing_date": "2026-08-28",
-   "days_open": 10,
+   "days_open": 9,
    "skills": [
     "SQL",
     "Power BI",
@@ -31324,7 +31127,7 @@
    "position_level": null,
    "date_posted": "2026-06-26",
    "closing_date": "2026-08-24",
-   "days_open": 6,
+   "days_open": 5,
    "skills": [
     "Firewall",
     "Cybersecurity",
@@ -31345,7 +31148,7 @@
    "position_level": "specialist",
    "date_posted": "2026-06-26",
    "closing_date": "2027-12-06",
-   "days_open": 475,
+   "days_open": 474,
    "skills": []
   },
   {
@@ -31361,7 +31164,7 @@
    "position_level": null,
    "date_posted": "2026-06-24",
    "closing_date": "2026-08-22",
-   "days_open": 4,
+   "days_open": 3,
    "skills": [
     "Python",
     "SQL",
@@ -31384,7 +31187,7 @@
    "position_level": "specialist",
    "date_posted": "2026-06-22",
    "closing_date": "2026-08-20",
-   "days_open": 2,
+   "days_open": 1,
    "skills": []
   },
   {
@@ -31400,7 +31203,7 @@
    "position_level": "specialist",
    "date_posted": "2026-06-22",
    "closing_date": "2026-08-20",
-   "days_open": 2,
+   "days_open": 1,
    "skills": [
     "Java"
    ]
@@ -31418,7 +31221,7 @@
    "position_level": null,
    "date_posted": "2026-06-22",
    "closing_date": "2026-08-20",
-   "days_open": 2,
+   "days_open": 1,
    "skills": [
     "Azure",
     "Linux",
@@ -31440,7 +31243,7 @@
    "position_level": "specialist",
    "date_posted": "2026-06-11",
    "closing_date": "2026-12-31",
-   "days_open": 135,
+   "days_open": 134,
    "skills": [
     "iOS",
     "Windows",
@@ -31462,7 +31265,7 @@
    "position_level": "specialist",
    "date_posted": "2026-05-14",
    "closing_date": "2026-09-30",
-   "days_open": 43,
+   "days_open": 42,
    "skills": [
     "Windows",
     "Firewall",
@@ -31482,7 +31285,7 @@
    "position_level": "staff",
    "date_posted": "2026-05-07",
    "closing_date": "2027-04-20",
-   "days_open": 245,
+   "days_open": 244,
    "skills": [
     "Python",
     "C++",
@@ -31504,7 +31307,7 @@
    "position_level": "staff",
    "date_posted": "2026-05-06",
    "closing_date": "2027-05-06",
-   "days_open": 261,
+   "days_open": 260,
    "skills": [
     "Python",
     "Artificial Intelligence"
@@ -31523,7 +31326,7 @@
    "position_level": "specialist",
    "date_posted": "2026-05-04",
    "closing_date": "2027-01-06",
-   "days_open": 141,
+   "days_open": 140,
    "skills": [
     "Windows",
     "Firewall",
@@ -31543,7 +31346,7 @@
    "position_level": "staff",
    "date_posted": "2026-04-03",
    "closing_date": "2026-11-30",
-   "days_open": 104,
+   "days_open": 103,
    "skills": [
     "ERP",
     "Excel"
@@ -31562,7 +31365,7 @@
    "position_level": "specialist",
    "date_posted": "2026-03-06",
    "closing_date": "2027-01-05",
-   "days_open": 140,
+   "days_open": 139,
    "skills": []
   },
   {
@@ -31578,7 +31381,7 @@
    "position_level": "specialist",
    "date_posted": "2026-01-30",
    "closing_date": "2026-09-30",
-   "days_open": 43,
+   "days_open": 42,
    "skills": [
     "Networking",
     "CRM",
@@ -31599,7 +31402,7 @@
    "position_level": "midmanager",
    "date_posted": "2026-01-25",
    "closing_date": "2026-08-31",
-   "days_open": 13,
+   "days_open": 12,
    "skills": [
     "Microsoft 365"
    ]
@@ -31617,7 +31420,7 @@
    "position_level": "staff",
    "date_posted": "2025-11-20",
    "closing_date": "2026-10-10",
-   "days_open": 53,
+   "days_open": 52,
    "skills": [
     "C++",
     "MySQL",
