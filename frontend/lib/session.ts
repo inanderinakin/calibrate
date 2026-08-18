@@ -2,6 +2,7 @@ import type { GapResult, NormalizedSkill, Report } from "./types";
 
 const KEYS = {
   cvSkills: "calibrate:cv_skills",
+  cvFilename: "calibrate:cv_filename",
   targetRoles: "calibrate:target_roles",
   gaps: "calibrate:gaps",
   report: "calibrate:report",
@@ -31,6 +32,9 @@ function write(key: string, value: unknown): void {
 export const session = {
   getCvSkills: () => read<NormalizedSkill[]>(KEYS.cvSkills),
   setCvSkills: (skills: NormalizedSkill[]) => write(KEYS.cvSkills, skills),
+
+  getCvFilename: () => read<string>(KEYS.cvFilename),
+  setCvFilename: (name: string) => write(KEYS.cvFilename, name),
 
   getTargetRoles: () => read<string[]>(KEYS.targetRoles),
   setTargetRoles: (roles: string[]) => write(KEYS.targetRoles, roles),

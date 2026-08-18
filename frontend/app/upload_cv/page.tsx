@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, ChangeEvent } from "react";
+import { useEffect, useRef, useState, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
@@ -8,9 +8,13 @@ import AppShell from "@/components/AppShell";
 import StepIndicator from "@/components/StepIndicator";
 import { isTimeout, persistSession, uploadCv } from "@/lib/api";
 import { session } from "@/lib/session";
+import { useHoldToConfirm } from "@/lib/useHoldToConfirm";
+import { useRestoreAnalysis } from "@/lib/useRestoreAnalysis";
 import type { NormalizedSkill } from "@/lib/types";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
+
+const HOLD_TO_REMOVE_MS = 2000;
 
 export default function UploadCvPage() {
   const router = useRouter();
@@ -21,6 +25,24 @@ export default function UploadCvPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [skillCount, setSkillCount] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // A CV that was uploaded before — this visit or on another device. While one
+  // is on file the page shows it instead of asking for another.
+  const [onFile, setOnFile] = useState<{ name: string; skills: number } | null>(null);
+  const [removing, setRemoving] = useState(false);
+  const restored = useRestoreAnalysis();
+
+  useEffect(() => {
+    if (!restored) return;
+
+    const skills = session.getCvSkills() ?? [];
+    if (skills.length === 0) return;
+
+    setOnFile({
+      name: session.getCvFilename() ?? t.uploadCv.onFileFallbackName,
+      skills: skills.length,
+    });
+  }, [restored, t.uploadCv.onFileFallbackName]);
 
   function handleFile(f: File | null) {
     if (!f) return;
@@ -55,6 +77,25 @@ export default function UploadCvPage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
+  async function removeCvOnFile() {
+    setRemoving(true);
+    setError(null);
+
+    session.clear();
+
+    try {
+      await persistSession();
+    }
+    catch {
+      setError(t.uploadCv.removeFailed);
+    }
+
+    setOnFile(null);
+    setRemoving(false);
+  }
+
+  const hold = useHoldToConfirm(HOLD_TO_REMOVE_MS, removeCvOnFile);
+
   function handleInputChange(e: ChangeEvent<HTMLInputElement>) {
     handleFile(e.target.files?.[0] ?? null);
     // Reset input value to allow selecting the same file consecutively
@@ -82,6 +123,7 @@ export default function UploadCvPage() {
       }
 
       session.setCvSkills(skills);
+      session.setCvFilename(file.name);
       session.clearDerived();
       persistSession().catch(() => {});
       setSkillCount(skills.length);
@@ -105,36 +147,93 @@ export default function UploadCvPage() {
           transition={{ duration: 0.5 }}
           className="text-3xl md:text-5xl font-bold text-(--text-primary)"
         >
-          {t.uploadCv.title}
+          {onFile ? t.uploadCv.onFileTitle : t.uploadCv.title}
         </motion.h1>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.15 }}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={handleDrop}
-          onClick={() => fileInputRef.current?.click()}
-          className="glass-card w-full border-2 border-dashed border-(--pink) rounded-[20px] py-16 flex flex-col items-center gap-4 cursor-pointer"
-        >
-          <Icon icon="mdi:file-pdf-box" className="w-20 h-20 text-(--accent-bg)" />
-          <p className="font-black text-xl text-(--accent-bg)">
-            {t.uploadCv.dragDrop}
-          </p>
-          <p className="font-semibold text-(--accent-bg)">
-            {t.uploadCv.pdfUpTo}
-          </p>
-          {/* File input supporting both PDF and DOCX formats */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            onChange={handleInputChange}
-            className="hidden"
-          />
-        </motion.div>
+        {onFile && (
+          <p className="-mt-4 text-(--text-secondary)">{t.uploadCv.onFileSubtitle}</p>
+        )}
 
-        {file && (
+        {onFile ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="glass-card w-full rounded-[20px] border-2 border-(--pink) p-6 text-left"
+          >
+            <div className="flex items-start gap-4">
+              <Icon icon="mdi-light:file" className="h-16 w-16 shrink-0 text-(--accent-bg)" />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-xl font-bold text-(--text-primary)">{onFile.name}</p>
+                <p className="text-(--text-secondary)">{t.uploadCv.skillsFound(onFile.skills)}</p>
+              </div>
+
+              <button
+                type="button"
+                onPointerDown={() => hold.start()}
+                onPointerUp={hold.stop}
+                onPointerLeave={hold.stop}
+                onKeyDown={(e) => {
+                  if (e.key === " " || e.key === "Enter") {
+                    e.preventDefault();
+                    hold.start(true);
+                  }
+                }}
+                onKeyUp={hold.stop}
+                onBlur={hold.stopOnBlur}
+                disabled={removing}
+                aria-label={t.uploadCv.holdToRemove}
+                className="relative shrink-0 overflow-hidden rounded-[20px] border-2 border-(--accent-2) px-5 py-3 font-bold text-(--accent-2) disabled:opacity-40"
+              >
+                <span
+                  aria-hidden
+                  className="absolute inset-y-0 left-0 bg-(--accent-2)/20"
+                  style={{ width: `${hold.progress * 100}%` }}
+                />
+                <span className="relative flex items-center gap-2">
+                  <Icon icon="mdi:trash-can-outline" className="h-5 w-5" />
+                  {removing
+                    ? t.uploadCv.removing
+                    : hold.progress > 0
+                      ? t.uploadCv.holdingToRemove
+                      : t.uploadCv.remove}
+                </span>
+              </button>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.15 }}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={handleDrop}
+            onClick={() => fileInputRef.current?.click()}
+            className="glass-card w-full border-2 border-dashed border-(--pink) rounded-[20px] py-16 flex flex-col items-center gap-4 cursor-pointer"
+          >
+            <Icon icon="mdi:file-pdf-box" className="w-20 h-20 text-(--accent-bg)" />
+            <p className="font-black text-xl text-(--accent-bg)">
+              {t.uploadCv.dragDrop}
+            </p>
+            <p className="font-semibold text-(--accent-bg)">
+              {t.uploadCv.pdfUpTo}
+            </p>
+            {/* File input supporting both PDF and DOCX formats */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              onChange={handleInputChange}
+              className="hidden"
+            />
+          </motion.div>
+        )}
+
+        {onFile && (
+          <p className="-mt-4 text-sm text-(--text-muted)">{t.uploadCv.removeCost}</p>
+        )}
+
+        {!onFile && file && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -195,13 +294,19 @@ export default function UploadCvPage() {
 
         <motion.button
           type="button"
-          disabled={!file || isUploading}
-          onClick={skillCount !== null ? () => router.push("/select_role") : handleContinue}
-          whileHover={file && !isUploading ? { scale: 1.03 } : undefined}
-          whileTap={file && !isUploading ? { scale: 0.97 } : undefined}
+          disabled={onFile ? removing : !file || isUploading}
+          onClick={onFile || skillCount !== null ? () => router.push("/select_role") : handleContinue}
+          whileHover={onFile || (file && !isUploading) ? { scale: 1.03 } : undefined}
+          whileTap={onFile || (file && !isUploading) ? { scale: 0.97 } : undefined}
           className="bg-(--accent) text-(--on-accent) rounded-[20px] px-10 py-3.5 font-black text-xl flex items-center gap-3 disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          {isUploading ? t.uploadCv.analysing : skillCount !== null ? t.uploadCv.selectRole : t.uploadCv.continue}
+          {onFile
+            ? t.uploadCv.continue
+            : isUploading
+              ? t.uploadCv.analysing
+              : skillCount !== null
+                ? t.uploadCv.selectRole
+                : t.uploadCv.continue}
           <Icon icon="mdi-light:arrow-up" className="w-6 h-6 rotate-90" />
         </motion.button>
 
