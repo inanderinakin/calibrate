@@ -6,6 +6,7 @@ import { landing } from "./landing";
 import { login } from "./login";
 import { signup } from "./signup";
 import { verifyEmail } from "./verifyEmail";
+import { accountCreated } from "./accountCreated";
 import { uploadCv } from "./uploadCv";
 import { selectRole } from "./selectRole";
 import { analyseCv } from "./analyseCv";
@@ -27,6 +28,7 @@ function pick(language: Language) {
     login: login[language],
     signup: signup[language],
     verifyEmail: verifyEmail[language],
+    accountCreated: accountCreated[language],
     uploadCv: uploadCv[language],
     selectRole: selectRole[language],
     analyseCv: analyseCv[language],

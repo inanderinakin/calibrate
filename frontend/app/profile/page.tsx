@@ -3,17 +3,25 @@
 import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
+import { countryLabel } from "@/lib/countries";
 import { useRequireAuth } from "@/lib/useRequireAuth";
 
 export default function ProfilePage() {
   const allowed = useRequireAuth();
-  const { user } = useAuth();
+  const router = useRouter();
+  const { user, logout } = useAuth();
   const { language } = useLanguage();
   const t = getTranslations(language);
+
+  function handleLogout() {
+    logout();
+    router.push("/");
+  }
 
   const joinedDate = user?.joinedAt
     ? new Date(user.joinedAt).toLocaleDateString(undefined, {
@@ -70,9 +78,10 @@ export default function ProfilePage() {
               <div className="flex items-center gap-3">
                 <Icon icon="weui:location-outlined" className="w-9 h-9 text-(--accent-bg) shrink-0" />
                 <div>
-                  <p className="font-bold text-(--accent-bg)">{t.profile.location}</p>
-                  {/* TODO: replace with a real location once we collect one */}
-                  <p className="text-(--accent-bg)">—</p>
+                  <p className="font-bold text-(--accent-bg)">{t.profile.country}</p>
+                  <p className="text-(--accent-bg)">
+                    {countryLabel(user?.country ?? "", language) || "—"}
+                  </p>
                 </div>
               </div>
 
@@ -108,6 +117,21 @@ export default function ProfilePage() {
             </Link>
           </div>
         </motion.div>
+
+        <motion.button
+          type="button"
+          onClick={handleLogout}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.97 }}
+          className="btn-hover self-start bg-[var(--accent)] text-[var(--on-accent)] rounded-[20px] px-8 py-3 font-medium flex items-center gap-2"
+        >
+          {t.profile.logout}
+
+          <Icon icon="material-symbols:logout-rounded" className="w-5 h-5" />
+        </motion.button>
       </div>
     </AppShell>
   );

@@ -20,6 +20,8 @@ const FEATURE_ICONS = [
   "solar:route-linear",
 ];
 
+const INTRO_SEEN = "calibrate:intro_seen";
+
 const staggerContainer = {
   hidden: {},
   show: {
@@ -297,6 +299,9 @@ export default function LandingPage() {
   // A signed-in user has no use for the pitch. Send them where they left off.
   useEffect(() => {
     if (!isAuthenticated) {
+      // Coming back from signup or login should land on the page they left, not
+      // replay the splash they already clicked through.
+      if (window.sessionStorage.getItem(INTRO_SEEN)) setShowIntro(false);
       setRedirecting(false);
       return;
     }
@@ -306,14 +311,17 @@ export default function LandingPage() {
       .catch(() => setRedirecting(false));
   }, [isAuthenticated, router]);
 
-  if (redirecting && isAuthenticated) {
+  if (redirecting) {
     return <main className="min-h-screen bg-[var(--page-bg)]" />;
   }
 
   if (showIntro) {
     return (
       <IntroPage
-        onContinue={() => setShowIntro(false)}
+        onContinue={() => {
+          window.sessionStorage.setItem(INTRO_SEEN, "1");
+          setShowIntro(false);
+        }}
         t={t}
       />
     );
@@ -322,7 +330,10 @@ export default function LandingPage() {
   return (
     <MainLandingPage
       t={t}
-      onBack={() => setShowIntro(true)}
+      onBack={() => {
+        window.sessionStorage.removeItem(INTRO_SEEN);
+        setShowIntro(true);
+      }}
     />
   );
 }

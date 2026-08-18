@@ -20,6 +20,7 @@ export async function errorMessage(
 }
 
 const UPLOAD_TIMEOUT_MS = 120_000;
+const AUTH_TIMEOUT_MS = 30_000;
 
 export function fetchWithTimeout(path: string, init: RequestInit, ms: number) {
   return fetch(`${API_URL}${path}`, { ...init, signal: AbortSignal.timeout(ms) });
@@ -65,14 +66,14 @@ export async function uploadCv(file: File) {
 }
 
 export async function post_login(email: string, password: string) {
-  const loginResponse = await fetch(`${API_URL}/login`, {
+  const loginResponse = await fetchWithTimeout("/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       email: email,
       password: password,
     }),
-  });
+  }, AUTH_TIMEOUT_MS);
 
   if (!loginResponse.ok ) {
     throw new Error(await errorMessage(loginResponse, "Login failure"))
@@ -105,7 +106,7 @@ function endSession(): never {
 }
 
 async function authedFetch(path: string, init: RequestInit = {}) {
-  const res = await fetch(`${API_URL}${path}`, { ...init, headers: authHeaders() });
+  const res = await fetchWithTimeout(path, { ...init, headers: authHeaders() }, AUTH_TIMEOUT_MS);
 
   if (res.status !== 401) return res;
 
@@ -121,7 +122,30 @@ async function authedFetch(path: string, init: RequestInit = {}) {
     endSession();
   }
 
-  return await fetch(`${API_URL}${path}`, { ...init, headers: authHeaders() });
+  return await fetchWithTimeout(path, { ...init, headers: authHeaders() }, AUTH_TIMEOUT_MS);
+}
+
+export async function updateProfile(firstName: string, lastName: string) {
+  const res = await authedFetch("/profile", {
+    method: "POST",
+    body: JSON.stringify({ first_name: firstName, last_name: lastName }),
+  });
+
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not save your name"));
+  }
+
+  return await res.json();
+}
+
+export async function deleteAccount() {
+  const res = await authedFetch("/account", { method: "DELETE" });
+
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not delete your account"));
+  }
+
+  return await res.json();
 }
 
 export async function getCompletedSkills(): Promise<string[]> {
@@ -155,7 +179,7 @@ export async function post_signup(
   firstName: string,
   lastName: string
 ) {
-  const res = await fetch(`${API_URL}/sign_up`, {
+  const res = await fetchWithTimeout("/sign_up", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -164,7 +188,7 @@ export async function post_signup(
       first_name: firstName,
       last_name: lastName,
     }),
-  });
+  }, AUTH_TIMEOUT_MS);
 
   if (!res.ok) {
     throw new Error(await errorMessage(res, "Sign up failed"));
@@ -173,12 +197,26 @@ export async function post_signup(
   return await res.json();
 }
 
+export async function post_resend_code(email: string) {
+  const res = await fetchWithTimeout("/resend_code", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  }, AUTH_TIMEOUT_MS);
+
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not send a new code"));
+  }
+
+  return await res.json();
+}
+
 export async function post_verify_email(email: string, code: string) {
-  const res = await fetch(`${API_URL}/verify_email`, {
+  const res = await fetchWithTimeout("/verify_email", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, code }),
-  });
+  }, AUTH_TIMEOUT_MS);
 
   if (!res.ok) {
     throw new Error(await errorMessage(res, "Confirmation failed"));

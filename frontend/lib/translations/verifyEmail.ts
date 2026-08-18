@@ -6,6 +6,10 @@ export const verifyEmail = {
     submit: "Confirm",
     missingEmail: "We do not know which account to confirm. Please sign up again.",
     genericError: "We could not confirm your account. Please try again.",
+    resend: "Send me a new code",
+    resending: "Sending…",
+    resendIn: (seconds: number) => `You can ask for a new code in ${seconds}s`,
+    codeResent: "A new code is on its way.",
   },
   tr: {
     title: "E-postanızı kontrol edin",
@@ -14,5 +18,9 @@ export const verifyEmail = {
     submit: "Onayla",
     missingEmail: "Hangi hesabın onaylanacağını bilmiyoruz. Lütfen tekrar kayıt olun.",
     genericError: "Hesabınız onaylanamadı. Lütfen tekrar deneyin.",
+    resend: "Bana yeni bir kod gönder",
+    resending: "Gönderiliyor…",
+    resendIn: (seconds: number) => `${seconds} sn sonra yeni kod isteyebilirsiniz`,
+    codeResent: "Yeni kod yolda.",
   },
 };

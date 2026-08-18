@@ -1,14 +1,19 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useEffect, useRef, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
 import AppShell from "@/components/AppShell";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth, clearStoredProfile } from "@/contexts/AuthContext";
+import { deleteAccount, updateProfile } from "@/lib/api";
+import { session } from "@/lib/session";
+import { tokens } from "@/lib/tokens";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useLanguage, type Language } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
+
+const HOLD_TO_DELETE_MS = 5000;
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -19,24 +24,127 @@ export default function SettingsPage() {
 
   const [firstName, setFirstName] = useState(user?.firstName ?? "");
   const [lastName, setLastName] = useState(user?.lastName ?? "");
-  const [email, setEmail] = useState(user?.email ?? "");
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [holdProgress, setHoldProgress] = useState(0);
+  const holdFrame = useRef<number | null>(null);
+  const holdFromKeyboard = useRef(false);
+
+  function stopHold() {
+    if (holdFrame.current !== null) cancelAnimationFrame(holdFrame.current);
+    holdFrame.current = null;
+    holdFromKeyboard.current = false;
+    setHoldProgress(0);
+  }
+
+  // Safari does not focus a button when you press it, so pressing the autofocused
+  // button fired blur and killed the hold that pointerdown had just started. Only
+  // a keyboard hold cares about focus leaving.
+  function stopHoldOnBlur() {
+    if (holdFromKeyboard.current) stopHold();
+  }
+
+  function startHold(fromKeyboard = false) {
+    if (deleting || holdFrame.current !== null) return;
+
+    holdFromKeyboard.current = fromKeyboard;
+
+    const start = performance.now();
+
+    const tick = (now: number) => {
+      const progress = Math.min((now - start) / HOLD_TO_DELETE_MS, 1);
+
+      if (progress >= 1) {
+        stopHold();
+        handleDelete();
+        return;
+      }
+
+      setHoldProgress(progress);
+      holdFrame.current = requestAnimationFrame(tick);
+    };
+
+    holdFrame.current = requestAnimationFrame(tick);
+  }
+
+  useEffect(() => stopHold, []);
+
+  function closeConfirm() {
+    stopHold();
+    setConfirmingDelete(false);
+    setDeleteError(null);
+  }
+
+  useEffect(() => {
+    if (!confirmingDelete) return;
+
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape" && !deleting) closeConfirm();
+    }
+
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [confirmingDelete, deleting]);
 
   const t = getTranslations(language).settings;
 
-  function handleSave(e: FormEvent) {
+  async function handleSave(e: FormEvent) {
     e.preventDefault();
 
-    updateUser({
-      firstName,
-      lastName,
-      email,
-    });
+    setSaving(true);
+    setSaveError(null);
+    setSaved(false);
+
+    try {
+      const result = await updateProfile(firstName, lastName);
+
+      updateUser({
+        firstName: result.first_name,
+        lastName: result.last_name,
+      });
+
+      setSaved(true);
+    }
+    catch (err) {
+      setSaveError(err instanceof Error ? err.message : t.saveFailed);
+    }
+    finally {
+      setSaving(false);
+    }
   }
 
   function handleLanguageChange(
     e: React.ChangeEvent<HTMLSelectElement>
   ) {
     setLanguage(e.target.value as Language);
+  }
+
+  async function handleDelete() {
+    setDeleting(true);
+    setDeleteError(null);
+
+    try {
+      await deleteAccount();
+
+      tokens.clear();
+      session.clear();
+      clearStoredProfile();
+
+      window.location.assign("/");
+    }
+    catch (err) {
+      setDeleteError(err instanceof Error ? err.message : t.deleteFailed);
+      setDeleting(false);
+    }
   }
 
   function handleLogout() {
@@ -111,19 +219,33 @@ export default function SettingsPage() {
 
               <input
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="glass-input border-2 border-(--accent-bg) rounded-[20px] px-4 py-3 text-[var(--text-primary)] outline-none"
+                value={user?.email ?? ""}
+                readOnly
+                className="glass-input border-2 border-(--accent-bg) rounded-[20px] px-4 py-3 text-[var(--text-primary)] outline-none opacity-60 cursor-not-allowed"
               />
             </label>
 
+            {saveError && (
+              <p role="alert" className="rounded-[20px] border-2 border-(--accent-2) px-4 py-3 font-medium text-[var(--text-primary)]">
+                {saveError}
+              </p>
+            )}
+
+            {saved && !saveError && (
+              <p className="flex items-center gap-2 font-medium text-[var(--text-primary)]">
+                <Icon icon="mdi:check-circle-outline" className="w-5 h-5" />
+                {t.saved}
+              </p>
+            )}
+
             <motion.button
               type="submit"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
-              className="self-start bg-[var(--accent)] text-[var(--on-accent)] rounded-[20px] px-6 py-2.5 font-medium"
+              disabled={saving}
+              whileHover={saving ? undefined : { scale: 1.02 }}
+              whileTap={saving ? undefined : { scale: 0.97 }}
+              className="self-end bg-[var(--accent)] text-[var(--on-accent)] rounded-[20px] px-6 py-2.5 font-medium disabled:opacity-60"
             >
-              {t.saveChanges}
+              {saving ? t.saving : t.saveChanges}
             </motion.button>
           </div>
 
@@ -189,22 +311,113 @@ export default function SettingsPage() {
           </div>
         </motion.form>
 
-        {/* Logout */}
-        <motion.button
-          type="button"
-          onClick={handleLogout}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.97 }}
-          className="self-end bg-[var(--accent)] text-[var(--on-accent)] rounded-[20px] px-8 py-2.5 font-medium flex items-center gap-2"
-        >
-          <Icon
-            icon="material-symbols:logout-rounded"
-            className="w-8 h-8"
-          />
+        <div className="self-end flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <motion.button
+            type="button"
+            onClick={() => { setConfirmingDelete(true); setDeleteError(null); }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.97 }}
+            className="bg-(--danger) text-(--on-danger) rounded-[20px] px-8 py-2.5 font-medium flex items-center justify-center gap-2"
+          >
+            <Icon icon="mdi:trash-can-outline" className="w-7 h-7" />
+            {t.deleteAccount}
+          </motion.button>
 
-          {t.logout}
-        </motion.button>
+          <motion.button
+            type="button"
+            onClick={handleLogout}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.97 }}
+            className="bg-[var(--accent)] text-[var(--on-accent)] rounded-[20px] px-8 py-2.5 font-medium flex items-center justify-center gap-2"
+          >
+            <Icon
+              icon="material-symbols:logout-rounded"
+              className="w-8 h-8"
+            />
+
+            {t.logout}
+          </motion.button>
+        </div>
       </div>
+
+      {confirmingDelete && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-6"
+          onPointerDown={(e) => { if (e.target === e.currentTarget && !deleting) closeConfirm(); }}
+        >
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-title"
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.2 }}
+            className="w-full max-w-md rounded-[24px] bg-[var(--card-bg)] p-6 md:p-8 shadow-2xl flex flex-col gap-4 text-center"
+          >
+            <h2 id="delete-title" className="text-2xl font-bold text-(--danger)">
+              {t.deleteAccount}
+            </h2>
+
+            <p className="text-[var(--text-primary)]">
+              {t.deleteExplanation}
+            </p>
+
+            <p className="font-bold text-[var(--text-primary)]">
+              {t.deleteConfirmQuestion}
+            </p>
+
+            {deleteError && (
+              <p role="alert" className="rounded-[16px] border-2 border-(--danger) px-4 py-3 font-medium text-[var(--text-primary)]">
+                {deleteError}
+              </p>
+            )}
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                type="button"
+                disabled={deleting}
+                onPointerDown={() => startHold()}
+                onPointerUp={stopHold}
+                onPointerLeave={stopHold}
+                onPointerCancel={stopHold}
+                onKeyDown={(e) => {
+                  if (e.key === " " || e.key === "Enter") {
+                    e.preventDefault();
+                    startHold(true);
+                  }
+                }}
+                onKeyUp={stopHold}
+                onBlur={stopHoldOnBlur}
+                className="relative flex-1 overflow-hidden rounded-[20px] bg-(--danger) px-6 py-3 font-bold text-(--on-danger) disabled:opacity-60 touch-none select-none"
+              >
+                <span
+                  aria-hidden="true"
+                  className="absolute inset-y-0 left-0 bg-black/30"
+                  style={{ width: `${holdProgress * 100}%` }}
+                />
+
+                <span className="relative">
+                  {deleting
+                    ? t.deleting
+                    : holdProgress > 0
+                      ? t.keepHolding
+                      : t.deleteConfirm}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                autoFocus
+                onClick={closeConfirm}
+                disabled={deleting}
+                className="rounded-[20px] border-2 border-(--accent-bg) px-6 py-3 font-medium text-(--accent-bg) disabled:opacity-60"
+              >
+                {t.cancel}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </AppShell>
   );
 }
