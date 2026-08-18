@@ -60,3 +60,57 @@ def test_trends_are_not_100_percent_stable():
     has_unstable_trend = any(trend != "Stable" for trend in all_trends)
     
     assert has_unstable_trend, "All trends are marked as 100% Stable, which indicates a pipeline regression."
+
+def test_every_shown_posting_has_a_link_we_checked_and_reached():
+    """The page promises live links. A posting nobody verified must not be on it."""
+    postings = load_json_artifact("active_postings.json")
+    link_status = load_json_artifact("link_status.json")["postings"]
+
+    unreachable = [
+        posting["id"] for posting in postings["postings"]
+        if not link_status.get(posting["id"], {}).get("alive")
+    ]
+
+    assert not unreachable, f"{len(unreachable)} postings are listed without a verified live link: {unreachable[:5]}"
+
+def test_no_shown_posting_is_past_its_closing_date():
+    """A posting that closed yesterday is not an opening."""
+    from datetime import date
+
+    postings = load_json_artifact("active_postings.json")
+    today = date.today().isoformat()
+
+    expired = [
+        posting["id"] for posting in postings["postings"]
+        if posting["closing_date"] and posting["closing_date"] < today
+    ]
+
+    assert not expired, f"{len(expired)} postings closed before today: {expired[:5]}"
+
+def test_posting_facets_use_known_tokens():
+    """The frontend translates these by token, so an unmapped one renders blank."""
+    postings = load_json_artifact("active_postings.json")
+
+    allowed = {
+        "work_model": {"onsite", "hybrid", "remote"},
+        "work_type": {"fulltime", "parttime", "contract", "freelance", "internship", "temporary"},
+        "position_level": {
+            "entry", "associate", "specialist", "assistant", "midsenior", "staff",
+            "midmanager", "seniormanager", "managercandidate", "intern",
+        },
+    }
+
+    unknown = []
+    for posting in postings["postings"]:
+        for field, tokens in allowed.items():
+            value = posting[field]
+            if value and value not in tokens:
+                unknown.append(f"{field}={value}")
+
+    assert not unknown, f"Postings carry tokens the frontend cannot translate: {sorted(set(unknown))}"
+
+def test_postings_artifact_is_not_empty():
+    """An empty board means the pipeline dropped everything — fail rather than ship it."""
+    postings = load_json_artifact("active_postings.json")
+
+    assert len(postings["postings"]) > 0, "active_postings.json has no postings at all"

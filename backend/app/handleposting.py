@@ -11,6 +11,7 @@ s3_client = boto3.client("s3")
 bucket = "calibrate-teamthrow"
 demand_profile_path = Path(__file__).parent / "demand_profile.json"
 trends_path = Path(__file__).parent / "trends.json"
+postings_path = Path(__file__).parent / "active_postings.json"
 
 def load_artifact(key, fallback_path):
     try:
@@ -46,6 +47,10 @@ def load_demand_profile():
 
 def load_trends():
     return load_artifact("pipeline-data/trends.json", trends_path)
+
+
+def load_postings():
+    return load_artifact("pipeline-data/active_postings.json", postings_path)
 
 if __name__ == "__main__":
     load_trends()

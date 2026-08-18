@@ -6,14 +6,16 @@ ROLE_PATTERNS = {
         "platform engineer", "infrastructure engineer", "system administrator",
         "system administration", "sistem yönetici", "network engineer",
         "systems engineer", "sistem uzman", "network uzman", "sistem destek",
-        "network destek", "siber güvenlik", "bilgi güvenliği", "cyber security",
+        "network destek", "network specialist",
+        "network yönetici", "siber güvenlik", "bilgi güvenliği", "cyber security",
         "information security", "network mühendisi", "ağ ve güvenlik",
         "network güvenlik", "ağ güvenliği", "sistem mühendis", "cyber-security",
     ],
     "ML Engineer": [
         "makine öğrenme", "machine learning", "yapay zeka mühendisi", "ai engineer",
         "computer vision", "nlp", "derin öğrenme", "deep learning",
-        "ai specialist", "yapay zeka uzmanı"
+        "ai specialist", "yapay zeka uzmanı", "ml engineer", "ml mühendis",
+        "mlops",
     ],
     "Data Scientist": [
         "veri bilim", "data science", "veri mühendisi", "data engineer",
@@ -84,7 +86,12 @@ TITLE_ONLY_PATTERNS: dict[str, list[str]] = {
     "DevOps": [
         "cybersecurity", "cloud operations", "cloud ops", "bulut sistem",
         "sanallaştırma", "virtualization", "altyapı mühendis",
+        # ROLE_PATTERNS covers "systems engineer" and "ağ ve güvenlik" but not
+        # the singular / plain-English forms these arrive in.
+        "security engineer", "güvenlik mühendis", "system engineer",
+        "ağ yönetici", "sre",
     ],
+    "Data Scientist": ["data architect", "veri mimar"],
     "IT Support Specialist": [
         "help desk", "helpdesk", "service desk", "technical support",
         "teknik destek", "support engineer", "support specialist",
@@ -102,6 +109,9 @@ TITLE_ONLY_PATTERNS: dict[str, list[str]] = {
         "erp", "abap", "netsis", "sap consultant", "sap danışman", "sap uzman",
         "sap developer", "sap modül", "sap abap", "sap fico", "sap mm",
         "sap sd", "sap pp", "sap bw", "kurumsal uygulamalar uzman",
+        # Module and platform titles the list did not name yet.
+        "sap basis", "sap fi", "sap co", "sap yönetici", "sap ana veri",
+        "sap s/4", "sap s4", "erp danışman",
     ],
 }
 
@@ -118,11 +128,12 @@ NON_TECH_CONFLICT_KW = [
 
 DEFAULT_ROLE = "Unclassified"
 GENERIC_ROLE = "Software Developer"
+KNOWN_ROLES = set(ROLE_PATTERNS) | {GENERIC_ROLE, DEFAULT_ROLE}
 
 GENERIC_PATTERNS = [
     "software engineer", "software develop", "software specialist",
     "yazılım", "bilgisayar mühendis", "computer engineer", "programcı",
-    "developer", "geliştirici"
+    "developer", "geliştirici", "software architect", "yazılım mimar"
 ]
 
 TITLE_WEIGHT = 10
@@ -194,3 +205,17 @@ def map_to_role(title: str, description: str | None = None) -> str:
         return _fallback(t)
 
     return best
+
+
+def resolve_role(title: str, description: str | None = None, stored: str | None = None) -> str:
+    """Trust the role written at scrape time, except when it is Unclassified.
+
+    "Unclassified" is not a verdict, it is "no pattern matched on the day this
+    was scraped". Treating it as final froze 390 postings -- every IT Support
+    and ERP title in the corpus -- as unclassifiable long after the patterns
+    that recognise them were added. A real role is still trusted as-is so
+    reclassifying stays cheap.
+    """
+    if stored in KNOWN_ROLES and stored != DEFAULT_ROLE:
+        return stored
+    return map_to_role(title, description)

@@ -1,7 +1,7 @@
 import { tokens } from "@/lib/tokens";
 import { refreshIdToken } from "@/lib/hostedUi";
 import { clearStoredUser } from "@/contexts/AuthContext";
-import type { GapResult, NormalizedSkill, Report } from "@/lib/types";
+import type { GapResult, NormalizedSkill, PostingsPayload, Report } from "@/lib/types";
 import { session } from "@/lib/session";
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -269,4 +269,38 @@ export async function persistSession() {
     gaps: session.getGaps(),
     report: session.getReport(),
   });
+}
+
+export interface PostingFilters {
+  role?: string;
+  city?: string;
+  workModel?: string;
+  skill?: string;
+  mySkills?: string[];
+  search?: string;
+  sort?: "newest" | "closing";
+  page?: number;
+  pageSize?: number;
+}
+
+export async function getPostings(filters: PostingFilters = {}): Promise<PostingsPayload> {
+  const params = new URLSearchParams();
+
+  if (filters.role) params.set("role", filters.role);
+  if (filters.city) params.set("city", filters.city);
+  if (filters.workModel) params.set("work_model", filters.workModel);
+  if (filters.skill) params.set("skill", filters.skill);
+  if (filters.mySkills?.length) params.set("my_skills", filters.mySkills.join(","));
+  if (filters.search) params.set("search", filters.search);
+  if (filters.sort) params.set("sort", filters.sort);
+  params.set("page", String(filters.page ?? 1));
+  params.set("page_size", String(filters.pageSize ?? 20));
+
+  const res = await fetchWithTimeout(`/postings?${params.toString()}`, {}, AUTH_TIMEOUT_MS);
+
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not load the job postings"));
+  }
+
+  return await res.json();
 }

@@ -12,6 +12,7 @@ import { selectRole } from "./selectRole";
 import { analyseCv } from "./analyseCv";
 import { dashboard } from "./dashboard";
 import { roadmap } from "./roadmap";
+import { postings } from "./postings";
 import { profile } from "./profile";
 import { settings } from "./settings";
 import { trendChart } from "./trendChart";
@@ -34,6 +35,7 @@ function pick(language: Language) {
     analyseCv: analyseCv[language],
     dashboard: dashboard[language],
     roadmap: roadmap[language],
+    postings: postings[language],
     profile: profile[language],
     settings: settings[language],
     trendChart: trendChart[language],

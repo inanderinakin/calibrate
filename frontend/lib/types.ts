@@ -97,3 +97,33 @@ export interface TrendsPayload {
   series: Record<string, number[]>;
   roles?: Record<string, RoleTrend>;
 }
+
+export interface Posting {
+  id: string;
+  title: string;
+  company: string;
+  city: string | null;
+  role: string;
+  source: string;
+  url: string;
+  work_model: string | null;
+  work_type: string | null;
+  position_level: string | null;
+  date_posted: string | null;
+  closing_date: string | null;
+  days_open: number | null;
+  skills: string[];
+  matched_skills?: number;
+}
+
+export interface PostingsPayload {
+  total: number;
+  page: number;
+  page_size: number;
+  generated_at: string;
+  roles: string[];
+  cities: string[];
+  sources: string[];
+  skills: string[];
+  postings: Posting[];
+}
