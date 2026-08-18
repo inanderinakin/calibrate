@@ -6,14 +6,16 @@ ROLE_PATTERNS = {
         "platform engineer", "infrastructure engineer", "system administrator",
         "system administration", "sistem yönetici", "network engineer",
         "systems engineer", "sistem uzman", "network uzman", "sistem destek",
-        "network destek", "siber güvenlik", "bilgi güvenliği", "cyber security",
+        "network destek", "network specialist",
+        "network yönetici", "siber güvenlik", "bilgi güvenliği", "cyber security",
         "information security", "network mühendisi", "ağ ve güvenlik",
         "network güvenlik", "ağ güvenliği", "sistem mühendis", "cyber-security",
     ],
     "ML Engineer": [
         "makine öğrenme", "machine learning", "yapay zeka mühendisi", "ai engineer",
         "computer vision", "nlp", "derin öğrenme", "deep learning",
-        "ai specialist", "yapay zeka uzmanı"
+        "ai specialist", "yapay zeka uzmanı", "ml engineer", "ml mühendis",
+        "mlops",
     ],
     "Data Scientist": [
         "veri bilim", "data science", "veri mühendisi", "data engineer",
@@ -131,7 +133,7 @@ KNOWN_ROLES = set(ROLE_PATTERNS) | {GENERIC_ROLE, DEFAULT_ROLE}
 GENERIC_PATTERNS = [
     "software engineer", "software develop", "software specialist",
     "yazılım", "bilgisayar mühendis", "computer engineer", "programcı",
-    "developer", "geliştirici"
+    "developer", "geliştirici", "software architect", "yazılım mimar"
 ]
 
 TITLE_WEIGHT = 10
