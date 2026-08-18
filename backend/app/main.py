@@ -20,7 +20,7 @@ from agent import get_recommendations
 from handlecv import compute_gaps, extract_skill_candidates, extract_cv_text, extract_docx_text
 from normalize import normalize
 from models import Analysis, CompletedSkills, GapResult, GapRequest, LoginInfo, NormalizedSkill, ProfileInfo, ResendCodeInfo, SignUpInfo, VerifyEmailInfo
-from skills import PATTERNS, SKILL_CATEGORIES
+from skills import PATTERNS, SKILL_CATEGORIES, base_skill_name
 from handleposting import load_demand_profile, load_postings, load_trends
 from storage import delete_user_data, read_analysis, read_completed_skills, write_analysis, write_completed_skills
 from auth import verify_token
@@ -329,13 +329,26 @@ async def upload_cv(file: UploadFile = File(...)):
             os.remove(cv_dest)
 
     candidates = extract_skill_candidates(lines)
-    skills = normalize(candidates = candidates)
-    skills_set = set(skill.skill for skill in skills)
+    normalized = normalize(candidates = candidates)
     joined_lines = "\n".join(lines)
 
-    for term, pattern in PATTERNS.items():
-        if pattern.search(joined_lines) and term not in skills_set:
-            skills.append(NormalizedSkill(skill=term, esco_category=SKILL_CATEGORIES[term]))
+    # The keyword terms are the vocabulary the demand profile is written in, and
+    # compute_gaps compares names exactly, so when a skill arrives from both places
+    # the keyword name is the one to keep: a CV holding "Java (computer programming)"
+    # never matches a role demanding "Java", and the skill reads as a gap the person
+    # already filled. Deduping the other way round would have hidden that.
+    skills = [
+        NormalizedSkill(skill = term, esco_category = SKILL_CATEGORIES[term])
+        for term, pattern in PATTERNS.items() if pattern.search(joined_lines)
+    ]
+    covered = {base_skill_name(skill.skill) for skill in skills}
+
+    for skill in normalized:
+        if base_skill_name(skill.skill) in covered:
+            continue
+
+        skills.append(skill)
+        covered.add(base_skill_name(skill.skill))
 
     return {"filename": safe_name, "skills": skills}
 
@@ -383,6 +396,12 @@ async def get_demand_profile(roles: list[str] = Query(...)):
 @app.get("/trends")
 async def get_trends():
     return trends
+
+@app.get("/skills")
+async def get_skills():
+    """The vocabulary gaps are measured against, so a skill someone adds by hand
+    can match the demand profile instead of sitting there as loose text."""
+    return {"skills": [{"skill": skill, "esco_category": SKILL_CATEGORIES[skill]} for skill in sorted(PATTERNS)]}
 
 @app.get("/postings")
 async def get_postings(

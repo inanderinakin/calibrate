@@ -18,6 +18,12 @@ MAX_ATTEMPTS = 5
 BACKOFF_SECONDS = 2
 PACE_SECONDS = 0.2
 
+# Swept against the gold set in experiments/eval/sweep_threshold.py. 0.66 is free:
+# it drops seven false positives without losing a single real skill. Above it the
+# trade starts -- 0.70 buys perfect precision for 3 of the 14 real skills.
+MATCH_THRESHOLD = 0.66
+
+
 def build_catalog():
     collection_csv_path = (Path(__file__).parent.parent / "normalizer" / "esco_dataset" / "digitalSkillsCollection_en.csv")
     skills_csv_path = (Path(__file__).parent.parent / "normalizer" / "esco_dataset" / "skills_en.csv")
@@ -128,7 +134,7 @@ def load_or_build_vectors(pairs, save_path=Path(__file__).parent / "vectors_arra
     np.savez(file=save_path, labels=current_labels, vectors=vectors)
     return vectors
 
-def match_candidates(candidates: list[str], pairs, vectors, threshold=0.65) -> list[str | None]:
+def match_candidates(candidates: list[str], pairs, vectors, threshold=MATCH_THRESHOLD) -> list[str | None]:
     candidates_vectors_list = []
     for i in range(0, len(candidates), 96):
         candidates_vectors_list.extend(embed_list(

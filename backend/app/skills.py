@@ -186,3 +186,8 @@ PATTERNS["Swift"] = re.compile(
     r"swift(?![A-Za-z0-9_])",
     re.IGNORECASE,
 )
+
+def base_skill_name(label: str) -> str:
+    """ESCO qualifies its labels, so "Java (computer programming)" and the keyword
+    list's "Java" are the same skill written two ways."""
+    return label.split(" (")[0].strip().casefold()
