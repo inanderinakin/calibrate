@@ -15,6 +15,7 @@ cannot invent one.
 from strands import Agent
 from dotenv import load_dotenv
 
+from agent.style import PLAIN_STYLE
 from models import NormalizedSkill, SkillVerdicts
 
 load_dotenv()
@@ -30,7 +31,8 @@ system_prompt = (
     "Quote the abbreviation itself as the evidence when that is what the CV uses. "
     "A skill is NOT supported when the match rests only on a word looking similar, on a hobby, on a course title, or on what a project did for its users rather than what the person did. "
     "Judge only what is written. Do not reason about what someone with this background probably also knows. "
-    "Return a verdict for every skill you were given, using the skill name exactly as it was given to you."
+    "Return a verdict for every skill you were given, using the skill name exactly as it was given to you. "
+    + PLAIN_STYLE
 )
 
 

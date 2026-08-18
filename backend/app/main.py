@@ -16,13 +16,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.concurrency import run_in_threadpool
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from agent import get_recommendations, verify_skills
+from agent import get_cv_bullet, get_project_steps, get_recommendations, verify_skills
 from handlecv import compute_gaps, extract_skill_candidates, extract_cv_text, extract_docx_text
 from normalize import normalize
-from models import Analysis, CompletedSkills, GapResult, GapRequest, LoginInfo, NormalizedSkill, ProfileInfo, ResendCodeInfo, SignUpInfo, VerifyEmailInfo
+from models import Analysis, BulletRequest, CompletedProjects, CompletedSkills, GapResult, GapRequest, LoginInfo, NormalizedSkill, ProfileInfo, ResendCodeInfo, SignUpInfo, VerifyEmailInfo
 from skills import PATTERNS, SKILL_CATEGORIES, base_skill_name
 from handleposting import load_demand_profile, load_postings, load_trends
-from storage import delete_user_data, read_analysis, read_completed_skills, write_analysis, write_completed_skills
+from storage import delete_user_data, read_analysis, read_completed_projects, read_completed_skills, write_analysis, write_completed_projects, write_completed_skills
 from auth import verify_token
 
 profile = load_demand_profile()
@@ -30,6 +30,7 @@ trends = load_trends()
 postings = load_postings()
 agent_timeout_seconds = 240
 verifier_timeout_seconds = 30
+briefs_timeout_seconds = 180
 app = FastAPI()
 security = HTTPBearer()
 cognito_client = boto3.client("cognito-idp")
@@ -488,12 +489,56 @@ async def get_postings(
         "postings": matches[start:start + page_size],
     }
 
+@app.get("/completed_projects")
+async def get_completed_projects(user_id: Annotated[str, Depends(verify_token_dependency)]):
+    try:
+        skills = await run_in_threadpool(read_completed_projects, user_id)
+    except ClientError as err:
+        print(f"Could not read completed projects: {err}")
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="We could not load your project progress right now")
+
+    return {"completed_projects": skills}
+
+@app.post("/completed_projects")
+async def set_completed_projects(completed: CompletedProjects, user_id: Annotated[str, Depends(verify_token_dependency)]):
+    try:
+        await run_in_threadpool(write_completed_projects, user_id, completed.skills)
+    except ClientError as err:
+        print(f"Could not save completed projects: {err}")
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="We could not save your project progress right now")
+
+    return {"completed_projects": completed.skills}
+
+@app.post("/cv_bullet")
+async def cv_bullet(request: BulletRequest):
+    try:
+        bullet = await asyncio.wait_for(
+            run_in_threadpool(get_cv_bullet, request),
+            timeout = agent_timeout_seconds,
+        )
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=status.HTTP_504_GATEWAY_TIMEOUT, detail="Writing the bullet took too long. Please try again.")
+
+    return {"bullet": bullet}
+
 @app.post("/recommendations")
 async def recommend_with_agent(report: GapResult, language: Literal["tr", "en"] = "en"):
     try:
         result = await asyncio.wait_for(run_in_threadpool(get_recommendations, report, language), timeout=agent_timeout_seconds)
     except asyncio.TimeoutError:
         raise HTTPException(status_code=status.HTTP_504_GATEWAY_TIMEOUT, detail="The roadmap took too long to build. Please try again.")
+
+    # The project steps are part of the roadmap, not a separate errand: they slot in
+    # after the skills they make you combine. If they fail, the roadmap still stands.
+    try:
+        result.projects = await asyncio.wait_for(
+            run_in_threadpool(get_project_steps, result.recommendations, language),
+            timeout = briefs_timeout_seconds,
+        )
+    except asyncio.TimeoutError:
+        print("Project steps timed out, returning the roadmap without them")
+    except Exception as err:
+        print(f"Project steps failed: {type(err).__name__}: {err}")
 
     return {"recommendations": result}
 
