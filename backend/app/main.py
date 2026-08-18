@@ -17,7 +17,7 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from agent import get_recommendations
-from handlecv import compute_gaps, extract_skill_candidates, extract_cv_text
+from handlecv import compute_gaps, extract_skill_candidates, extract_cv_text, extract_docx_text
 from normalize import normalize
 from models import Analysis, CompletedSkills, GapResult, GapRequest, LoginInfo, NormalizedSkill, ProfileInfo, ResendCodeInfo, SignUpInfo, VerifyEmailInfo
 from skills import PATTERNS, SKILL_CATEGORIES
@@ -267,8 +267,6 @@ async def login(login_info: LoginInfo):
 
     result = response.get("AuthenticationResult")
 
-
-
     if result is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Sign in could not be completed")
 
@@ -278,8 +276,17 @@ async def login(login_info: LoginInfo):
 
 @app.post("/upload_cv")
 async def upload_cv(file: UploadFile = File(...)):
-    if file.content_type not in {"application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"}:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid file type")
+    is_docx = (
+        file.content_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document" 
+        or (file.filename and file.filename.lower().endswith(".docx"))
+    )
+    is_pdf = (
+        file.content_type == "application/pdf" 
+        or (file.filename and file.filename.lower().endswith(".pdf"))
+    )
+
+    if not is_pdf and not is_docx:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid file type. Only PDF and DOCX files are supported.")
     
     path = Path(tempfile.gettempdir())
     path.mkdir(exist_ok = True)
@@ -304,22 +311,23 @@ async def upload_cv(file: UploadFile = File(...)):
         await file.close()
     
     s3_client = boto3.client('s3')
-    if (file.content_type == "application/pdf"):
-        try:
-            await run_in_threadpool(s3_client.upload_file, str(cv_dest), bucket, f"uploads/{safe_name}")
-        except ClientError as e:
-            print(f"S3 Upload failed: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
-                detail="Failed to upload document to secure storage."
-            )
-        finally:
-            if cv_dest.exists():
-                os.remove(cv_dest)
-    else:
-        return {"error": "We only accept PDF at the moment. Please check back later."}
+    try:
+        await run_in_threadpool(s3_client.upload_file, str(cv_dest), bucket, f"uploads/{safe_name}")
+        
+        if is_pdf:
+            lines = await run_in_threadpool(extract_cv_text, bucket, f"uploads/{safe_name}")
+        else:
+            lines = await run_in_threadpool(extract_docx_text, str(cv_dest))
+    except ClientError as e:
+        print(f"S3 Upload failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail="Failed to upload document to secure storage."
+        )
+    finally:
+        if cv_dest.exists():
+            os.remove(cv_dest)
 
-    lines = await run_in_threadpool(extract_cv_text, "calibrate-teamthrow", f"uploads/{safe_name}")
     candidates = extract_skill_candidates(lines)
     skills = normalize(candidates = candidates)
     skills_set = set(skill.skill for skill in skills)
@@ -329,7 +337,6 @@ async def upload_cv(file: UploadFile = File(...)):
         if pattern.search(joined_lines) and term not in skills_set:
             skills.append(NormalizedSkill(skill=term, esco_category=SKILL_CATEGORIES[term]))
 
-    
     return {"filename": safe_name, "skills": skills}
 
 @app.post("/compute_gaps")
@@ -448,8 +455,6 @@ async def get_postings(
 
 @app.post("/recommendations")
 async def recommend_with_agent(report: GapResult, language: Literal["tr", "en"] = "en"):
-    # we use run_in_threadpool because bedrock takes couple of seconds to output
-    # and we do not want our app to freeze while waiting for it
     try:
         result = await asyncio.wait_for(run_in_threadpool(get_recommendations, report, language), timeout=agent_timeout_seconds)
     except asyncio.TimeoutError:
@@ -458,4 +463,3 @@ async def recommend_with_agent(report: GapResult, language: Literal["tr", "en"] 
     return {"recommendations": result}
 
 handler = Mangum(app, lifespan="off")
-    

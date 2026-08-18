@@ -9,7 +9,7 @@ import AppShell from "@/components/AppShell";
 import TrendingSkillsChart from "@/components/TrendingSkillsChart";
 import { ChartSkeleton, DashboardSkeleton } from "@/components/Skeleton";
 import { useAuth } from "@/contexts/AuthContext";
-import { API_URL } from "@/lib/api";
+import { getTrends } from "@/lib/api";
 import { session } from "@/lib/session";
 import { useRestoreAnalysis } from "@/lib/useRestoreAnalysis";
 import type { Gap, GapResult, Trend, TrendsPayload } from "@/lib/types";
@@ -121,8 +121,7 @@ export default function DashboardPage() {
   }, [restored]);
 
   useEffect(() => {
-    fetch(`${API_URL}/trends`)
-      .then((res) => res.json())
+    getTrends()
       .then((data) => setTrends(data))
       .catch(() => setTrendsFailed(true));
   }, []);
@@ -227,11 +226,6 @@ export default function DashboardPage() {
     );
     setSelectedSkill(name);
   }
-
-  /* ---------------- SELECTED ROLE MATCH ---------------- */
-
-  const selectedRoleData =
-    roles.length === 1 ? gaps.matched_data[roles[0]] : null;
 
   /* ---------------- UI ---------------- */
 

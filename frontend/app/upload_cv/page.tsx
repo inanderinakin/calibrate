@@ -14,6 +14,8 @@ import type { NormalizedSkill } from "@/lib/types";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
 
+const MAX_FILE_SIZE_MB = 25;
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 const HOLD_TO_REMOVE_MS = 2000;
 
 export default function UploadCvPage() {
@@ -47,7 +49,13 @@ export default function UploadCvPage() {
   function handleFile(f: File | null) {
     if (!f) return;
 
-    // Validate DOCX format using MIME type and file extension fallback
+    // Validate file size before proceeding (Fixes #65)
+    if (f.size > MAX_FILE_SIZE_BYTES) {
+      setError(t.uploadCv.fileSizeError ?? `File size exceeds ${MAX_FILE_SIZE_MB}MB limit.`);
+      return;
+    }
+
+    // Validate DOCX format using MIME type and file extension fallback (Fixes #59)
     const isValidDocx =
       f.type ===
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
@@ -59,7 +67,7 @@ export default function UploadCvPage() {
       f.name.toLowerCase().endsWith(".pdf");
 
     if (!isValidDocx && !isValidPdf) {
-      setError("Please upload a valid PDF or DOCX file.");
+      setError(t.uploadCv.invalidFileType ?? "Please upload a valid PDF or DOCX file.");
       return;
     }
 
@@ -98,7 +106,6 @@ export default function UploadCvPage() {
 
   function handleInputChange(e: ChangeEvent<HTMLInputElement>) {
     handleFile(e.target.files?.[0] ?? null);
-    // Reset input value to allow selecting the same file consecutively
     e.target.value = "";
   }
 
@@ -211,7 +218,7 @@ export default function UploadCvPage() {
             onClick={() => fileInputRef.current?.click()}
             className="glass-card w-full border-2 border-dashed border-(--pink) rounded-[20px] py-16 flex flex-col items-center gap-4 cursor-pointer"
           >
-            <Icon icon="mdi:file-pdf-box" className="w-20 h-20 text-(--accent-bg)" />
+            <Icon icon="mdi:file-document-outline" className="w-20 h-20 text-(--accent-bg)" />
             <p className="font-black text-xl text-(--accent-bg)">
               {t.uploadCv.dragDrop}
             </p>
@@ -241,7 +248,14 @@ export default function UploadCvPage() {
             className="glass-card w-full border-2 border-(--pink) rounded-[20px] p-4 flex flex-col gap-4 text-left"
           >
             <div className="flex items-center gap-4">
-              <Icon icon="mdi:file-pdf-box" className="w-12 h-12 text-(--accent-bg) shrink-0" />
+              <Icon
+                icon={
+                  file.name.toLowerCase().endsWith(".docx")
+                    ? "mdi:file-word-box"
+                    : "mdi:file-pdf-box"
+                }
+                className="w-12 h-12 text-(--accent-bg) shrink-0"
+              />
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-(--text-primary) truncate">{file.name}</p>
                 <p className="text-sm text-(--text-secondary)">
