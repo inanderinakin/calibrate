@@ -320,3 +320,13 @@ export async function getPostings(filters: PostingFilters = {}): Promise<Posting
 
   return await res.json();
 }
+
+export async function getSkillCatalog(): Promise<NormalizedSkill[]> {
+  const res = await fetch(`${API_URL}/skills`);
+
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not load the skill list"));
+  }
+
+  return (await res.json()).skills;
+}
