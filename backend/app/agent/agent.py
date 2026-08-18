@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 from strands import Agent, tool
 from dotenv import load_dotenv
+from agent.style import PLAIN_STYLE
 from models import GapResult, NormalizedSkill, Report
 from handleposting import load_demand_profile
 
@@ -55,7 +56,8 @@ def get_recommendations(gaps: GapResult, language: str = "en"):
                                 "Never show raw numeric scores to the user."
                                 "Rank strictly by market demand percentage, highest first."
                                 f"Write the summary and every recommendation's reason in {language_name}. "
-                                "Keep skill names, resource titles, and resource URLs exactly as returned by the tools — do not translate those."
+                                "Keep skill names, resource titles, and resource URLs exactly as returned by the tools, do not translate those."
+                                + " " + PLAIN_STYLE
                                 ))
 
     result = agent(gaps.model_dump_json() + "Here are the student's skill gaps. For each one, produce a recommendation.")

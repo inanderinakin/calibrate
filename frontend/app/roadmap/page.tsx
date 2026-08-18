@@ -6,12 +6,12 @@ import { Icon } from "@iconify/react";
 import { AnimatePresence, motion } from "framer-motion";
 import AppShell from "@/components/AppShell";
 import { session } from "@/lib/session";
-import type { Report } from "@/lib/types";
+import type { ProjectStep, Recommendation, Report } from "@/lib/types";
 import { getDisplaySkillName } from "@/lib/escoMapper";
 import { getCategoryLabel } from "@/lib/skillCategories";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
-import { getCompletedSkills, setCompletedSkills } from "@/lib/api";
+import { getCompletedProjects, getCompletedSkills, getCvBullet, setCompletedProjects, setCompletedSkills } from "@/lib/api";
 import { useRequireAuth } from "@/lib/useRequireAuth";
 import { useRestoreAnalysis } from "@/lib/useRestoreAnalysis";
 import { downloadRoadmapPdf } from "@/lib/roadmapPdf";
@@ -27,6 +27,21 @@ export default function RoadmapPage() {
   const [completed, setCompleted] = useState<Set<string>>(new Set());
   const [focus, setFocus] = useState<string[]>([]);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [doneProjects, setDoneProjects] = useState<Set<string>>(new Set());
+
+  function toggleProject(title: string) {
+    const previous = doneProjects;
+    const next = new Set(previous);
+
+    if (next.has(title)) {
+      next.delete(title);
+    } else {
+      next.add(title);
+    }
+
+    setDoneProjects(next);
+    setCompletedProjects([...next]).catch(() => setDoneProjects(previous));
+  }
 
   function toggleCompleted(skill: string) {
     const previous = completed;
@@ -175,6 +190,21 @@ export default function RoadmapPage() {
   const filtering = focus.length > 0 && picked.length > 0;
   const shown = filtering ? picked : report.recommendations;
 
+  // A project step belongs after the skills it makes you combine, so the roadmap
+  // reads learn, learn, build. Filtering down to a few skills breaks that pairing,
+  // so the projects sit out until the full roadmap is back.
+  const steps: ({ kind: "skill"; skill: Recommendation } | { kind: "project"; project: ProjectStep })[] = [];
+
+  for (const skill of shown) {
+    steps.push({ kind: "skill", skill });
+
+    if (filtering) continue;
+
+    for (const project of report.projects ?? []) {
+      if (project.after_rank === skill.rank) steps.push({ kind: "project", project });
+    }
+  }
+
   // CV + roadmap exist → show roadmap.
   return (
     <AppShell backHref="/dashboard">
@@ -236,7 +266,22 @@ export default function RoadmapPage() {
             className="absolute top-0 bottom-0 left-5 w-0.5 -translate-x-1/2 bg-(--accent-2) md:left-1/2"
           />
 
-          {shown.map((skill, index) => {
+          {steps.map((step, index) => {
+            if (step.kind === "project") {
+              return (
+                <ProjectCard
+                  key={step.project.title}
+                  project={step.project}
+                  index={index}
+                  done={doneProjects.has(step.project.title)}
+                  onToggle={() => toggleProject(step.project.title)}
+                  t={t.roadmap}
+                  language={language}
+                />
+              );
+            }
+
+            const skill = step.skill;
             const collapsed =
               completed.has(skill.skill) && !expanded.has(skill.skill);
 
@@ -385,5 +430,173 @@ export default function RoadmapPage() {
         </div>
       </div>
     </AppShell>
+  );
+}
+
+type RoadmapText = ReturnType<typeof getTranslations>["roadmap"];
+
+function ProjectCard({
+  project,
+  index,
+  done,
+  onToggle,
+  t,
+  language,
+}: {
+  project: ProjectStep;
+  index: number;
+  done: boolean;
+  onToggle: () => void;
+  t: RoadmapText;
+  language: string;
+}) {
+  const [notes, setNotes] = useState("");
+  const [bullet, setBullet] = useState<string | null>(null);
+  const [writing, setWriting] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function writeBullet() {
+    setWriting(true);
+    setError(null);
+
+    try {
+      setBullet(await getCvBullet(project, notes, language));
+    }
+    catch {
+      setError(t.bulletError);
+    }
+    finally {
+      setWriting(false);
+    }
+  }
+
+  async function copyBullet() {
+    if (!bullet) return;
+
+    await navigator.clipboard.writeText(bullet);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration: 0.5 }}
+      className="relative"
+    >
+      <div className="absolute left-5 top-8 z-10 flex size-11 -translate-x-1/2 items-center justify-center rounded-full bg-(--accent-2) text-(--on-accent) md:top-1/2 md:left-1/2 md:-translate-y-1/2">
+        <Icon icon="mdi:hammer-wrench" className="size-6" />
+      </div>
+
+      <div className={index % 2 === 0 ? "ml-16 md:ml-0 md:w-1/2 md:pr-10" : "ml-16 md:ml-auto md:w-1/2 md:pl-10"}>
+        <div className="glass-card flex flex-col gap-4 rounded-[20px] border-2 border-(--accent-2) p-6 shadow-[4px_4px_4px_rgba(0,0,0,0.2)]">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-lg bg-(--accent-2) px-3 py-1 text-xs font-bold text-(--on-accent)">
+              {t.projectStep}
+            </span>
+            {project.skills.map((skill) => (
+              <span key={skill} className="rounded-lg bg-(--hover-bg) px-2.5 py-1 text-xs font-bold">
+                {getDisplaySkillName(skill)}
+              </span>
+            ))}
+            {done && (
+              <span className="flex items-center gap-1 rounded-lg bg-(--accent) px-2.5 py-1 text-xs font-bold text-(--on-accent)">
+                <Icon icon="mdi:check-circle" className="size-4" />
+                {t.projectDone}
+              </span>
+            )}
+          </div>
+
+          <h3 className="text-xl font-black text-(--text-primary)">{project.title}</h3>
+          <p className="text-(--text-secondary)">{project.brief}</p>
+
+          <div className="flex flex-col gap-3">
+            <ProjectRow icon="mdi:flag-checkered" label={t.projectGoal} value={project.completion_goal} strong />
+            <ProjectRow icon="mdi:lock-open-variant-outline" label={t.projectForces} value={project.forces} />
+            <ProjectRow icon="mdi:chart-bar" label={t.projectDemand} value={project.demand_note} />
+          </div>
+
+          <button
+            onClick={onToggle}
+            className={`flex w-fit items-center gap-2 rounded-xl px-5 py-2.5 font-bold transition ${
+              done ? "border border-(--accent)/20 text-(--text-primary)" : "bg-(--accent-bg) text-(--accent-text)"
+            }`}
+          >
+            <Icon icon={done ? "mdi:undo" : "mdi:check"} className="size-5" />
+            {done ? t.projectUndo : t.projectMarkDone}
+          </button>
+
+          <AnimatePresence initial={false}>
+            {done && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="border-t border-(--border-color)/20 pt-4">
+                  <p className="font-bold text-(--text-primary)">{t.bulletTitle}</p>
+                  <p className="mt-0.5 text-sm text-(--text-muted)">{t.bulletHint}</p>
+
+                  <label className="mt-3 block text-sm font-medium" htmlFor={`notes-${project.title}`}>
+                    {t.bulletNotesLabel}
+                  </label>
+                  <textarea
+                    id={`notes-${project.title}`}
+                    value={notes}
+                    onChange={(event) => setNotes(event.target.value)}
+                    placeholder={t.bulletNotesPlaceholder}
+                    rows={2}
+                    className="mt-1.5 w-full rounded-xl border border-(--border-color)/30 bg-(--input-bg) px-4 py-2.5 text-sm outline-none focus:border-(--accent-2)"
+                  />
+
+                  <button
+                    onClick={writeBullet}
+                    disabled={writing}
+                    className="mt-3 flex items-center gap-2 rounded-xl bg-(--accent) px-5 py-2.5 font-bold text-(--on-accent) disabled:opacity-50"
+                  >
+                    <Icon icon={writing ? "cuida:loading-left-outline" : "mdi:format-quote-close"} className={`size-5 ${writing ? "animate-spin-ccw" : ""}`} />
+                    {writing ? t.bulletWriting : bullet ? t.bulletRewrite : t.bulletWrite}
+                  </button>
+
+                  {error && <p className="mt-3 text-sm font-semibold">{error}</p>}
+
+                  {bullet && (
+                    <div className="mt-4 rounded-xl border border-(--accent-2)/40 p-4">
+                      <p className="text-(--text-primary)">{bullet}</p>
+                      <div className="mt-3 flex flex-wrap items-center gap-3">
+                        <button
+                          onClick={copyBullet}
+                          className="flex items-center gap-1.5 rounded-lg border border-(--accent)/20 px-4 py-2 text-sm font-bold"
+                        >
+                          <Icon icon={copied ? "mdi:check" : "mdi:content-copy"} className="size-4" />
+                          {copied ? t.bulletCopied : t.bulletCopy}
+                        </button>
+                        <p className="text-xs text-(--text-muted)">{t.bulletOwnIt}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+function ProjectRow({ icon, label, value, strong }: { icon: string; label: string; value: string; strong?: boolean }) {
+  return (
+    <div className="flex gap-3">
+      <Icon icon={icon} className="mt-0.5 size-5 shrink-0 text-(--accent-2)" />
+      <div className="min-w-0">
+        <p className="text-xs font-bold uppercase tracking-wide text-(--text-muted)">{label}</p>
+        <p className={`mt-0.5 ${strong ? "font-semibold text-(--text-primary)" : "text-(--text-secondary)"}`}>{value}</p>
+      </div>
+    </div>
   );
 }

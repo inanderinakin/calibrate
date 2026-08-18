@@ -61,3 +61,26 @@ def write_analysis(userId: str, payload: dict):
         ExpressionAttributeNames = {'#analysis': analysis},
         ExpressionAttributeValues = {':payload': json.dumps(payload)}
     )
+
+
+completed_projects = "completedProjects"
+
+def read_completed_projects(userId: str):
+    response = table.get_item(
+            Key = {
+            'userId': userId
+        }
+    )
+    item = response.get('Item', {})
+    return item.get(completed_projects, [])
+
+
+def write_completed_projects(userId: str, skills: list[str]):
+    table.update_item(
+        Key = {
+            'userId': userId
+        },
+        UpdateExpression = "SET #completed = :skills",
+        ExpressionAttributeNames = {'#completed': completed_projects},
+        ExpressionAttributeValues = {':skills': skills}
+    )

@@ -1,4 +1,5 @@
 import json
+from collections import Counter, defaultdict
 from pathlib import Path
 from dotenv import load_dotenv
 from fastapi.concurrency import run_in_threadpool
@@ -54,3 +55,33 @@ def load_postings():
 
 if __name__ == "__main__":
     load_trends()
+
+
+def build_skill_facts(postings: dict) -> dict:
+    """What the live board says about each skill, so a project brief can be anchored
+    to real demand instead of the agent's imagination."""
+    entries = postings["postings"]
+    total = len(entries)
+
+    counts = Counter()
+    roles = defaultdict(Counter)
+    pairs = defaultdict(Counter)
+
+    for posting in entries:
+        for skill in posting["skills"]:
+            counts[skill] += 1
+            roles[skill][posting["role"]] += 1
+
+            for other in posting["skills"]:
+                if other != skill:
+                    pairs[skill][other] += 1
+
+    return {
+        skill: {
+            "postings": count,
+            "share": round(100 * count / total, 1) if total else 0.0,
+            "top_roles": [role for role, _ in roles[skill].most_common(3)],
+            "paired_with": [other for other, _ in pairs[skill].most_common(5)],
+        }
+        for skill, count in counts.items()
+    }

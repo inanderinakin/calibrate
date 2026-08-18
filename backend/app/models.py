@@ -76,6 +76,7 @@ class Report(BaseModel):
     target_roles: list[str]
     summary: str
     recommendations: list[Recommendation]
+    projects: list["ProjectStep"] = []
 
 class DemandedSkill(BaseModel):
     skill: str
@@ -111,3 +112,36 @@ class SkillVerdict(BaseModel):
 
 class SkillVerdicts(BaseModel):
     verdicts: list[SkillVerdict]
+
+class ProjectStep(BaseModel):
+    # The skills this step makes you put together. A project that consolidates two
+    # skills is worth more than two that each rehearse one.
+    skills: list[str]
+    # It slots into the roadmap after the recommendation with this rank.
+    after_rank: int
+    title: str
+    # What to build, in a couple of sentences.
+    brief: str
+    # The line the student has to be able to say is true before they call it done.
+    # It doubles as the "as measured by" clause of the CV bullet later.
+    completion_goal: str
+    # Why this particular build cannot be finished without the skill. A project that
+    # merely mentions a skill proves nothing.
+    forces: str
+    # Grounding: what the live board says about the skill.
+    demand_note: str
+
+class ProjectSteps(BaseModel):
+    steps: list[ProjectStep]
+
+class CvBullet(BaseModel):
+    bullet: str
+
+class BulletRequest(BaseModel):
+    step: ProjectStep
+    # Anything the student wants reflected: numbers they hit, what they actually used.
+    notes: str = ""
+    language: Literal["tr", "en"] = "en"
+
+class CompletedProjects(BaseModel):
+    skills: list[str]
