@@ -27,6 +27,7 @@ export default function Sidebar() {
 
   const NAV_ITEMS = [
     { label: t.sidebar.dashboard, href: "/dashboard", icon: "solar:widget-2-linear" },
+    { label: t.sidebar.jobPostings, href: "/postings", icon: "solar:case-minimalistic-linear" },
     { label: t.sidebar.roadMap, href: "/roadmap", icon: "solar:routing-2-linear" },
     { label: t.sidebar.settings, href: "/settings", icon: "solar:settings-linear" },
   ];
@@ -40,7 +41,8 @@ export default function Sidebar() {
       className="
         sidebar-texture
         flex flex-col justify-between
-        h-screen sticky top-0
+        fixed inset-y-0 left-0 z-30 overflow-y-auto
+        pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)]
         w-16 md:w-64
         text-[var(--creamy)]
         transition-[width] duration-200

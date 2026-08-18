@@ -105,6 +105,7 @@ export default function AnalyseCvPage() {
           target_roles: targetRoles ?? [],
           gaps,
           report,
+          cv_filename: session.getCvFilename(),
         }).catch(() => {});
       } catch (e) {
         setError(

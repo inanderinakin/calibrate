@@ -1,7 +1,7 @@
 import json
 import jsonlines as jl
 from pathlib import Path
-from scraper.roles import map_to_role, DEFAULT_ROLE, GENERIC_ROLE, ROLE_PATTERNS
+from scraper.roles import resolve_role, DEFAULT_ROLE
 from models import DemandedSkill
 from skills import PATTERNS, SKILL_CATEGORIES
 from collections import Counter, defaultdict
@@ -10,7 +10,6 @@ demand_profile_path = Path(__file__).parent.parent / "app" / "demand_profile.jso
 trends_json_path = Path(__file__).parent.parent / "app" / "trends.json"
 postings_path = Path(__file__).parent.parent / "scraper" / "postings.jsonl"
 unclassified_role = DEFAULT_ROLE
-known_roles = set(ROLE_PATTERNS) | {GENERIC_ROLE, DEFAULT_ROLE}
 noise_floor = 0.05
 min_skills_per_role = 5
 
@@ -41,11 +40,6 @@ def otsu_cut(shares):
 
     return cut
 
-def resolve_role(obj):
-    stored = obj.get("role")
-    if stored in known_roles:
-        return stored
-    return map_to_role(obj["title"], obj.get("description_text"))
 
 def build_demand_profile():
     trends = new_trends()
@@ -87,7 +81,7 @@ def count_role_terms():
 
     with jl.open(postings_path) as reader:
         for obj in reader:
-            role = resolve_role(obj)
+            role = resolve_role(obj["title"], obj.get("description_text"), obj.get("role"))
             if role == unclassified_role:
                 continue
 

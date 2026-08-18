@@ -44,6 +44,14 @@ def read_analysis(userId: str):
     return json.loads(saved) if saved else None
 
 
+def delete_user_data(userId: str):
+    table.delete_item(
+        Key = {
+            'userId': userId
+        }
+    )
+
+
 def write_analysis(userId: str, payload: dict):
     table.update_item(
         Key = {

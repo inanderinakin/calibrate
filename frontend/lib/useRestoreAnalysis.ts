@@ -25,6 +25,7 @@ export function useRestoreAnalysis() {
 
         if (saved) {
           if (saved.cv_skills?.length) session.setCvSkills(saved.cv_skills);
+          if (saved.cv_filename) session.setCvFilename(saved.cv_filename);
           if (saved.target_roles?.length) session.setTargetRoles(saved.target_roles);
           if (saved.gaps) session.setGaps(saved.gaps);
           if (saved.report) session.setReport(saved.report);

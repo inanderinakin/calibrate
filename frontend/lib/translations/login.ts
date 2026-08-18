@@ -4,7 +4,11 @@ export const login = {
     email: "Email",
     password: "Password",
     submit: "Log in",
+    signingIn: "Signing you in…",
     orContinueWith: "or continue with",
+    noAccount: "Don't have an account?",
+    signUpCta: "Click here to sign up",
+    timeoutError: "We could not reach the server. Check your connection and try again.",
     genericError: "We could not sign you in. Please try again.",
   },
   tr: {
@@ -12,7 +16,11 @@ export const login = {
     email: "E-posta",
     password: "Şifre",
     submit: "Giriş Yap",
+    signingIn: "Giriş yapılıyor…",
     orContinueWith: "veya şununla devam et",
+    noAccount: "Hesabınız yok mu?",
+    signUpCta: "Kaydolmak için tıklayın",
+    timeoutError: "Sunucuya ulaşamadık. Bağlantınızı kontrol edip tekrar deneyin.",
     genericError: "Giriş yapılamadı. Lütfen tekrar deneyin.",
   },
 };

@@ -43,6 +43,14 @@ Resources:
         - Statement:
             - Effect: Allow
               Action:
+                - "cognito-idp:AdminUpdateUserAttributes"
+                - "cognito-idp:AdminDeleteUser"
+              Resource:
+                - !GetAtt UserPool.Arn
+
+        - Statement:
+            - Effect: Allow
+              Action:
                 - "bedrock:InvokeModel"
                 - "bedrock:InvokeModelWithResponseStream"
               Resource:

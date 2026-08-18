@@ -6,11 +6,13 @@ import { landing } from "./landing";
 import { login } from "./login";
 import { signup } from "./signup";
 import { verifyEmail } from "./verifyEmail";
+import { accountCreated } from "./accountCreated";
 import { uploadCv } from "./uploadCv";
 import { selectRole } from "./selectRole";
 import { analyseCv } from "./analyseCv";
 import { dashboard } from "./dashboard";
 import { roadmap } from "./roadmap";
+import { postings } from "./postings";
 import { profile } from "./profile";
 import { settings } from "./settings";
 import { trendChart } from "./trendChart";
@@ -27,11 +29,13 @@ function pick(language: Language) {
     login: login[language],
     signup: signup[language],
     verifyEmail: verifyEmail[language],
+    accountCreated: accountCreated[language],
     uploadCv: uploadCv[language],
     selectRole: selectRole[language],
     analyseCv: analyseCv[language],
     dashboard: dashboard[language],
     roadmap: roadmap[language],
+    postings: postings[language],
     profile: profile[language],
     settings: settings[language],
     trendChart: trendChart[language],
