@@ -124,9 +124,22 @@ jobs:
         working-directory: backend
         env:
           PYTHONPATH: app:.
+      # Boards rate limit hard, so this is paced at one request per host every
+      # 2s and works through a slice of the backlog each night rather than the
+      # whole corpus at once. Postings it has not reached yet stay off the page.
+      - name: Verify posting links and build the job board
+        id: postings
+        if: steps.generate.outcome == 'success'
+        run: |
+          aws s3 cp s3://calibrate-teamthrow/pipeline-data/link_status.json app/link_status.json || true
+          python pipeline/check_links.py
+          python pipeline/build_postings.py
+        working-directory: backend
+        env:
+          PYTHONPATH: app:.
       - name: Test
         id: test
-        if: steps.generate.outcome == 'success'
+        if: steps.postings.outcome == 'success'
         run: |
           pytest
         working-directory: backend
@@ -136,6 +149,8 @@ jobs:
         run: |
           aws s3 cp app/trends.json s3://calibrate-teamthrow/pipeline-data/trends.json
           aws s3 cp app/demand_profile.json s3://calibrate-teamthrow/pipeline-data/demand_profile.json
+          aws s3 cp app/active_postings.json s3://calibrate-teamthrow/pipeline-data/active_postings.json
+          aws s3 cp app/link_status.json s3://calibrate-teamthrow/pipeline-data/link_status.json
         working-directory: backend
       - name: Test the live api
         if: steps.upload.outcome == 'success'

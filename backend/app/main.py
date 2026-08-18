@@ -21,12 +21,13 @@ from handlecv import compute_gaps, extract_skill_candidates, extract_cv_text
 from normalize import normalize
 from models import Analysis, CompletedSkills, GapResult, GapRequest, LoginInfo, NormalizedSkill, ProfileInfo, ResendCodeInfo, SignUpInfo, VerifyEmailInfo
 from skills import PATTERNS, SKILL_CATEGORIES
-from handleposting import load_demand_profile, load_trends
+from handleposting import load_demand_profile, load_postings, load_trends
 from storage import delete_user_data, read_analysis, read_completed_skills, write_analysis, write_completed_skills
 from auth import verify_token
 
 profile = load_demand_profile()
 trends = load_trends()
+postings = load_postings()
 agent_timeout_seconds = 240
 app = FastAPI()
 security = HTTPBearer()
@@ -375,6 +376,75 @@ async def get_demand_profile(roles: list[str] = Query(...)):
 @app.get("/trends")
 async def get_trends():
     return trends
+
+@app.get("/postings")
+async def get_postings(
+    role: str | None = None,
+    city: str | None = None,
+    work_model: str | None = None,
+    source: str | None = None,
+    skill: str | None = None,
+    my_skills: str | None = None,
+    min_match: float = Query(0.6, ge=0.0, le=1.0),
+    search: str | None = None,
+    sort: Literal["newest", "closing"] = "newest",
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=50),
+):
+    matches = postings["postings"]
+
+    if role:
+        matches = [posting for posting in matches if posting["role"] == role]
+    if city:
+        matches = [posting for posting in matches if posting["city"] == city]
+    if work_model:
+        matches = [posting for posting in matches if posting["work_model"] == work_model]
+    if source:
+        matches = [posting for posting in matches if posting["source"] == source]
+    if skill:
+        matches = [posting for posting in matches if skill in posting["skills"]]
+
+    # "Jobs I could apply to now": keep postings where the CV already covers
+    # enough of what they ask for, and tell the page how much of it is covered
+    # so a row can show "you have 4 of 5" instead of an unexplained badge.
+    if my_skills:
+        owned = {name.strip() for name in my_skills.split(",") if name.strip()}
+        covered = []
+
+        for posting in matches:
+            wanted = posting["skills"]
+            if not wanted:
+                continue
+            have = [name for name in wanted if name in owned]
+            if len(have) / len(wanted) >= min_match:
+                covered.append({**posting, "matched_skills": len(have)})
+
+        matches = covered
+
+    if search:
+        needle = search.casefold()
+        matches = [
+            posting for posting in matches
+            if needle in posting["title"].casefold() or needle in posting["company"].casefold()
+        ]
+
+    if sort == "closing":
+        # Postings with no closing date go last — there is nothing to count down to.
+        matches = sorted(matches, key=lambda posting: (posting["days_open"] is None, posting["days_open"]))
+
+    start = (page - 1) * page_size
+
+    return {
+        "total": len(matches),
+        "page": page,
+        "page_size": page_size,
+        "generated_at": postings["generated_at"],
+        "roles": postings["roles"],
+        "cities": postings["cities"],
+        "sources": postings["sources"],
+        "skills": postings["skills"],
+        "postings": matches[start:start + page_size],
+    }
 
 @app.post("/recommendations")
 async def recommend_with_agent(report: GapResult, language: Literal["tr", "en"] = "en"):

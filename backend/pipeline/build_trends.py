@@ -5,7 +5,7 @@ import math
 from pathlib import Path
 import jsonlines as jl
 from skills import PATTERNS
-from scraper.roles import map_to_role, DEFAULT_ROLE, GENERIC_ROLE, ROLE_PATTERNS
+from scraper.roles import resolve_role, DEFAULT_ROLE
 
 trends_path = Path(__file__).parent.parent / "app" / "trends.json"
 postings_path = Path(__file__).parent.parent / "scraper" / "postings.jsonl"
@@ -20,7 +20,6 @@ min_term_occurrences = 10
 window_days = 28
 min_window_postings = 120
 min_role_postings = 50
-known_roles = set(ROLE_PATTERNS) | {GENERIC_ROLE, DEFAULT_ROLE}
 
 def posted_date(obj):
     value = str(obj["date_posted"])
@@ -142,11 +141,6 @@ def build_series(sources):
     return weeks, series
 
 
-def resolve_role(obj):
-    stored = obj.get("role")
-    if stored in known_roles:
-        return stored
-    return map_to_role(obj["title"], obj.get("description_text"))
 
 
 def build_role_series():
@@ -159,7 +153,7 @@ def build_role_series():
         for obj in reader:
             day = posted_day(obj)
 
-            role = resolve_role(obj)
+            role = resolve_role(obj["title"], obj.get("description_text"), obj.get("role"))
             if role == DEFAULT_ROLE:
                 continue
 

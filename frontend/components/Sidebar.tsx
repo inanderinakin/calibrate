@@ -27,6 +27,7 @@ export default function Sidebar() {
 
   const NAV_ITEMS = [
     { label: t.sidebar.dashboard, href: "/dashboard", icon: "solar:widget-2-linear" },
+    { label: t.sidebar.jobPostings, href: "/postings", icon: "solar:case-minimalistic-linear" },
     { label: t.sidebar.roadMap, href: "/roadmap", icon: "solar:routing-2-linear" },
     { label: t.sidebar.settings, href: "/settings", icon: "solar:settings-linear" },
   ];

@@ -83,3 +83,19 @@ class DemandedSkill(BaseModel):
 class GapRequest(BaseModel):
     cv_skills: list[NormalizedSkill]
     target_roles: list[str]
+
+class Posting(BaseModel):
+    id: str
+    title: str
+    company: str
+    city: str | None = None
+    role: str
+    source: str
+    url: str
+    work_model: str | None = None
+    work_type: str | None = None
+    position_level: str | None = None
+    date_posted: str | None = None
+    closing_date: str | None = None
+    days_open: int | None = None
+    skills: list[str] = []
