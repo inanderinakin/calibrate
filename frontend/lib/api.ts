@@ -1,7 +1,7 @@
 import { tokens } from "@/lib/tokens";
 import { refreshIdToken } from "@/lib/hostedUi";
 import { clearStoredUser } from "@/contexts/AuthContext";
-import type { GapResult, NormalizedSkill, PostingsPayload, Report } from "@/lib/types";
+import type { GapResult, NormalizedSkill, PostingsPayload, ProjectStep, Report } from "@/lib/types";
 import { session } from "@/lib/session";
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -21,6 +21,8 @@ export async function errorMessage(
 
 const UPLOAD_TIMEOUT_MS = 120_000;
 const AUTH_TIMEOUT_MS = 30_000;
+// The brief agent calls a tool per skill before writing, so this is slower than the rest.
+const BRIEFS_TIMEOUT_MS = 200_000;
 
 export function fetchWithTimeout(path: string, init: RequestInit, ms: number) {
   return fetch(`${API_URL}${path}`, { ...init, signal: AbortSignal.timeout(ms) });
@@ -329,4 +331,41 @@ export async function getSkillCatalog(): Promise<NormalizedSkill[]> {
   }
 
   return (await res.json()).skills;
+}
+
+export async function getCvBullet(step: ProjectStep, notes: string, language: string): Promise<string> {
+  const res = await fetchWithTimeout("/cv_bullet", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ step, notes, language }),
+  }, BRIEFS_TIMEOUT_MS);
+
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not write the CV line"));
+  }
+
+  return (await res.json()).bullet;
+}
+
+export async function getCompletedProjects(): Promise<string[]> {
+  const res = await authedFetch("/completed_projects");
+
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not load your project progress"));
+  }
+
+  return (await res.json()).completed_projects;
+}
+
+export async function setCompletedProjects(skills: string[]): Promise<string[]> {
+  const res = await authedFetch("/completed_projects", {
+    method: "POST",
+    body: JSON.stringify({ skills }),
+  });
+
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not save your project progress"));
+  }
+
+  return (await res.json()).completed_projects;
 }

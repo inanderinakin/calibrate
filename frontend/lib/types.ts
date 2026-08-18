@@ -54,6 +54,7 @@ export interface Report {
   target_roles: string[];
   summary: string;
   recommendations: Recommendation[];
+  projects?: ProjectStep[];
 }
 
 export interface TrendSource {
@@ -126,4 +127,14 @@ export interface PostingsPayload {
   sources: string[];
   skills: string[];
   postings: Posting[];
+}
+
+export interface ProjectStep {
+  skills: string[];
+  after_rank: number;
+  title: string;
+  brief: string;
+  completion_goal: string;
+  forces: string;
+  demand_note: string;
 }
