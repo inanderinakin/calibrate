@@ -127,14 +127,50 @@ async function authedFetch(path: string, init: RequestInit = {}) {
   return await fetchWithTimeout(path, { ...init, headers: authHeaders() }, AUTH_TIMEOUT_MS);
 }
 
-export async function updateProfile(firstName: string, lastName: string) {
+export async function updateProfile(
+  firstName: string,
+  lastName: string,
+  country: string,
+  studyField: string
+) {
   const res = await authedFetch("/profile", {
     method: "POST",
-    body: JSON.stringify({ first_name: firstName, last_name: lastName }),
+    body: JSON.stringify({
+      first_name: firstName,
+      last_name: lastName,
+      country,
+      study_field: studyField,
+    }),
   });
 
   if (!res.ok) {
-    throw new Error(await errorMessage(res, "Could not save your name"));
+    throw new Error(await errorMessage(res, "Could not save your profile"));
+  }
+
+  return await res.json();
+}
+
+export async function getProfile(): Promise<{ country: string; study_field: string }> {
+  const res = await authedFetch("/profile");
+
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not load your profile"));
+  }
+
+  return await res.json();
+}
+
+export async function changePassword(currentPassword: string, newPassword: string) {
+  const res = await authedFetch("/change_password", {
+    method: "POST",
+    body: JSON.stringify({
+      current_password: currentPassword,
+      new_password: newPassword,
+    }),
+  });
+
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not change your password"));
   }
 
   return await res.json();

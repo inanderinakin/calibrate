@@ -7,7 +7,7 @@ import { useCombobox } from "downshift";
 // without Turkish characters still finds their answer: "muhendislik" has to
 // match "Mühendisliği". Lowercasing with the Turkish locale first ("I" -> "ı",
 // "İ" -> "i"), then stripping the combining marks NFD splits off (ü -> u,
-// ğ -> g, ç -> c, ş -> s), then folding the dotless "ı" onto "i" — which does
+// ğ -> g, ç -> c, ş -> s), then folding the dotless "ı" onto "i", which does
 // not decompose, so it needs its own pass.
 function fold(text: string): string {
   return text
@@ -34,11 +34,20 @@ interface SuggestInputProps {
   required?: boolean;
   /** How many matches to show at once. */
   limit?: number;
+  /**
+   * "form" matches the heavier field styling the settings page uses for its
+   * other inputs. Anything else keeps the compact look the upload page wants.
+   */
+  variant?: "compact" | "form";
+  /** Shows the unsaved-change dot in the label. */
+  changed?: boolean;
+  /** Tooltip for that dot. */
+  changedTitle?: string;
 }
 
 /**
  * Text field with a filtered suggestion list. Suggestions are a shortcut, not
- * a constraint — anything typed is kept, so this suits fields where our list
+ * a constraint. Anything typed is kept, so this suits fields where our list
  * cannot be exhaustive (field of study, country...).
  */
 export default function SuggestInput({
@@ -50,6 +59,9 @@ export default function SuggestInput({
   aliases,
   required = false,
   limit = 8,
+  variant = "compact",
+  changed = false,
+  changedTitle,
 }: SuggestInputProps) {
   const items = useMemo(() => {
     const query = fold(value.trim());
@@ -84,20 +96,37 @@ export default function SuggestInput({
   });
 
   const showMenu = isOpen && items.length > 0;
+  const form = variant === "form";
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className={`flex flex-col ${form ? "gap-2" : "gap-1.5"}`}>
       <label
         {...getLabelProps()}
-        className="text-sm font-medium text-[var(--text-primary)]"
+        className={
+          form
+            ? "flex items-center gap-1.5 text-(--accent-bg) font-medium"
+            : "text-sm font-medium text-[var(--text-primary)]"
+        }
       >
+        {variant === "form" && (
+          <span
+            title={changed ? changedTitle : undefined}
+            aria-label={changed ? changedTitle : undefined}
+            role={changed ? "img" : undefined}
+            className={`h-2 w-2 shrink-0 rounded-full bg-(--warning) ${changed ? "" : "invisible"}`}
+          />
+        )}
         {label}
       </label>
 
       <div className="relative">
         <input
           {...getInputProps({ required, autoComplete: "off" })}
-          className="glass-input w-full rounded-lg border border-[var(--border-color)] px-4 py-2.5 text-[var(--text-primary)] outline-none focus:border-[var(--accent-2)]"
+          className={`glass-input w-full text-[var(--text-primary)] outline-none ${
+            form
+              ? "rounded-[20px] border-2 border-(--accent-bg) px-4 py-3"
+              : "rounded-lg border border-[var(--border-color)] px-4 py-2.5 focus:border-[var(--accent-2)]"
+          }`}
         />
 
         {/* getMenuProps holds a ref downshift needs on every render, so the

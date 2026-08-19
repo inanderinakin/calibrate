@@ -42,6 +42,10 @@
 
   --danger: #c0271c;
   --on-danger: #ffffff;
+
+  /* Marks a field edited but not saved. A bright yellow disappears on the light
+     card, so this one is deep enough to clear 3:1 there. */
+  --warning: #a16207;
 }
 
 .dark {
@@ -80,10 +84,13 @@
   /* Lighter than the light-mode red so it stays legible on the dark card */
   --danger: #e8564a;
   --on-danger: #1a0a08;
+
+  /* The light-mode amber goes muddy on the blue card, so this is a true yellow */
+  --warning: #eab308;
 }
 
 /*
-  BACKGROUND ASSETS — see /public/bg/README.md.
+  BACKGROUND ASSETS. See /public/bg/README.md.
   The 3 files (white-bg.png, blue-bg.png, burgundy-bg.png) are saved there.
   light-picture / dark-picture are not in the repo yet.
 */
