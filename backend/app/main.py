@@ -2,6 +2,7 @@ import asyncio
 import os
 import tempfile
 import jwt
+from datetime import datetime, timezone
 from typing_extensions import Annotated
 import uuid
 from pathlib import Path
@@ -297,6 +298,11 @@ async def upload_cv(file: UploadFile = File(...)):
     safe_name = f"{uuid.uuid4()}{ext}"
     cv_dest = path / safe_name
 
+    original_name = file.filename
+    # Taken from the same check that let the file through, not from content_type,
+    # which browsers sometimes report as application/octet-stream for a real PDF.
+    cv_type = "PDF" if is_pdf else "DOCX"
+
     bucket = "calibrate-teamthrow"
 
     try:
@@ -367,7 +373,14 @@ async def upload_cv(file: UploadFile = File(...)):
     except Exception as err:
         print(f"Skill verification failed: {type(err).__name__}: {err}")
 
-    return {"filename": safe_name, "skills": skills}
+    return {
+        "filename": safe_name,
+        "skills": skills,
+        "cv_filename": original_name,
+        "cv_size": size,
+        "cv_type": cv_type,
+        "cv_uploaded_at": datetime.now(timezone.utc).isoformat(),
+    }
 
 @app.post("/compute_gaps")
 async def get_gaps(gap_request: GapRequest):
@@ -472,7 +485,7 @@ async def get_postings(
         ]
 
     if sort == "closing":
-        # Postings with no closing date go last — there is nothing to count down to.
+        # Postings with no closing date go last, since there is nothing to count down to.
         matches = sorted(matches, key=lambda posting: (posting["days_open"] is None, posting["days_open"]))
 
     start = (page - 1) * page_size

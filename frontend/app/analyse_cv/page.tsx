@@ -106,6 +106,9 @@ export default function AnalyseCvPage() {
           gaps,
           report,
           cv_filename: session.getCvFilename(),
+          cv_size: session.getCvSize(),
+          cv_type: session.getCvType(),
+          cv_uploaded_at: session.getCvUploadedAt(),
         }).catch(() => {});
       } catch (e) {
         setError(

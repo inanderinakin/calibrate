@@ -233,6 +233,9 @@ export interface SavedAnalysis {
   gaps: GapResult | null;
   report: Report | null;
   cv_filename: string | null;
+  cv_size: number | null;
+  cv_type: string | null;
+  cv_uploaded_at: string | null;
 }
 
 export async function getAnalysis(): Promise<SavedAnalysis | null> {
@@ -261,7 +264,7 @@ export async function saveAnalysis(analysis: SavedAnalysis) {
 
 /**
  * Push whatever the session currently holds up to the account. Safe to call
- * after any step of the flow — signed-out users are a no-op.
+ * after any step of the flow. Signed-out users are a no-op.
  */
 export async function persistSession() {
   if (!tokens.getIdToken()) return;
@@ -272,6 +275,9 @@ export async function persistSession() {
     gaps: session.getGaps(),
     report: session.getReport(),
     cv_filename: session.getCvFilename(),
+    cv_size: session.getCvSize(),
+    cv_type: session.getCvType(),
+    cv_uploaded_at: session.getCvUploadedAt(),
   });
 }
 

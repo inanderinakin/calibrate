@@ -30,9 +30,13 @@ class Analysis(BaseModel):
     target_roles: list[str] = []
     gaps: "GapResult | None" = None
     report: "Report | None" = None
-    # The uploaded file itself is never kept — only its name, so the upload page
-    # can show which CV is on file after sessionStorage is gone.
+    # The uploaded file itself is never kept, only what it was, so the upload page
+    # can show which CV is on file after sessionStorage is gone. All optional: the
+    # accounts that uploaded before these existed only have the name.
     cv_filename: str | None = None
+    cv_size: int | None = None
+    cv_type: str | None = None
+    cv_uploaded_at: str | None = None
 
 class MatchData(BaseModel):
     matched_demanded: int

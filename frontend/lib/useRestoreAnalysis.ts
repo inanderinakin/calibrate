@@ -26,13 +26,16 @@ export function useRestoreAnalysis() {
         if (saved) {
           if (saved.cv_skills?.length) session.setCvSkills(saved.cv_skills);
           if (saved.cv_filename) session.setCvFilename(saved.cv_filename);
+          if (saved.cv_size) session.setCvSize(saved.cv_size);
+          if (saved.cv_type) session.setCvType(saved.cv_type);
+          if (saved.cv_uploaded_at) session.setCvUploadedAt(saved.cv_uploaded_at);
           if (saved.target_roles?.length) session.setTargetRoles(saved.target_roles);
           if (saved.gaps) session.setGaps(saved.gaps);
           if (saved.report) session.setReport(saved.report);
         }
       }
       catch {
-        // Nothing saved, or the account is unreachable — fall through to the
+        // Nothing saved, or the account is unreachable, so fall through to the
         // page's own empty state.
       }
 

@@ -21,6 +21,12 @@ const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 const HOLD_TO_REMOVE_MS = 2000;
 const USER_ADDED_CATEGORY = "added by you";
 
+function formatBytes(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 export default function UploadCvPage() {
   const router = useRouter();
   const { language } = useLanguage();
@@ -36,6 +42,9 @@ export default function UploadCvPage() {
   // a record of the CV we hold rather than a request for a new one.
   const [skills, setSkills] = useState<NormalizedSkill[]>([]);
   const [cvName, setCvName] = useState<string | null>(null);
+  const [cvSize, setCvSize] = useState<number | null>(null);
+  const [cvType, setCvType] = useState<string | null>(null);
+  const [cvUploadedAt, setCvUploadedAt] = useState<string | null>(null);
   const [removing, setRemoving] = useState(false);
   const [adding, setAdding] = useState(false);
   const [draftSkill, setDraftSkill] = useState("");
@@ -49,6 +58,9 @@ export default function UploadCvPage() {
 
     setSkills(session.getCvSkills() ?? []);
     setCvName(session.getCvFilename());
+    setCvSize(session.getCvSize());
+    setCvType(session.getCvType());
+    setCvUploadedAt(session.getCvUploadedAt());
   }, [restored]);
 
   useEffect(() => {
@@ -165,6 +177,9 @@ export default function UploadCvPage() {
 
     setSkills([]);
     setCvName(null);
+    setCvSize(null);
+    setCvType(null);
+    setCvUploadedAt(null);
     clearSelection();
     setRemoving(false);
   }
@@ -186,12 +201,18 @@ export default function UploadCvPage() {
       }
 
       session.setCvSkills(found);
-      session.setCvFilename(file.name);
+      session.setCvFilename(data.cv_filename ?? file.name);
+      if (data.cv_size) session.setCvSize(data.cv_size);
+      if (data.cv_type) session.setCvType(data.cv_type);
+      if (data.cv_uploaded_at) session.setCvUploadedAt(data.cv_uploaded_at);
       session.clearDerived();
       persistSession().catch(() => {});
 
       setSkills(found);
-      setCvName(file.name);
+      setCvName(data.cv_filename ?? file.name);
+      setCvSize(data.cv_size ?? null);
+      setCvType(data.cv_type ?? null);
+      setCvUploadedAt(data.cv_uploaded_at ?? null);
       setFile(null);
     }
     catch (e) {
@@ -201,6 +222,16 @@ export default function UploadCvPage() {
       setIsUploading(false);
     }
   }
+
+  // Accounts that uploaded before we kept this only have the name, so anything
+  // missing just drops out of the line.
+  const fileMeta = [
+    cvType,
+    cvSize ? formatBytes(cvSize) : null,
+    cvUploadedAt
+      ? t.uploadCv.uploadedOn(new Date(cvUploadedAt).toLocaleDateString(language))
+      : null,
+  ].filter(Boolean);
 
   return (
     <AppShell backHref="/">
@@ -233,7 +264,10 @@ export default function UploadCvPage() {
                 <p className="truncate text-xl font-bold text-(--text-primary)">
                   {cvName ?? t.uploadCv.onFileFallbackName}
                 </p>
-                <p className="text-(--text-secondary)">{t.uploadCv.skillsFound(skills.length)}</p>
+                {fileMeta.length > 0 && (
+                  <p className="mt-0.5 text-sm text-(--text-muted)">{fileMeta.join(" · ")}</p>
+                )}
+                <p className="mt-1 text-(--text-secondary)">{t.uploadCv.skillsFound(skills.length)}</p>
               </div>
 
               <button
