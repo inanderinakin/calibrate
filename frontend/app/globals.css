@@ -146,35 +146,42 @@ body {
 }
 
 /*
-  GLASSMORPHISM — semi-transparent white background, backdrop blur,
+  GLASSMORPHISM: semi-transparent white background, backdrop blur,
   subtle light border. Base `.glass` uses the exact requested fill;
   `.glass-card` and `.glass-input` raise opacity just enough for
   text-heavy surfaces to stay readable while keeping the same blur.
+
+  In the components layer so a border utility on the element still wins. These
+  set the `border` shorthand, which resets width and style as well as colour, and
+  from the top level that quietly killed every `border-2 border-(--pink)` the
+  pages ask for.
 */
-.glass {
-  background: rgba(255, 255, 255, 0.15);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
-  backdrop-filter: blur(16px) saturate(140%);
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-}
+@layer components {
+  .glass {
+    background: rgba(255, 255, 255, 0.15);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    backdrop-filter: blur(16px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  }
 
-.glass-card {
-  background: rgba(255, 255, 255, 0.5);
-  -webkit-backdrop-filter: blur(18px) saturate(150%);
-  backdrop-filter: blur(18px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.32);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-}
+  .glass-card {
+    background: rgba(255, 255, 255, 0.5);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+    backdrop-filter: blur(18px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.32);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  }
 
-.glass-input {
-  background: rgba(255, 255, 255, 0.85);
-  -webkit-backdrop-filter: blur(12px) saturate(140%);
-  backdrop-filter: blur(12px) saturate(140%);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
-  -webkit-text-fill-color: var(--text-primary);
-  transition: background-color 5000s ease-in-out 0s;
+  .glass-input {
+    background: rgba(255, 255, 255, 0.85);
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+    backdrop-filter: blur(12px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
+    -webkit-text-fill-color: var(--text-primary);
+    transition: background-color 5000s ease-in-out 0s;
+  }
 }
 
 .dark .glass-card {
@@ -210,7 +217,7 @@ input.glass-input:-webkit-autofill:active {
 }
 
 /*
-  SOFT COLOURED BOXES — solid fill for the login / signup / profile
+  SOFT COLOURED BOXES: solid fill for the login / signup / profile
   containers. Light mode uses a soft baby blue; dark mode uses a soft blue.
 */
 :root {
@@ -232,7 +239,7 @@ input.glass-input:-webkit-autofill:active {
 }
 
 /*
-  HOVER ANIMATION FOR ALL BUTTONS — lifts + brightens on hover and
+  HOVER ANIMATION FOR ALL BUTTONS: lifts + brightens on hover and
   presses on active, in both light and dark mode. framer-motion buttons
   keep their own inline whileHover transforms; plain buttons get this.
   `.btn-hover` applies the same treatment to links styled as buttons.

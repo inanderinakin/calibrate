@@ -28,6 +28,7 @@ export default function UploadCvPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [file, setFile] = useState<File | null>(null);
+  const [dragging, setDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -131,8 +132,21 @@ export default function UploadCvPage() {
     e.target.value = "";
   }
 
+  function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setDragging(true);
+  }
+
+  function handleDragLeave(e: React.DragEvent<HTMLDivElement>) {
+    // Crossing onto the icon or the label counts as leaving the zone, which
+    // strobes the border. Only let go once the pointer is really outside.
+    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+    setDragging(false);
+  }
+
   function handleDrop(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault();
+    setDragging(false);
     handleFile(e.dataTransfer.files?.[0] ?? null);
   }
 
@@ -237,11 +251,11 @@ export default function UploadCvPage() {
                 onBlur={hold.stopOnBlur}
                 disabled={removing}
                 aria-label={t.uploadCv.holdToRemove}
-                className="relative shrink-0 overflow-hidden rounded-[20px] border-2 border-(--accent-2) px-5 py-3 font-bold text-(--accent-2) disabled:opacity-40"
+                className="relative shrink-0 overflow-hidden rounded-[20px] border-2 border-(--text-primary) px-5 py-3 font-bold text-(--text-primary) disabled:opacity-40"
               >
                 <span
                   aria-hidden
-                  className="absolute inset-y-0 left-0 bg-(--accent-2)/20"
+                  className="absolute inset-y-0 left-0 bg-(--text-primary)/20"
                   style={{ width: `${hold.progress * 100}%` }}
                 />
                 <span className="relative flex items-center gap-2">
@@ -250,7 +264,7 @@ export default function UploadCvPage() {
                     ? t.uploadCv.removing
                     : hold.progress > 0
                       ? t.uploadCv.holdingToRemove
-                      : t.uploadCv.remove}
+                      : t.uploadCv.holdToRemove}
                 </span>
               </button>
             </div>
@@ -262,7 +276,7 @@ export default function UploadCvPage() {
               <ul className="mt-4 flex flex-wrap gap-2">
                 {skills.map((entry) => (
                   <li key={entry.skill} className="group relative">
-                    <span className="flex items-center rounded-lg border border-(--accent)/15 px-3 py-1.5 text-sm font-semibold text-(--text-primary)">
+                    <span className="flex items-center rounded-lg border border-(--border-color)/40 px-3 py-1.5 text-sm font-semibold text-(--text-primary)">
                       {getDisplaySkillName(entry.skill)}
                     </span>
                     <button
@@ -324,12 +338,20 @@ export default function UploadCvPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.15 }}
-            onDragOver={(e) => e.preventDefault()}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
-            className="glass-card w-full border-2 border-dashed border-(--pink) rounded-[20px] py-16 flex flex-col items-center gap-4 cursor-pointer"
+            className={`glass-card w-full border-2 rounded-[20px] py-16 flex flex-col items-center gap-4 cursor-pointer transition-colors ${
+              dragging
+                ? "border-solid border-(--accent-bg)"
+                : "border-dashed border-(--pink) hover:border-(--accent-bg)/60"
+            }`}
           >
-            <Icon icon="mdi:file-document-outline" className="w-20 h-20 text-(--accent-bg)" />
+            <Icon
+              icon="mdi:file-document-outline"
+              className={`w-20 h-20 text-(--accent-bg) transition-transform ${dragging ? "scale-110" : ""}`}
+            />
             <p className="font-black text-xl text-(--accent-bg)">
               {t.uploadCv.dragDrop}
             </p>
