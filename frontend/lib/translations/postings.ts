@@ -2,7 +2,7 @@ export const postings = {
   en: {
     title: "Job Postings",
     subtitle: (count: string) =>
-      `${count} openings we could reach today, collected from 4 Turkish job boards.`,
+      `${count} open postings in total`,
     searchPlaceholder: "Search title or company",
     allRoles: "All roles",
     allCities: "All cities",
@@ -62,7 +62,7 @@ export const postings = {
   tr: {
     title: "İş İlanları",
     subtitle: (count: string) =>
-      `Bugün ulaşabildiğimiz ${count} ilan, 4 Türk iş sitesinden toplandı.`,
+      `Açık olan toplam ${count} ilan.`,
     searchPlaceholder: "Pozisyon veya şirket ara",
     allRoles: "Tüm roller",
     allCities: "Tüm şehirler",
