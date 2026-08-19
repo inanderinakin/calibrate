@@ -21,7 +21,7 @@ export const trendChart = {
       `${skill} için ${weeks} haftalık trend. Her haftayı okumak için sol ve sağ ok tuşlarını kullanın.`,
     postingsShare: (skill: string, percent: number) => `${skill}: ilanların %${percent}'${turkishNumberSuffix(percent)}`,
     shareOfPostings: (skill: string, sources: string[]) =>
-      `${skill} geçen iş ilanlarının oranı, ${sources.join(" ve ")} ortalaması alınarak — böylece tek bir site hacmiyle sonucu domine etmiyor.`,
+      `${skill} geçen iş ilanlarının oranı, ${sources.join(" ve ")} ortalaması alınarak, böylece tek bir site hacmiyle sonucu domine etmiyor.`,
     roleShare: (skill: string, percent: number, role: string) =>
       `${role} ilanlarının %${percent}'${turkishNumberSuffix(percent)} ${skill} içeriyor`,
     roleCaption: (skill: string, role: string) =>

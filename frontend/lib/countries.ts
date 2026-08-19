@@ -32,7 +32,7 @@ const aliasesByLanguage: Partial<Record<Language, Record<string, string[]>>> = {
 /**
  * The other names each country answers to, keyed by the name we display.
  * The data lists them officially-first ("Türkiye", then "Turkey"), so we show
- * the official one and keep the rest searchable — otherwise someone typing
+ * the official one and keep the rest searchable, otherwise someone typing
  * "Turkey" or "UK" in English gets no suggestion at all.
  */
 export function countryAliases(language: Language): Record<string, string[]> {
@@ -52,7 +52,7 @@ export function countryAliases(language: Language): Record<string, string[]> {
 /**
  * What we store for a country: its ISO alpha-2 code when we recognise the
  * name, otherwise whatever was typed. Storing the code keeps the value stable
- * when the reading language changes — a profile saved as "Türkiye" would
+ * when the reading language changes. A profile saved as "Türkiye" would
  * otherwise still read "Türkiye" after switching the app to English.
  */
 export function toStoredCountry(input: string, language: Language): string {

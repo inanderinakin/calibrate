@@ -1,7 +1,7 @@
 export const selectRole = {
   en: {
     title: "Select Your Target Roles",
-    subtitle: "Pick every role you're aiming for — we'll build one roadmap covering all of them.",
+    subtitle: "Pick every role you're aiming for. We'll build one roadmap covering all of them.",
     continue: "Continue",
     continueWithRoles: (n: number) => `Continue with ${n} roles`,
     roles: {
@@ -20,7 +20,7 @@ export const selectRole = {
   },
   tr: {
     title: "Hedef Rollerinizi Seçin",
-    subtitle: "Hedeflediğiniz her rolü seçin — hepsini kapsayan tek bir yol haritası oluşturacağız.",
+    subtitle: "Hedeflediğiniz her rolü seçin. Hepsini kapsayan tek bir yol haritası oluşturacağız.",
     continue: "Devam Et",
     continueWithRoles: (n: number) => `${n} rol ile devam et`,
     roles: {

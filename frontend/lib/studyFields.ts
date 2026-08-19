@@ -1,6 +1,6 @@
 import type { Language } from "@/contexts/LanguageContext";
 
-// Suggestions for the "field of study" box, not a closed list — the field
+// Suggestions for the "field of study" box, not a closed list. The field
 // stays free text, so anything missing here can still be typed. The two
 // arrays are parallel: index n is the same programme in both languages, which
 // is what keeps them reviewable side by side when one gets edited.

@@ -682,7 +682,7 @@ export default function DashboardPage() {
                   </p>
 
                   <p className="text-base font-black text-[var(--text-primary)]">
-                    {selected ? t.dashboard.demandInYourRolesValue(selected.demand) : "—"}
+                    {selected ? t.dashboard.demandInYourRolesValue(selected.demand) : "-"}
                   </p>
                 </div>
               </div>
@@ -702,7 +702,7 @@ export default function DashboardPage() {
                   </p>
 
                   <p className="text-base font-black text-[var(--text-primary)]">
-                    {selected ? t.common.trend[selected.trend] : "—"}
+                    {selected ? t.common.trend[selected.trend] : "-"}
                   </p>
                 </div>
               </div>
@@ -722,7 +722,7 @@ export default function DashboardPage() {
                   </p>
 
                   <p className="text-base font-black text-[var(--text-primary)]">
-                    {selected ? getCategoryLabel(selected.category, language) : "—"}
+                    {selected ? getCategoryLabel(selected.category, language) : "-"}
                   </p>
                 </div>
               </div>
@@ -803,7 +803,7 @@ export default function DashboardPage() {
                     href={`mailto:${user?.email ?? ""}`}
                     className="truncate text-xs font-light text-[var(--on-accent)] underline"
                   >
-                    {user?.email ?? "—"}
+                    {user?.email ?? "-"}
                   </a>
                 </div>
               </div>

@@ -11,7 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations, type Translations } from "@/lib/translations";
 
-// Order matches t.landing.features in translations.ts — icons aren't
+// Order matches t.landing.features in translations.ts, icons aren't
 // translatable text, so they're kept out of the language-keyed dictionary.
 const FEATURE_ICONS = [
   "solar:graph-new-up-linear",

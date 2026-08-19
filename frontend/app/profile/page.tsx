@@ -70,7 +70,7 @@ export default function ProfilePage() {
                     href={`mailto:${user?.email ?? ""}`}
                     className="text-(--accent-bg) underline"
                   >
-                    {user?.email ?? "—"}
+                    {user?.email ?? "-"}
                   </a>
                 </div>
               </div>
@@ -80,7 +80,7 @@ export default function ProfilePage() {
                 <div>
                   <p className="font-bold text-(--accent-bg)">{t.profile.country}</p>
                   <p className="text-(--accent-bg)">
-                    {countryLabel(user?.country ?? "", language) || "—"}
+                    {countryLabel(user?.country ?? "", language) || "-"}
                   </p>
                 </div>
               </div>
@@ -91,7 +91,7 @@ export default function ProfilePage() {
                   <p className="font-bold text-(--accent-bg)">{t.profile.joined}</p>
                   {/* TODO: replace with real signup date once the backend exists */}
                   <p className="text-(--accent-bg)">
-                    {joinedDate ?? "—"}
+                    {joinedDate ?? "-"}
                   </p>
                 </div>
               </div>
@@ -101,7 +101,7 @@ export default function ProfilePage() {
                 <div>
                   <p className="font-bold text-(--accent-bg)">{t.profile.achievements}</p>
                   {/* TODO: replace with real progress once the backend exists */}
-                  <p className="text-(--accent-bg)">—</p>
+                  <p className="text-(--accent-bg)">-</p>
                   <p className="text-(--accent-bg) text-sm">In progress</p>
                 </div>
               </div>
