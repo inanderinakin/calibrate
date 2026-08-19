@@ -33,7 +33,8 @@
   --sidebar-texture: url("/bg/burgundy-bg.png");
   --landing-texture: url("/bg/light-picture.png");
 
-  --nav-active: var(--pink);
+  --nav-active: var(--burgundy);
+  --nav-active-bg: var(--creamy);
   --landing-accent: var(--burgundy);
 
   --chart-line: var(--burgundy);
@@ -66,8 +67,10 @@
   --sidebar-texture: none; /* dark sidebar is a flat #3C5E82 fill in the design, no texture */
   --landing-texture: url("/bg/dark-picture.png");
 
-  /* Sidebar hover/active color — light-blue in dark mode (was pink) */
-  --nav-active: var(--light-blue);
+  /* Selected nav item is a creamy pill in both modes. Light-blue text on the
+     blue sidebar only came to 2.33:1, dimmer than the items you hadn't picked */
+  --nav-active: var(--dark-blue);
+  --nav-active-bg: var(--creamy);
   --landing-accent: var(--light-blue);
 
   /* Own step, not a flip of the burgundy: clears 3:1 on the blue card surface */
