@@ -321,7 +321,7 @@ async def resend_code(info: ResendCodeInfo):
 @app.post("/verify_email")
 async def verify_email(verify_info: VerifyEmailInfo):
     try:
-        response = cognito_client.confirm_sign_up(
+        cognito_client.confirm_sign_up(
             ClientId= os.getenv("APP_CLIENT"),
             Username= verify_info.email,
             ConfirmationCode= verify_info.code
@@ -373,12 +373,12 @@ async def login(login_info: LoginInfo):
     if result is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Sign in could not be completed")
 
-    user_id = verify_token(result['IdToken'])
+    verify_token(result['IdToken'])
 
     return {"id_token": result["IdToken"], "refresh_token": result["RefreshToken"]}
 
 @app.post("/upload_cv")
-async def upload_cv(file: UploadFile = File(...)):
+async def upload_cv(user_id: Annotated[str, Depends(verify_token_dependency)], file: UploadFile = File(...)):
     is_docx = (
         file.content_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document" 
         or (file.filename and file.filename.lower().endswith(".docx"))
@@ -483,7 +483,7 @@ async def upload_cv(file: UploadFile = File(...)):
     }
 
 @app.post("/compute_gaps")
-async def get_gaps(gap_request: GapRequest):
+async def get_gaps(gap_request: GapRequest, user_id: Annotated[str, Depends(verify_token_dependency)]):
     target_roles = gap_request.target_roles
     skills = gap_request.cv_skills
 
@@ -628,7 +628,7 @@ async def set_completed_projects(completed: CompletedProjects, user_id: Annotate
     return {"completed_projects": completed.skills}
 
 @app.post("/cv_bullet")
-async def cv_bullet(request: BulletRequest):
+async def cv_bullet(request: BulletRequest, user_id: Annotated[str, Depends(verify_token_dependency)]):
     try:
         bullet = await asyncio.wait_for(
             run_in_threadpool(get_cv_bullet, request),
@@ -640,7 +640,7 @@ async def cv_bullet(request: BulletRequest):
     return {"bullet": bullet}
 
 @app.post("/recommendations")
-async def recommend_with_agent(report: GapResult, language: Literal["tr", "en"] = "en"):
+async def recommend_with_agent(report: GapResult, user_id: Annotated[str, Depends(verify_token_dependency)], language: Literal["tr", "en"] = "en"):
     try:
         result = await asyncio.wait_for(run_in_threadpool(get_recommendations, report, language), timeout=agent_timeout_seconds)
     except asyncio.TimeoutError:
