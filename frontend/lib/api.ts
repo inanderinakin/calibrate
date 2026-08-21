@@ -332,10 +332,10 @@ export async function getTrends() {
 }
 
 export interface PostingFilters {
-  role?: string;
+  role?: string[];
   city?: string;
   workModel?: string;
-  skill?: string;
+  skill?: string[];
   mySkills?: string[];
   search?: string;
   sort?: "newest" | "closing";
@@ -346,10 +346,12 @@ export interface PostingFilters {
 export async function getPostings(filters: PostingFilters = {}): Promise<PostingsPayload> {
   const params = new URLSearchParams();
 
-  if (filters.role) params.set("role", filters.role);
+  // Repeated rather than comma joined, so a role or skill containing a comma
+  // still survives the round trip.
+  filters.role?.forEach((value) => params.append("role", value));
   if (filters.city) params.set("city", filters.city);
   if (filters.workModel) params.set("work_model", filters.workModel);
-  if (filters.skill) params.set("skill", filters.skill);
+  filters.skill?.forEach((value) => params.append("skill", value));
   if (filters.mySkills?.length) params.set("my_skills", filters.mySkills.join(","));
   if (filters.search) params.set("search", filters.search);
   if (filters.sort) params.set("sort", filters.sort);

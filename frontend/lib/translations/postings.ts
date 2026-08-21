@@ -8,6 +8,8 @@ export const postings = {
     allCities: "All cities",
     allModels: "Work model",
     allSkills: "All skills",
+    filterRoles: "Roles",
+    filterSkills: "Skills",
     otherRole: "Other",
     sortNewest: "Newest first",
     sortClosing: "Closing soonest",
@@ -58,6 +60,7 @@ export const postings = {
     matchShowMine: "Show these",
     matchShowAll: "Show all jobs",
     youHave: (have: number, total: number) => `You have ${have} of ${total}`,
+    matchNoCv: "Upload a CV to find out which postings you can apply to right now.",
   },
   tr: {
     title: "İş İlanları",
@@ -68,6 +71,8 @@ export const postings = {
     allCities: "Tüm şehirler",
     allModels: "Çalışma şekli",
     allSkills: "Tüm yetenekler",
+    filterRoles: "Roller",
+    filterSkills: "Yetenekler",
     otherRole: "Diğer",
     sortNewest: "Önce en yeni",
     sortClosing: "Önce süresi dolacak",
@@ -118,5 +123,6 @@ export const postings = {
     matchShowMine: "Bunları göster",
     matchShowAll: "Tüm ilanları göster",
     youHave: (have: number, total: number) => `${total} yetenekten ${have} tanesi sende`,
+    matchNoCv: "Hangi ilanlara hemen başvurabileceğinizi görmek için bir CV yükleyin.",
   },
 };

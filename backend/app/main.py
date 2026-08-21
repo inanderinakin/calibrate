@@ -532,11 +532,11 @@ async def get_skills():
 
 @app.get("/postings")
 async def get_postings(
-    role: str | None = None,
+    role: list[str] | None = Query(None),
     city: str | None = None,
     work_model: str | None = None,
     source: str | None = None,
-    skill: str | None = None,
+    skill: list[str] | None = Query(None),
     my_skills: str | None = None,
     min_match: float = Query(0.6, ge=0.0, le=1.0),
     search: str | None = None,
@@ -547,7 +547,7 @@ async def get_postings(
     matches = postings["postings"]
 
     if role:
-        matches = [posting for posting in matches if posting["role"] == role]
+        matches = [posting for posting in matches if posting["role"] in role]
     if city:
         matches = [posting for posting in matches if posting["city"] == city]
     if work_model:
@@ -555,7 +555,12 @@ async def get_postings(
     if source:
         matches = [posting for posting in matches if posting["source"] == source]
     if skill:
-        matches = [posting for posting in matches if skill in posting["skills"]]
+        # Any of the picked skills rather than all of them: choosing a second one
+        # widens the board, which is what a filter list is normally taken to mean.
+        matches = [
+            posting for posting in matches
+            if any(name in posting["skills"] for name in skill)
+        ]
 
     # "Jobs I could apply to now": keep postings where the CV already covers
     # enough of what they ask for, and tell the page how much of it is covered
