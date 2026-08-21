@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Icon } from "@iconify/react";
+import { Icon } from "@/components/Icon";
 import { motion } from "framer-motion";
 import AppShell from "@/components/AppShell";
 import { useAuth, clearStoredProfile } from "@/contexts/AuthContext";
@@ -11,6 +11,7 @@ import SuggestInput from "@/components/SuggestInput";
 import { countryAliases, countryLabel, countrySuggestions, toStoredCountry } from "@/lib/countries";
 import { studyFieldSuggestions } from "@/lib/studyFields";
 import { session } from "@/lib/session";
+import { clearAnalysisMarker } from "@/lib/useRestoreAnalysis";
 import { tokens } from "@/lib/tokens";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
@@ -221,6 +222,9 @@ export default function SettingsPage() {
     try {
       await deleteAccount();
 
+      // Before tokens.clear(): the marker is keyed by the account, so dropping the
+      // token first would leave it behind with no way to name it.
+      clearAnalysisMarker();
       tokens.clear();
       session.clear();
       clearStoredProfile();
