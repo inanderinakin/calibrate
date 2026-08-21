@@ -4,12 +4,14 @@ def compute_gaps(cv_skills: list[NormalizedSkill], target_roles: list[str], dema
     gaps_list = {}
     checked_roles = []
     matched_list = {}
+    matched_skills = {}
     for role in target_roles:
         if role not in demand_profile:
             continue
 
         checked_roles.append(role)
         gaps_list[role] = []
+        matched_skills[role] = []
         profile_data = demand_profile[role]
         profile_skills = profile_data["skills"]
         postings_count = profile_data["postings_count"]
@@ -28,10 +30,14 @@ def compute_gaps(cv_skills: list[NormalizedSkill], target_roles: list[str], dema
                         gap.closest_cv_skill = cv_skill.skill
                         break
                 gaps_list[role].append(gap)
+            else:
+                matched_skills[role].append(demanded)
 
-        matched_demanded = total_demanded - len(gaps_list[role])
+        # counted off the list rather than subtracted from the gaps, so the number and
+        # the list the dashboard shows cannot drift apart
+        matched_demanded = len(matched_skills[role])
         matched_list[role] = MatchData(matched_demanded=matched_demanded, total_demanded=total_demanded, ratio= matched_demanded / total_demanded if total_demanded else 0.0, postings_count=postings_count)
-    return GapResult(target_roles=checked_roles, gaps = gaps_list, matched_data = matched_list)
+    return GapResult(target_roles=checked_roles, gaps = gaps_list, matched_data = matched_list, matched_skills = matched_skills)
 
 if __name__ == "__main__":
     python_normalized = DemandedSkill(skill = "Python", esco_category="programming languages", demand_percentage=0.2, trend="Stable")
