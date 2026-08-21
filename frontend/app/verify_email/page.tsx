@@ -101,6 +101,7 @@ function VerifyEmailForm() {
         inputMode="numeric"
         autoComplete="one-time-code"
         placeholder={t.verifyEmail.code}
+        aria-label={t.verifyEmail.code}
         value={code}
         onChange={(e) => setCode(e.target.value)}
         className="glass-input rounded-lg border border-[var(--border-color)] px-4 py-2.5 text-[var(--text-primary)] outline-none focus:border-[var(--accent-2)]"

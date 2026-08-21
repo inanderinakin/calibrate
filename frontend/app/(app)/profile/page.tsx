@@ -1,6 +1,6 @@
 "use client";
 
-import { Icon } from "@iconify/react";
+import { Icon } from "@/components/Icon";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -93,16 +93,6 @@ export default function ProfilePage() {
                   <p className="text-(--accent-bg)">
                     {joinedDate ?? "-"}
                   </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Icon icon="solar:cup-bold" className="w-9 h-9 text-(--accent-bg) shrink-0" />
-                <div>
-                  <p className="font-bold text-(--accent-bg)">{t.profile.achievements}</p>
-                  {/* TODO: replace with real progress once the backend exists */}
-                  <p className="text-(--accent-bg)">-</p>
-                  <p className="text-(--accent-bg) text-sm">In progress</p>
                 </div>
               </div>
             </div>

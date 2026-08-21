@@ -11,7 +11,7 @@ import { isTimeout, post_login } from "@/lib/api";
 import { tokens, readClaims } from "@/lib/tokens";
 import { resolveEntryPath } from "@/lib/entry";
 import BackButton from "@/components/BackButton";
-import { Icon } from "@iconify/react";
+import { Icon } from "@/components/Icon";
 import { signInWith } from "@/lib/hostedUi";
 
 export default function LoginPage() {
@@ -82,6 +82,7 @@ export default function LoginPage() {
           required
           type="email"
           placeholder={t.login.email}
+          aria-label={t.login.email}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="glass-input rounded-lg border border-[var(--border-color)] px-4 py-2.5 text-[var(--text-primary)] outline-none focus:border-[var(--accent-2)]"
@@ -91,6 +92,7 @@ export default function LoginPage() {
           required
           type="password"
           placeholder={t.login.password}
+          aria-label={t.login.password}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="glass-input rounded-lg border border-[var(--border-color)] px-4 py-2.5 text-[var(--text-primary)] outline-none focus:border-[var(--accent-2)]"
