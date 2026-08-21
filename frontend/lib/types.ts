@@ -31,6 +31,9 @@ export interface GapResult {
   target_roles: string[];
   gaps: Record<string, Gap[]>;
   matched_data: Record<string, MatchData>;
+  /** Demanded skills the CV already covers. Optional: older saved analyses, and the
+   *  backend before it started keeping them, have no such field. */
+  matched_skills?: Record<string, DemandedSkill[]> | null;
 }
 
 export interface Resource {
