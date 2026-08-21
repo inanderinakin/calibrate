@@ -3,17 +3,21 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Icon } from "@iconify/react";
-import { motion } from "framer-motion";
+import { Icon } from "@/components/Icon";
+import "@/lib/iconBundleSkills";
+import { AnimatePresence, motion } from "framer-motion";
 import AppShell from "@/components/AppShell";
 import TrendingSkillsChart from "@/components/TrendingSkillsChart";
 import { ChartSkeleton, DashboardSkeleton } from "@/components/Skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { getTrends } from "@/lib/api";
 import { session } from "@/lib/session";
-import { useRestoreAnalysis } from "@/lib/useRestoreAnalysis";
+import { expectsAnalysis, useRestoreAnalysis } from "@/lib/useRestoreAnalysis";
+import { useDelayedLoading } from "@/lib/useDelayedLoading";
 import type { Gap, GapResult, Trend, TrendsPayload } from "@/lib/types";
 import { getDisplaySkillName } from "@/lib/escoMapper";
+import { topByDemand } from "@/lib/rankSkills";
+import { useMeasuredHeight } from "@/lib/useMeasuredHeight";
 import { getCategoryLabel } from "@/lib/skillCategories";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
@@ -109,8 +113,12 @@ export default function DashboardPage() {
   const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
   const [focusSkills, setFocusSkills] = useState<string[]>([]);
   const restored = useRestoreAnalysis();
+  const [awaitingData] = useState(expectsAnalysis);
+  const showLoading = useDelayedLoading(!loaded);
   const [hasRoadmap, setHasRoadmap] = useState(false);
   const [showMethodology, setShowMethodology] = useState(false);
+  const [skillView, setSkillView] = useState<"missing" | "have">("missing");
+  const [skillListRef, skillListHeight] = useMeasuredHeight();
 
   useEffect(() => {
     if (!restored) return;
@@ -126,40 +134,43 @@ export default function DashboardPage() {
       .catch(() => setTrendsFailed(true));
   }, []);
 
+  const nothingToShow = (
+    <div className="mx-auto flex max-w-3xl flex-col items-start gap-5 rounded-[30px] bg-(--card-bg) p-8 shadow-lg">
+      <Icon
+        icon="mdi:file-search-outline"
+        className="h-14 w-14 text-(--accent-2)"
+      />
+
+      <h1 className="text-3xl font-black text-(--text-primary) md:text-5xl">
+        {t.common.nothingToShowYet}
+      </h1>
+
+      <p className="text-lg text-[var(--text-secondary)]">
+        {t.common.uploadCvPrompt}
+      </p>
+
+      <Link
+        href="/upload_cv"
+        className="btn-hover rounded-[20px] bg-[var(--accent)] px-8 py-3.5 text-lg font-bold text-[var(--on-accent)]"
+      >
+        {t.common.uploadYourCv}
+      </Link>
+    </div>
+  );
+
+  // Skeleton a dashboard only when one is actually coming. Signed out there is
+  // nothing to restore, and the full-page skeleton collapsing into this one small
+  // card was a worse jump than never showing it.
   if (!loaded) {
     return (
       <AppShell backHref="/analyse_cv">
-        <DashboardSkeleton />
+        {awaitingData ? showLoading && <DashboardSkeleton /> : nothingToShow}
       </AppShell>
     );
   }
 
   if (!gaps) {
-    return (
-      <AppShell backHref="/analyse_cv">
-        <div className="mx-auto flex max-w-3xl flex-col items-start gap-5 rounded-[30px] bg-(--card-bg) p-8 shadow-lg">
-          <Icon
-            icon="mdi:file-search-outline"
-            className="h-14 w-14 text-(--accent-2)"
-          />
-
-          <h1 className="text-3xl font-black text-(--text-primary) md:text-5xl">
-            {t.common.nothingToShowYet}
-          </h1>
-
-          <p className="text-lg text-[var(--text-secondary)]">
-            {t.common.uploadCvPrompt}
-          </p>
-
-          <Link
-            href="/upload_cv"
-            className="btn-hover rounded-[20px] bg-[var(--accent)] px-8 py-3.5 text-lg font-bold text-[var(--on-accent)]"
-          >
-            {t.common.uploadYourCv}
-          </Link>
-        </div>
-      </AppShell>
-    );
+    return <AppShell backHref="/analyse_cv">{nothingToShow}</AppShell>;
   }
 
   const roles = gaps.target_roles;
@@ -195,6 +206,32 @@ export default function DashboardPage() {
     }
   }
 
+  /* ---------------- SKILLS YOU HAVE ---------------- */
+
+  // matched_skills is optional: the backend only started keeping the demanded skills a
+  // CV already covers recently, and analyses saved before that have no such field.
+  const matchedByRole = gaps.matched_skills;
+
+  const matchedSkills: Skill[] = matchedByRole
+    ? topByDemand(
+        roles.flatMap((role) =>
+          (matchedByRole[role] ?? []).map((entry) => ({ ...entry, role }))
+        ),
+        5
+      ).map((entry) => {
+        const name = getDisplaySkillName(entry.skill);
+        return {
+          name,
+          demand: Math.round(entry.demand_percentage * 100),
+          category: entry.esco_category,
+          trend: entry.trend,
+          closestCvSkill: null,
+          icon: getSkillIcon(name),
+          postingsCount: gaps.matched_data[entry.role]?.postings_count ?? 0,
+        };
+      })
+    : [];
+
   const missingSkills: Skill[] = [...gapBySkill.values()]
     .sort((a, b) => b.gap.demand_percentage - a.gap.demand_percentage)
     .slice(0, 5)
@@ -210,6 +247,10 @@ export default function DashboardPage() {
         postingsCount: gaps.matched_data[role]?.postings_count ?? 0,
       };
     });
+
+  const canToggleSkills = matchedByRole != null;
+  const showingHave = canToggleSkills && skillView === "have";
+  const shownSkills = showingHave ? matchedSkills : missingSkills;
 
   const missingSkillNames = [...gapBySkill.keys()].map(getDisplaySkillName);
 
@@ -355,12 +396,12 @@ export default function DashboardPage() {
               <div className="mb-5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Icon
-                    icon="mdi:target"
+                    icon={showingHave ? "mdi:check-decagram-outline" : "mdi:target"}
                     className="h-9 w-9 text-[var(--accent-2)]"
                   />
 
                   <h2 className="text-2xl font-black text-[var(--text-primary)]">
-                    {t.dashboard.missingSkills}
+                    {showingHave ? t.dashboard.skillsYouHave : t.dashboard.missingSkills}
                   </h2>
                 </div>
 
@@ -377,6 +418,38 @@ export default function DashboardPage() {
                   />
                 </button>
               </div>
+
+              {canToggleSkills && (
+                <div className="mb-5 flex w-fit gap-1 rounded-xl border border-black/10 p-1">
+                  {(["missing", "have"] as const).map((view) => (
+                    <button
+                      key={view}
+                      type="button"
+                      onClick={() => setSkillView(view)}
+                      aria-pressed={skillView === view}
+                      className={`relative rounded-lg px-4 py-1.5 text-sm font-bold transition-colors ${
+                        skillView === view
+                          ? "text-[var(--on-accent)]"
+                          : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                      }`}
+                    >
+                      {skillView === view && (
+                        <motion.span
+                          layoutId="skillViewPill"
+                          transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                          className="absolute inset-0 rounded-lg bg-[var(--accent-2)]"
+                        />
+                      )}
+
+                      <span className="relative">
+                        {view === "missing"
+                          ? `${t.dashboard.viewMissing} (${missingSkills.length})`
+                          : `${t.dashboard.viewHave} (${matchedSkills.length})`}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
 
               {showMethodology && (
                 <div className="mb-5 rounded-[16px] border border-[var(--accent-2)] p-4">
@@ -410,60 +483,83 @@ export default function DashboardPage() {
                 </div>
               )}
 
-              {missingSkills.length === 0 ? (
-                <p className="text-[var(--text-muted)]">
-                  {t.dashboard.noGapsFound}
-                </p>
-              ) : (
-                <div className="space-y-4">
-                  {missingSkills.map((skill) => (
-                    <button
-                      key={skill.name}
-                      type="button"
-                      onClick={() => setSelectedSkill(skill.name)}
-                      className={`grid w-full grid-cols-[58px_1fr_65px] items-center gap-3 rounded-xl text-left transition hover:text-[var(--pink)] dark:hover:text-[var(--light-blue)] hover:bg-(--hover-bg) ${
-                        selectedSkill === skill.name
-                          ? "scale-[1.01]"
-                          : ""
-                      }`}
+              {/* The outer box animates to whatever the inner one measures, so swapping to
+                  a shorter list shrinks the card instead of snapping it. popLayout takes
+                  the outgoing list out of flow, so the incoming one lands immediately and
+                  the height only has to travel the real difference. */}
+              <motion.div
+                initial={false}
+                animate={{ height: skillListHeight }}
+                transition={{ duration: 0.28, ease: "easeOut" }}
+                className="overflow-hidden"
+              >
+                <div ref={skillListRef} className="relative">
+                  <AnimatePresence mode="popLayout" initial={false}>
+                    <motion.div
+                      key={skillView}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
                     >
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#f1f1f1]">
-                        <Icon
-                          icon={skill.icon}
-                          className="h-8 w-8"
-                        />
-                      </div>
-
-                      <div>
-                        <div className="mb-1 flex items-center justify-between">
-                          <span className="text-base font-bold text-[var(--text-primary)]">
-                            {skill.name}
-                          </span>
-                        </div>
-
-                        <div className="h-2 rounded-full bg-[#e4e4e4]">
-                          <div
-                            className="h-full rounded-full bg-[var(--accent-2)]"
-                            style={{
-                              width: `${skill.demand}%`,
-                            }}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="text-right">
-                        <span className="text-xl font-black text-[var(--text-primary)]">
-                          {skill.demand}%
-                        </span>
-
-                        <p className="text-xs text-[var(--text-muted)]">
-                          {t.dashboard.basedOnPostings(skill.postingsCount)}
+                      {shownSkills.length === 0 ? (
+                        <p className="text-[var(--text-muted)]">
+                          {showingHave ? t.dashboard.noMatchedSkills : t.dashboard.noGapsFound}
                         </p>
-                      </div>
-                    </button>
-                  ))}
+                      ) : (
+                        <div className="space-y-4">
+                          {shownSkills.map((skill) => (
+                            <button
+                              key={skill.name}
+                              type="button"
+                              onClick={() => setSelectedSkill(skill.name)}
+                              className={`grid w-full grid-cols-[58px_1fr_65px] items-center gap-3 rounded-xl text-left transition hover:text-[var(--pink)] dark:hover:text-[var(--light-blue)] hover:bg-(--hover-bg) ${
+                                selectedSkill === skill.name
+                                  ? "scale-[1.01]"
+                                  : ""
+                              }`}
+                            >
+                              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#f1f1f1]">
+                                <Icon
+                                  icon={skill.icon}
+                                  className="h-8 w-8"
+                                />
+                              </div>
+
+                              <div>
+                                <div className="mb-1 flex items-center justify-between">
+                                  <span className="text-base font-bold text-[var(--text-primary)]">
+                                    {skill.name}
+                                  </span>
+                                </div>
+
+                                <div className="h-2 rounded-full bg-[#e4e4e4]">
+                                  <div
+                                    className="h-full rounded-full bg-[var(--accent-2)]"
+                                    style={{
+                                      width: `${skill.demand}%`,
+                                    }}
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="text-right">
+                                <span className="text-xl font-black text-[var(--text-primary)]">
+                                  {skill.demand}%
+                                </span>
+
+                                <p className="text-xs text-[var(--text-muted)]">
+                                  {t.dashboard.basedOnPostings(skill.postingsCount)}
+                                </p>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </motion.div>
+                  </AnimatePresence>
                 </div>
-              )}
+              </motion.div>
 
               <p className="mt-5 text-xs text-[var(--text-muted)]">
                 {t.dashboard.percentagesNote}
@@ -682,7 +778,7 @@ export default function DashboardPage() {
                   </p>
 
                   <p className="text-base font-black text-[var(--text-primary)]">
-                    {selected ? t.dashboard.demandInYourRolesValue(selected.demand) : "—"}
+                    {selected ? t.dashboard.demandInYourRolesValue(selected.demand) : "-"}
                   </p>
                 </div>
               </div>
@@ -702,7 +798,7 @@ export default function DashboardPage() {
                   </p>
 
                   <p className="text-base font-black text-[var(--text-primary)]">
-                    {selected ? t.common.trend[selected.trend] : "—"}
+                    {selected ? t.common.trend[selected.trend] : "-"}
                   </p>
                 </div>
               </div>
@@ -722,7 +818,7 @@ export default function DashboardPage() {
                   </p>
 
                   <p className="text-base font-black text-[var(--text-primary)]">
-                    {selected ? getCategoryLabel(selected.category, language) : "—"}
+                    {selected ? getCategoryLabel(selected.category, language) : "-"}
                   </p>
                 </div>
               </div>
@@ -803,7 +899,7 @@ export default function DashboardPage() {
                     href={`mailto:${user?.email ?? ""}`}
                     className="truncate text-xs font-light text-[var(--on-accent)] underline"
                   >
-                    {user?.email ?? "—"}
+                    {user?.email ?? "-"}
                   </a>
                 </div>
               </div>

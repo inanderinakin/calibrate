@@ -2,6 +2,7 @@ import asyncio
 import os
 import tempfile
 import jwt
+from datetime import date, datetime, timezone
 from typing_extensions import Annotated
 import uuid
 from pathlib import Path
@@ -19,11 +20,12 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from agent import get_cv_bullet, get_project_steps, get_recommendations, verify_skills
 from handlecv import compute_gaps, extract_skill_candidates, extract_cv_text, extract_docx_text
 from normalize import normalize
-from models import Analysis, BulletRequest, CompletedProjects, CompletedSkills, GapResult, GapRequest, LoginInfo, NormalizedSkill, ProfileInfo, ResendCodeInfo, SignUpInfo, VerifyEmailInfo
+from models import Analysis, BulletRequest, CompletedProjects, CompletedSkills, GapResult, GapRequest, LoginInfo, NormalizedSkill, PasswordChange, ProfileInfo, ResendCodeInfo, SignUpInfo, VerifyEmailInfo
 from skills import PATTERNS, SKILL_CATEGORIES, base_skill_name
 from handleposting import load_demand_profile, load_postings, load_trends
-from storage import delete_user_data, read_analysis, read_completed_projects, read_completed_skills, write_analysis, write_completed_projects, write_completed_skills
-from auth import verify_token
+from postings_rules import drop_expired
+from storage import delete_user_data, read_analysis, read_completed_projects, read_completed_skills, read_profile, write_analysis, write_completed_projects, write_completed_skills, write_profile
+from auth import verify_token, verify_token_claims
 
 profile = load_demand_profile()
 trends = load_trends()
@@ -60,6 +62,15 @@ async def verify_token_dependency(credentials: Annotated[HTTPAuthorizationCreden
     return user_id
 
 
+async def verify_claims_dependency(credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)]):
+    try:
+        claims = verify_token_claims(credentials.credentials)
+    except jwt.PyJWTError as error:
+        print(f"Token rejected: {type(error).__name__}: {error}")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Your session is no longer valid. Please sign in again")
+    return claims
+
+
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
@@ -90,7 +101,95 @@ async def update_profile(profile: ProfileInfo, user_id: Annotated[str, Depends(v
         print(f"Could not update the profile: {err}")
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="We could not save your name right now")
 
-    return {"first_name": first_name, "last_name": last_name}
+    country = profile.country.strip()
+    study_field = profile.study_field.strip()
+
+    try:
+        await run_in_threadpool(
+            write_profile, user_id, {"country": country, "study_field": study_field}
+        )
+    except ClientError as err:
+        print(f"Could not save the profile details: {err}")
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="We could not save your details right now")
+
+    return {
+        "first_name": first_name,
+        "last_name": last_name,
+        "country": country,
+        "study_field": study_field,
+    }
+
+@app.get("/profile")
+async def get_profile(user_id: Annotated[str, Depends(verify_token_dependency)]):
+    try:
+        saved = await run_in_threadpool(read_profile, user_id)
+    except ClientError as err:
+        print(f"Could not read the profile details: {err}")
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="We could not load your details right now")
+
+    return {
+        "country": saved.get("country", ""),
+        "study_field": saved.get("study_field", ""),
+    }
+
+@app.post("/change_password")
+async def change_password(
+    change: PasswordChange,
+    claims: Annotated[dict, Depends(verify_claims_dependency)],
+):
+    email = claims.get("email")
+
+    if not email:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="This account has no email to sign in with")
+
+    if len(change.new_password) < 8:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Your new password must be at least 8 characters")
+
+    # Signing in again is the verification: a wrong current password fails here,
+    # and a right one hands back the access token change_password needs. Google
+    # accounts have no password to sign in with, so they land in the same branch.
+    try:
+        signed_in = await run_in_threadpool(
+            lambda: cognito_client.initiate_auth(
+                ClientId = os.getenv('APP_CLIENT'),
+                AuthFlow = 'USER_PASSWORD_AUTH',
+                AuthParameters = {'USERNAME': email, 'PASSWORD': change.current_password},
+            )
+        )
+    except ClientError as err:
+        code = err.response["Error"]["Code"]
+
+        if code in ("NotAuthorizedException", "UserNotFoundException"):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="That current password is not right")
+
+        print(f"Could not verify the current password: {err}")
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="We could not change your password right now")
+
+    result = signed_in.get("AuthenticationResult")
+
+    if result is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="That current password is not right")
+
+    try:
+        await run_in_threadpool(
+            cognito_client.change_password,
+            AccessToken = result['AccessToken'],
+            PreviousPassword = change.current_password,
+            ProposedPassword = change.new_password,
+        )
+    except ClientError as err:
+        code = err.response["Error"]["Code"]
+
+        if code == "InvalidPasswordException":
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="That new password does not meet the requirements")
+
+        if code == "LimitExceededException":
+            raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Too many attempts. Please try again later")
+
+        print(f"Could not change the password: {err}")
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="We could not change your password right now")
+
+    return {"changed": True}
 
 @app.delete("/account")
 async def delete_account(user_id: Annotated[str, Depends(verify_token_dependency)]):
@@ -297,6 +396,11 @@ async def upload_cv(file: UploadFile = File(...)):
     safe_name = f"{uuid.uuid4()}{ext}"
     cv_dest = path / safe_name
 
+    original_name = file.filename
+    # Taken from the same check that let the file through, not from content_type,
+    # which browsers sometimes report as application/octet-stream for a real PDF.
+    cv_type = "PDF" if is_pdf else "DOCX"
+
     bucket = "calibrate-teamthrow"
 
     try:
@@ -367,7 +471,14 @@ async def upload_cv(file: UploadFile = File(...)):
     except Exception as err:
         print(f"Skill verification failed: {type(err).__name__}: {err}")
 
-    return {"filename": safe_name, "skills": skills}
+    return {
+        "filename": safe_name,
+        "skills": skills,
+        "cv_filename": original_name,
+        "cv_size": size,
+        "cv_type": cv_type,
+        "cv_uploaded_at": datetime.now(timezone.utc).isoformat(),
+    }
 
 @app.post("/compute_gaps")
 async def get_gaps(gap_request: GapRequest):
@@ -422,11 +533,11 @@ async def get_skills():
 
 @app.get("/postings")
 async def get_postings(
-    role: str | None = None,
+    role: list[str] | None = Query(None),
     city: str | None = None,
     work_model: str | None = None,
     source: str | None = None,
-    skill: str | None = None,
+    skill: list[str] | None = Query(None),
     my_skills: str | None = None,
     min_match: float = Query(0.6, ge=0.0, le=1.0),
     search: str | None = None,
@@ -434,10 +545,10 @@ async def get_postings(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=50),
 ):
-    matches = postings["postings"]
+    matches = drop_expired(postings["postings"], date.today().isoformat())
 
     if role:
-        matches = [posting for posting in matches if posting["role"] == role]
+        matches = [posting for posting in matches if posting["role"] in role]
     if city:
         matches = [posting for posting in matches if posting["city"] == city]
     if work_model:
@@ -445,7 +556,12 @@ async def get_postings(
     if source:
         matches = [posting for posting in matches if posting["source"] == source]
     if skill:
-        matches = [posting for posting in matches if skill in posting["skills"]]
+        # Any of the picked skills rather than all of them: choosing a second one
+        # widens the board, which is what a filter list is normally taken to mean.
+        matches = [
+            posting for posting in matches
+            if any(name in posting["skills"] for name in skill)
+        ]
 
     # "Jobs I could apply to now": keep postings where the CV already covers
     # enough of what they ask for, and tell the page how much of it is covered
@@ -472,7 +588,7 @@ async def get_postings(
         ]
 
     if sort == "closing":
-        # Postings with no closing date go last — there is nothing to count down to.
+        # Postings with no closing date go last, since there is nothing to count down to.
         matches = sorted(matches, key=lambda posting: (posting["days_open"] is None, posting["days_open"]))
 
     start = (page - 1) * page_size

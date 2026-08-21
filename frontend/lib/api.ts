@@ -127,14 +127,50 @@ async function authedFetch(path: string, init: RequestInit = {}) {
   return await fetchWithTimeout(path, { ...init, headers: authHeaders() }, AUTH_TIMEOUT_MS);
 }
 
-export async function updateProfile(firstName: string, lastName: string) {
+export async function updateProfile(
+  firstName: string,
+  lastName: string,
+  country: string,
+  studyField: string
+) {
   const res = await authedFetch("/profile", {
     method: "POST",
-    body: JSON.stringify({ first_name: firstName, last_name: lastName }),
+    body: JSON.stringify({
+      first_name: firstName,
+      last_name: lastName,
+      country,
+      study_field: studyField,
+    }),
   });
 
   if (!res.ok) {
-    throw new Error(await errorMessage(res, "Could not save your name"));
+    throw new Error(await errorMessage(res, "Could not save your profile"));
+  }
+
+  return await res.json();
+}
+
+export async function getProfile(): Promise<{ country: string; study_field: string }> {
+  const res = await authedFetch("/profile");
+
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not load your profile"));
+  }
+
+  return await res.json();
+}
+
+export async function changePassword(currentPassword: string, newPassword: string) {
+  const res = await authedFetch("/change_password", {
+    method: "POST",
+    body: JSON.stringify({
+      current_password: currentPassword,
+      new_password: newPassword,
+    }),
+  });
+
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not change your password"));
   }
 
   return await res.json();
@@ -233,6 +269,9 @@ export interface SavedAnalysis {
   gaps: GapResult | null;
   report: Report | null;
   cv_filename: string | null;
+  cv_size: number | null;
+  cv_type: string | null;
+  cv_uploaded_at: string | null;
 }
 
 export async function getAnalysis(): Promise<SavedAnalysis | null> {
@@ -261,7 +300,7 @@ export async function saveAnalysis(analysis: SavedAnalysis) {
 
 /**
  * Push whatever the session currently holds up to the account. Safe to call
- * after any step of the flow — signed-out users are a no-op.
+ * after any step of the flow. Signed-out users are a no-op.
  */
 export async function persistSession() {
   if (!tokens.getIdToken()) return;
@@ -272,6 +311,9 @@ export async function persistSession() {
     gaps: session.getGaps(),
     report: session.getReport(),
     cv_filename: session.getCvFilename(),
+    cv_size: session.getCvSize(),
+    cv_type: session.getCvType(),
+    cv_uploaded_at: session.getCvUploadedAt(),
   });
 }
 
@@ -290,10 +332,10 @@ export async function getTrends() {
 }
 
 export interface PostingFilters {
-  role?: string;
+  role?: string[];
   city?: string;
   workModel?: string;
-  skill?: string;
+  skill?: string[];
   mySkills?: string[];
   search?: string;
   sort?: "newest" | "closing";
@@ -304,10 +346,12 @@ export interface PostingFilters {
 export async function getPostings(filters: PostingFilters = {}): Promise<PostingsPayload> {
   const params = new URLSearchParams();
 
-  if (filters.role) params.set("role", filters.role);
+  // Repeated rather than comma joined, so a role or skill containing a comma
+  // still survives the round trip.
+  filters.role?.forEach((value) => params.append("role", value));
   if (filters.city) params.set("city", filters.city);
   if (filters.workModel) params.set("work_model", filters.workModel);
-  if (filters.skill) params.set("skill", filters.skill);
+  filters.skill?.forEach((value) => params.append("skill", value));
   if (filters.mySkills?.length) params.set("my_skills", filters.mySkills.join(","));
   if (filters.search) params.set("search", filters.search);
   if (filters.sort) params.set("sort", filters.sort);

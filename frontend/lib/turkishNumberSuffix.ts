@@ -1,6 +1,6 @@
 // Turkish attaches a possessive/accusative-style suffix ("%29'u", "%12'si",
 // "%15'i"...) after numbers, and which vowel (+ whether an "s" buffer is
-// needed) depends on how the number is actually PRONOUNCED, not its digits —
+// needed) depends on how the number is actually PRONOUNCED, not its digits,
 // "12" is spoken "on iki", ends in "i", so it takes "'si"; "13" is "on üç",
 // ends in "ü" (a consonant "ç" before it, no buffer needed), so it's "'ü".
 // Hardcoding one suffix for every number (as the code used to) is wrong for

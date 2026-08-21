@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Icon } from "@iconify/react";
+import { Icon } from "@/components/Icon";
 import { motion } from "framer-motion";
 import AppShell from "@/components/AppShell";
 import StepIndicator from "@/components/StepIndicator";
@@ -21,6 +21,12 @@ const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 const HOLD_TO_REMOVE_MS = 2000;
 const USER_ADDED_CATEGORY = "added by you";
 
+function formatBytes(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 export default function UploadCvPage() {
   const router = useRouter();
   const { language } = useLanguage();
@@ -28,6 +34,7 @@ export default function UploadCvPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [file, setFile] = useState<File | null>(null);
+  const [dragging, setDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,6 +42,9 @@ export default function UploadCvPage() {
   // a record of the CV we hold rather than a request for a new one.
   const [skills, setSkills] = useState<NormalizedSkill[]>([]);
   const [cvName, setCvName] = useState<string | null>(null);
+  const [cvSize, setCvSize] = useState<number | null>(null);
+  const [cvType, setCvType] = useState<string | null>(null);
+  const [cvUploadedAt, setCvUploadedAt] = useState<string | null>(null);
   const [removing, setRemoving] = useState(false);
   const [adding, setAdding] = useState(false);
   const [draftSkill, setDraftSkill] = useState("");
@@ -48,6 +58,9 @@ export default function UploadCvPage() {
 
     setSkills(session.getCvSkills() ?? []);
     setCvName(session.getCvFilename());
+    setCvSize(session.getCvSize());
+    setCvType(session.getCvType());
+    setCvUploadedAt(session.getCvUploadedAt());
   }, [restored]);
 
   useEffect(() => {
@@ -131,8 +144,21 @@ export default function UploadCvPage() {
     e.target.value = "";
   }
 
+  function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setDragging(true);
+  }
+
+  function handleDragLeave(e: React.DragEvent<HTMLDivElement>) {
+    // Crossing onto the icon or the label counts as leaving the zone, which
+    // strobes the border. Only let go once the pointer is really outside.
+    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+    setDragging(false);
+  }
+
   function handleDrop(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault();
+    setDragging(false);
     handleFile(e.dataTransfer.files?.[0] ?? null);
   }
 
@@ -151,6 +177,9 @@ export default function UploadCvPage() {
 
     setSkills([]);
     setCvName(null);
+    setCvSize(null);
+    setCvType(null);
+    setCvUploadedAt(null);
     clearSelection();
     setRemoving(false);
   }
@@ -172,12 +201,18 @@ export default function UploadCvPage() {
       }
 
       session.setCvSkills(found);
-      session.setCvFilename(file.name);
+      session.setCvFilename(data.cv_filename ?? file.name);
+      if (data.cv_size) session.setCvSize(data.cv_size);
+      if (data.cv_type) session.setCvType(data.cv_type);
+      if (data.cv_uploaded_at) session.setCvUploadedAt(data.cv_uploaded_at);
       session.clearDerived();
       persistSession().catch(() => {});
 
       setSkills(found);
-      setCvName(file.name);
+      setCvName(data.cv_filename ?? file.name);
+      setCvSize(data.cv_size ?? null);
+      setCvType(data.cv_type ?? null);
+      setCvUploadedAt(data.cv_uploaded_at ?? null);
       setFile(null);
     }
     catch (e) {
@@ -187,6 +222,16 @@ export default function UploadCvPage() {
       setIsUploading(false);
     }
   }
+
+  // Accounts that uploaded before we kept this only have the name, so anything
+  // missing just drops out of the line.
+  const fileMeta = [
+    cvType,
+    cvSize ? formatBytes(cvSize) : null,
+    cvUploadedAt
+      ? t.uploadCv.uploadedOn(new Date(cvUploadedAt).toLocaleDateString(language))
+      : null,
+  ].filter(Boolean);
 
   return (
     <AppShell backHref="/">
@@ -219,7 +264,10 @@ export default function UploadCvPage() {
                 <p className="truncate text-xl font-bold text-(--text-primary)">
                   {cvName ?? t.uploadCv.onFileFallbackName}
                 </p>
-                <p className="text-(--text-secondary)">{t.uploadCv.skillsFound(skills.length)}</p>
+                {fileMeta.length > 0 && (
+                  <p className="mt-0.5 text-sm text-(--text-muted)">{fileMeta.join(" · ")}</p>
+                )}
+                <p className="mt-1 text-(--text-secondary)">{t.uploadCv.skillsFound(skills.length)}</p>
               </div>
 
               <button
@@ -237,11 +285,11 @@ export default function UploadCvPage() {
                 onBlur={hold.stopOnBlur}
                 disabled={removing}
                 aria-label={t.uploadCv.holdToRemove}
-                className="relative shrink-0 overflow-hidden rounded-[20px] border-2 border-(--accent-2) px-5 py-3 font-bold text-(--accent-2) disabled:opacity-40"
+                className="relative shrink-0 overflow-hidden rounded-[20px] border-2 border-(--text-primary) px-5 py-3 font-bold text-(--text-primary) disabled:opacity-40"
               >
                 <span
                   aria-hidden
-                  className="absolute inset-y-0 left-0 bg-(--accent-2)/20"
+                  className="absolute inset-y-0 left-0 bg-(--text-primary)/20"
                   style={{ width: `${hold.progress * 100}%` }}
                 />
                 <span className="relative flex items-center gap-2">
@@ -250,7 +298,7 @@ export default function UploadCvPage() {
                     ? t.uploadCv.removing
                     : hold.progress > 0
                       ? t.uploadCv.holdingToRemove
-                      : t.uploadCv.remove}
+                      : t.uploadCv.holdToRemove}
                 </span>
               </button>
             </div>
@@ -262,7 +310,7 @@ export default function UploadCvPage() {
               <ul className="mt-4 flex flex-wrap gap-2">
                 {skills.map((entry) => (
                   <li key={entry.skill} className="group relative">
-                    <span className="flex items-center rounded-lg border border-(--accent)/15 px-3 py-1.5 text-sm font-semibold text-(--text-primary)">
+                    <span className="flex items-center rounded-lg border border-(--border-color)/40 px-3 py-1.5 text-sm font-semibold text-(--text-primary)">
                       {getDisplaySkillName(entry.skill)}
                     </span>
                     <button
@@ -324,12 +372,20 @@ export default function UploadCvPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.15 }}
-            onDragOver={(e) => e.preventDefault()}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
-            className="glass-card w-full border-2 border-dashed border-(--pink) rounded-[20px] py-16 flex flex-col items-center gap-4 cursor-pointer"
+            className={`glass-card w-full border-2 rounded-[20px] py-16 flex flex-col items-center gap-4 cursor-pointer transition-colors ${
+              dragging
+                ? "border-solid border-(--accent-bg)"
+                : "border-dashed border-(--pink) hover:border-(--accent-bg)/60"
+            }`}
           >
-            <Icon icon="mdi:file-document-outline" className="w-20 h-20 text-(--accent-bg)" />
+            <Icon
+              icon="mdi:file-document-outline"
+              className={`w-20 h-20 text-(--accent-bg) transition-transform ${dragging ? "scale-110" : ""}`}
+            />
             <p className="font-black text-xl text-(--accent-bg)">
               {t.uploadCv.dragDrop}
             </p>

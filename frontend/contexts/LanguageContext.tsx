@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-} from "react";
+import { createContext, useContext, useState, ReactNode } from "react";
 
 export type Language = "en" | "tr";
 
@@ -20,15 +14,13 @@ const LanguageContext = createContext<LanguageContextValue | undefined>(undefine
 const STORAGE_KEY = "calibrate_language";
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguageState] = useState<Language>("en");
-
-  useEffect(() => {
+  // Read straight from storage on the first render. Starting on "en" and switching
+  // in an effect made every string on the page swap once, after paint.
+  const [language, setLanguageState] = useState<Language>(() => {
+    if (typeof window === "undefined") return "en";
     const stored = window.localStorage.getItem(STORAGE_KEY) as Language | null;
-    if (stored === "en" || stored === "tr") {
-      setLanguageState(stored);
-      document.documentElement.lang = stored;
-    }
-  }, []);
+    return stored === "en" || stored === "tr" ? stored : "en";
+  });
 
   const setLanguage = (next: Language) => {
     setLanguageState(next);

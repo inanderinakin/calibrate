@@ -12,10 +12,12 @@ jwks_url = f"{issuer}/.well-known/jwks.json"
 
 jwks_client = jwt.PyJWKClient(uri=jwks_url)
 
-def verify_token(token: str):
+def verify_token_claims(token: str):
     signing_key = jwks_client.get_signing_key_from_jwt(token = token)
-    claims = jwt.decode(jwt=token, key=signing_key, algorithms=["RS256"], audience=app_client_id, issuer=issuer)
-    return claims.get('sub')
+    return jwt.decode(jwt=token, key=signing_key, algorithms=["RS256"], audience=app_client_id, issuer=issuer)
+
+def verify_token(token: str):
+    return verify_token_claims(token).get('sub')
 
 if __name__ == "__main__":
     import boto3

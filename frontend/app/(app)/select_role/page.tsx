@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Icon } from "@iconify/react";
+import { Icon } from "@/components/Icon";
 import { motion } from "framer-motion";
 import AppShell from "@/components/AppShell";
 import StepIndicator from "@/components/StepIndicator";
@@ -11,7 +11,7 @@ import { persistSession } from "@/lib/api";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
 
-// title/description come from t.selectRole.roles[id] at render time — this
+// title/description come from t.selectRole.roles[id] at render time, this
 // stays a plain language-independent const.
 const ROLES = [
   { id: "backend", apiName: "Backend Engineer", icon: "tabler:code" },
@@ -92,7 +92,7 @@ export default function SelectRolePage() {
     );
   }
 
-  // CV exists — show the normal role selection page
+  // CV exists, show the normal role selection page
   return (
     <AppShell backHref="/upload_cv">
       <div className="flex flex-col items-center gap-8 max-w-5xl mx-auto text-center">

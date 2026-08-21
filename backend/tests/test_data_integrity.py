@@ -74,18 +74,30 @@ def test_every_shown_posting_has_a_link_we_checked_and_reached():
     assert not unreachable, f"{len(unreachable)} postings are listed without a verified live link: {unreachable[:5]}"
 
 def test_no_shown_posting_is_past_its_closing_date():
-    """A posting that closed yesterday is not an opening."""
-    from datetime import date
+    """A posting that closed yesterday is not an opening.
 
-    postings = load_json_artifact("active_postings.json")
-    today = date.today().isoformat()
+    Asserted against the filter the endpoint runs, not against the artifact. The
+    artifact is only filtered when it is built and is then served for days, so
+    checking it directly just measured how old the file was.
+    """
+    from postings_rules import drop_expired
 
-    expired = [
-        posting["id"] for posting in postings["postings"]
-        if posting["closing_date"] and posting["closing_date"] < today
+    postings = load_json_artifact("active_postings.json")["postings"]
+    today = "2026-08-21"
+
+    shown = drop_expired(postings, today)
+    expired = [p["id"] for p in shown if p["closing_date"] and p["closing_date"] < today]
+
+    assert not expired, f"{len(expired)} closed postings survived the filter: {expired[:5]}"
+
+    # and the rule itself, so a stale artifact cannot make this vacuous
+    rows = [
+        {"id": "no-date", "closing_date": None},
+        {"id": "future", "closing_date": "2099-01-01"},
+        {"id": "today", "closing_date": today},
+        {"id": "yesterday", "closing_date": "2026-08-20"},
     ]
-
-    assert not expired, f"{len(expired)} postings closed before today: {expired[:5]}"
+    assert [p["id"] for p in drop_expired(rows, today)] == ["no-date", "future", "today"]
 
 def test_posting_facets_use_known_tokens():
     """The frontend translates these by token, so an unmapped one renders blank."""

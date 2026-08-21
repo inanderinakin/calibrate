@@ -4,14 +4,14 @@ import Link from "next/link";
 import { resolveEntryPath } from "@/lib/entry";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Icon } from "@iconify/react";
+import { Icon } from "@/components/Icon";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations, type Translations } from "@/lib/translations";
 
-// Order matches t.landing.features in translations.ts — icons aren't
+// Order matches t.landing.features in translations.ts, icons aren't
 // translatable text, so they're kept out of the language-keyed dictionary.
 const FEATURE_ICONS = [
   "solar:graph-new-up-linear",

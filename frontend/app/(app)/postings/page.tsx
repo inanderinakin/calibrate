@@ -1,19 +1,56 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Icon } from "@iconify/react";
+import Link from "next/link";
+import { Icon } from "@/components/Icon";
 import { motion } from "framer-motion";
 import AppShell from "@/components/AppShell";
 import { Skeleton } from "@/components/Skeleton";
 import { getPostings } from "@/lib/api";
 import { session } from "@/lib/session";
 import { useRestoreAnalysis } from "@/lib/useRestoreAnalysis";
+import { useDelayedLoading } from "@/lib/useDelayedLoading";
 import type { Posting, PostingsPayload } from "@/lib/types";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
 
 const PAGE_SIZE = 20;
 const MODELS = ["onsite", "hybrid", "remote"] as const;
+
+function addFilter(
+  set: React.Dispatch<React.SetStateAction<string[]>>,
+  value: string
+) {
+  if (!value) return;
+  set((prev) => (prev.includes(value) ? prev : [...prev, value]));
+}
+
+function FilterGroup({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="text-xs font-semibold text-[var(--text-muted)]">
+        {label}
+      </span>
+      {children}
+    </div>
+  );
+}
+
+function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }) {
+  return (
+    <span className="flex items-center gap-1 rounded-full border border-(--border-color)/40 bg-(--border-color)/20 py-0.5 pl-2.5 pr-1 text-xs font-semibold text-[var(--text-primary)]">
+      {label}
+      <button
+        type="button"
+        onClick={onRemove}
+        aria-label={label}
+        className="flex h-4 w-4 items-center justify-center rounded-full text-[var(--text-muted)] hover:bg-[var(--hover-bg)] hover:text-[var(--text-primary)]"
+      >
+        <Icon icon="mdi:close" className="h-3 w-3" />
+      </button>
+    </span>
+  );
+}
 
 // The role patterns miss plenty of real IT titles ("Data Architect", "Bilgi
 // Teknolojileri Uzmanı"), so those postings arrive unclassified rather than
@@ -32,16 +69,18 @@ export default function PostingsPage() {
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [role, setRole] = useState("");
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [city, setCity] = useState("");
   const [workModel, setWorkModel] = useState("");
-  const [skill, setSkill] = useState("");
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [sort, setSort] = useState<Sort>("newest");
   const [page, setPage] = useState(1);
 
   const [mySkills, setMySkills] = useState<string[]>([]);
   const [matchOnly, setMatchOnly] = useState(false);
   const restored = useRestoreAnalysis();
+  // The buttons still key off raw `loading`; only what the eye sees is delayed.
+  const showLoading = useDelayedLoading(loading);
 
   useEffect(() => {
     if (!restored) return;
@@ -55,7 +94,17 @@ export default function PostingsPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, role, city, workModel, skill, sort, matchOnly]);
+  }, [debouncedSearch, selectedRoles, city, workModel, selectedSkills, sort, matchOnly]);
+
+  // mySkills only reaches the request when the match filter is on, but it lands after
+  // the analysis restore and is a brand new array every time, which put a fresh
+  // identity into load's deps and refetched the list out from under the user. Keying
+  // off a string keeps that churn out of load.
+  const matchKey = matchOnly && mySkills.length ? mySkills.join("\u0000") : "";
+  const matchSkills = useMemo(
+    () => (matchKey ? matchKey.split("\u0000") : undefined),
+    [matchKey]
+  );
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -63,11 +112,11 @@ export default function PostingsPage() {
 
     try {
       const payload = await getPostings({
-        role: role || undefined,
+        role: selectedRoles.length ? selectedRoles : undefined,
         city: city || undefined,
         workModel: workModel || undefined,
-        skill: skill || undefined,
-        mySkills: matchOnly && mySkills.length ? mySkills : undefined,
+        skill: selectedSkills.length ? selectedSkills : undefined,
+        mySkills: matchSkills,
         search: debouncedSearch || undefined,
         sort,
         page,
@@ -81,7 +130,7 @@ export default function PostingsPage() {
     finally {
       setLoading(false);
     }
-  }, [role, city, workModel, skill, matchOnly, mySkills, debouncedSearch, sort, page, t.error]);
+  }, [selectedRoles, city, workModel, selectedSkills, matchSkills, debouncedSearch, sort, page, t.error]);
 
   useEffect(() => {
     load();
@@ -97,14 +146,26 @@ export default function PostingsPage() {
     [language]
   );
 
-  const hasFilters = Boolean(role || city || workModel || skill || search || matchOnly);
+  const hasFilters = Boolean(
+    selectedRoles.length || city || workModel || selectedSkills.length || search || matchOnly
+  );
+
+  // The page used to appear to teleport to the top on Next. Nothing scrolled it: the
+  // list was swapped for six skeletons, the document got shorter than the current
+  // scroll offset, and the browser clamped it. Keeping the old list on screen while
+  // the next one loads holds the height, which is what lets this animate at all.
+  function goToPage(next: number) {
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
+    setPage(next);
+  }
 
   function clearFilters() {
     setSearch("");
-    setRole("");
+    setSelectedRoles([]);
     setCity("");
     setWorkModel("");
-    setSkill("");
+    setSelectedSkills([]);
     setMatchOnly(false);
   }
 
@@ -121,7 +182,7 @@ export default function PostingsPage() {
       </p>
 
       <div className="mt-7 flex flex-wrap items-center gap-3 rounded-[18px] bg-(--card-bg) p-3 shadow-lg">
-        <div className="flex min-w-[240px] flex-1 items-center gap-2 rounded-xl bg-[var(--hover-bg)] px-3 py-2.5">
+        <div className="flex min-w-[240px] max-w-[380px] flex-1 items-center gap-2 rounded-xl bg-[var(--hover-bg)] px-3 py-2.5">
           <Icon icon="mdi:magnify" className="h-[18px] w-[18px] shrink-0 text-[var(--icon-color)]" />
           <input
             type="search"
@@ -133,8 +194,8 @@ export default function PostingsPage() {
           />
         </div>
 
-        <Select value={role} onChange={setRole} label={t.allRoles}>
-          {(data?.roles ?? []).map((option) => (
+        <Select value="" onChange={(value) => addFilter(setSelectedRoles, value)} label={t.allRoles}>
+          {(data?.roles ?? []).filter((option) => !selectedRoles.includes(option)).map((option) => (
             <option key={option} value={option}>
               {option === UNCLASSIFIED ? t.otherRole : option}
             </option>
@@ -155,8 +216,8 @@ export default function PostingsPage() {
           ))}
         </Select>
 
-        <Select value={skill} onChange={setSkill} label={t.allSkills}>
-          {(data?.skills ?? []).map((option) => (
+        <Select value="" onChange={(value) => addFilter(setSelectedSkills, value)} label={t.allSkills}>
+          {(data?.skills ?? []).filter((option) => !selectedSkills.includes(option)).map((option) => (
             <option key={option} value={option}>{option}</option>
           ))}
         </Select>
@@ -168,6 +229,59 @@ export default function PostingsPage() {
           </Select>
         </div>
       </div>
+
+      {(selectedRoles.length > 0 || selectedSkills.length > 0) && (
+        <div className="mt-4 flex flex-col gap-2">
+          {selectedRoles.length > 0 && (
+            <FilterGroup label={t.filterRoles}>
+              {selectedRoles.map((option) => (
+                <FilterChip
+                  key={option}
+                  label={option === UNCLASSIFIED ? t.otherRole : option}
+                  onRemove={() => setSelectedRoles((prev) => prev.filter((name) => name !== option))}
+                />
+              ))}
+            </FilterGroup>
+          )}
+
+          {selectedSkills.length > 0 && (
+            <FilterGroup label={t.filterSkills}>
+              {selectedSkills.map((option) => (
+                <FilterChip
+                  key={option}
+                  label={option}
+                  onRemove={() => setSelectedSkills((prev) => prev.filter((name) => name !== option))}
+                />
+              ))}
+            </FilterGroup>
+          )}
+        </div>
+      )}
+
+      {/* Waits for the restore: mySkills is empty for a moment on load, and
+          without this a signed-in user with a CV sees the prompt flash first. The
+          placeholder holds the slot at the height of the taller of the two, so the
+          list below does not get shoved down when the restore lands. */}
+      {!restored && (
+        <div className="mt-4 flex h-[76px] w-full items-center gap-4 rounded-[18px] bg-(--card-bg) px-6 shadow-lg">
+          <Skeleton className="h-8 w-8 shrink-0 rounded-lg" />
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <Skeleton className="h-4 w-48 max-w-full" />
+            <Skeleton className="h-3 w-32 max-w-full" />
+          </div>
+        </div>
+      )}
+
+      {restored && mySkills.length === 0 && (
+        <Link
+          href="/upload_cv"
+          className="mt-4 flex w-full items-center gap-4 rounded-[18px] bg-(--card-bg) px-6 py-4 text-left text-[var(--text-primary)] shadow-lg"
+        >
+          <Icon icon="mdi:account-star-outline" className="h-8 w-8 shrink-0" />
+          <span className="min-w-0 flex-1 text-base font-black">{t.matchNoCv}</span>
+          <Icon icon="mdi:arrow-right" className="h-5 w-5 shrink-0" />
+        </Link>
+      )}
 
       {mySkills.length > 0 && (
         <motion.button
@@ -212,7 +326,7 @@ export default function PostingsPage() {
         </div>
       )}
 
-      {loading && !error && (
+      {showLoading && !error && (!data || data.postings.length === 0) && (
         <div className="mt-5 flex flex-col gap-3">
           {Array.from({ length: 6 }).map((_, index) => (
             <Skeleton key={index} className="h-[104px] w-full rounded-[16px]" />
@@ -235,9 +349,14 @@ export default function PostingsPage() {
         </div>
       )}
 
-      {!loading && !error && data && data.postings.length > 0 && (
+      {!error && data && data.postings.length > 0 && (
         <>
-          <ul className="mt-5 flex flex-col gap-3">
+          <ul
+            aria-busy={loading}
+            className={`mt-5 flex flex-col gap-3 transition-opacity duration-200 ${
+              showLoading ? "opacity-50" : ""
+            }`}
+          >
             {data.postings.map((posting, index) => (
               <PostingRow
                 key={posting.id}
@@ -255,11 +374,11 @@ export default function PostingsPage() {
               {t.showing(from, to, numberFormat.format(total))}
             </p>
             <div className="ml-auto flex items-center gap-2">
-              <PageButton onClick={() => setPage(page - 1)} disabled={page <= 1}>
+              <PageButton onClick={() => goToPage(page - 1)} disabled={page <= 1 || loading}>
                 {t.previous}
               </PageButton>
               <span className="px-2 text-sm font-semibold">{page} / {lastPage}</span>
-              <PageButton onClick={() => setPage(page + 1)} disabled={page >= lastPage}>
+              <PageButton onClick={() => goToPage(page + 1)} disabled={page >= lastPage || loading}>
                 {t.next}
               </PageButton>
             </div>
@@ -286,7 +405,7 @@ function Select({
       value={value}
       onChange={(event) => onChange(event.target.value)}
       aria-label={label}
-      className="rounded-xl border border-[var(--accent)]/20 bg-transparent px-3 py-2.5 text-sm font-medium text-[var(--text-primary)] outline-none"
+      className="max-w-[170px] truncate rounded-xl border border-[var(--accent)]/20 bg-transparent px-3 py-2.5 text-sm font-medium text-[var(--text-primary)] outline-none"
     >
       {label && <option value="">{label}</option>}
       {children}
@@ -346,17 +465,19 @@ function PostingRow({
       className="flex flex-col gap-4 rounded-[16px] bg-(--card-bg) px-6 py-4 shadow-lg md:flex-row md:items-center md:gap-5"
     >
       <div className="min-w-0 flex-1">
+        {/* The badges keep their own line so every card breaks in the same place.
+            Sharing a row with the title made it depend on how long the title was. */}
         <div className="flex flex-wrap items-center gap-2.5">
           <span className="rounded-lg bg-[var(--accent-2)]/10 px-2.5 py-1 text-[11px] font-bold text-[var(--accent-2)] dark:bg-[var(--creamy)]/15 dark:text-[var(--creamy)]">
             {posting.role === UNCLASSIFIED ? t.otherRole : posting.role}
           </span>
-          <h2 className="min-w-0 truncate text-[17px] font-bold">{posting.title}</h2>
-          {showMatch && posting.matched_skills !== undefined && (
+          {showMatch && posting.matched_skills !== undefined && posting.skills.length > 1 && (
             <span className="rounded-lg bg-[var(--accent)] px-2.5 py-1 text-[11px] font-bold text-[var(--on-accent)]">
               {t.youHave(posting.matched_skills, posting.skills.length)}
             </span>
           )}
         </div>
+        <h2 className="mt-1.5 text-[17px] font-bold">{posting.title}</h2>
         <p className="mt-1.5 truncate text-[13px] text-[var(--text-muted)]">{posting.company}</p>
         <p className="mt-1 flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
           <Icon icon="mdi:map-marker-outline" className="h-3.5 w-3.5 shrink-0" />

@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Icon } from "@iconify/react";
+import { Icon } from "@/components/Icon";
 
 interface BackButtonProps {
   fallbackHref: string;

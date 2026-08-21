@@ -1,40 +1,44 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
-import { Icon } from "@iconify/react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Icon } from "@/components/Icon";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
 
 const MotionLink = motion.create(Link);
 
+type NavItem = {
+  label: string;
+  href: string;
+  icon: string;
+  routes?: string[];
+};
+
 export default function Sidebar() {
   const pathname = usePathname();
   const { user } = useAuth();
-  const { language } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
+  const { language, setLanguage } = useLanguage();
   const t = getTranslations(language);
+  const [prefsOpen, setPrefsOpen] = useState(false);
 
-  // Matches the Figma structure exactly: "CV Analysis" is a group that expands
-  // into the 3-step flow (Upload CV / Select Role / Analyse CV); Dashboard,
-  // Road Map and Settings are flat items below it.
-  const CV_FLOW = [
-    { label: t.sidebar.uploadCv, href: "/upload_cv", icon: "pepicons-pencil:cv" },
-    { label: t.sidebar.selectRole, href: "/select_role", icon: "ant-design:select-outlined" },
-    { label: t.sidebar.analyseCv, href: "/analyse_cv", icon: "hugeicons:chart-analysis" },
-  ];
-
-  const NAV_ITEMS = [
+  const NAV_ITEMS: NavItem[] = [
+    {
+      label: t.sidebar.cvAnalysis,
+      href: "/upload_cv",
+      icon: "hugeicons:chart-analysis",
+      routes: ["/upload_cv", "/select_role", "/analyse_cv"],
+    },
     { label: t.sidebar.dashboard, href: "/dashboard", icon: "solar:widget-2-linear" },
     { label: t.sidebar.jobPostings, href: "/postings", icon: "solar:case-minimalistic-linear" },
     { label: t.sidebar.roadMap, href: "/roadmap", icon: "solar:routing-2-linear" },
     { label: t.sidebar.settings, href: "/settings", icon: "solar:settings-linear" },
   ];
-
-  const cvFlowActive = CV_FLOW.some(
-    (item) => pathname === item.href || pathname.startsWith(item.href + "/")
-  );
 
   return (
     <aside
@@ -55,42 +59,11 @@ export default function Sidebar() {
         </div>
 
         <nav className="mt-2 flex flex-col gap-1 px-2 md:px-4">
-          {/* CV Analysis group */}
-          <div
-            className={`
-              hidden md:flex items-center gap-3 rounded-lg px-3 py-2.5
-              justify-center md:justify-start
-              ${cvFlowActive ? "text-[var(--nav-active)]" : "text-[var(--creamy)] hover:text-[var(--nav-active)]"}
-            `}
-          >
-            <Icon icon="hugeicons:chart-analysis" className="w-6 h-6 shrink-0" />
-            <span className="hidden md:inline text-lg font-black">{t.sidebar.cvAnalysis}</span>
-          </div>
-          <div className="flex flex-col gap-1 pb-2 md:pl-9">
-            {CV_FLOW.map((item) => {
-              const isActive = pathname === item.href;
-              return (
-                <MotionLink
-                  key={item.href}
-                  href={item.href}
-                  whileHover={{ x: 3 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                  className={`
-                    flex items-center justify-center gap-3 rounded-lg px-3 py-2.5
-                    md:justify-start md:px-0 md:py-1 md:text-sm md:font-semibold
-                    ${isActive ? "text-[var(--nav-active)]" : "text-[var(--creamy)]/80 hover:text-[var(--nav-active)]"}
-                  `}
-                >
-                  <Icon icon={item.icon} className="w-6 h-6 shrink-0 md:hidden" />
-                  <span className="sr-only md:not-sr-only">{item.label}</span>
-                </MotionLink>
-              );
-            })}
-          </div>
-
-          {/* Flat items */}
           {NAV_ITEMS.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+            const routes = item.routes ?? [item.href];
+            const isActive = routes.some(
+              (route) => pathname === route || pathname.startsWith(route + "/")
+            );
             return (
               <MotionLink
                 key={item.href}
@@ -101,7 +74,7 @@ export default function Sidebar() {
                 className={`
                   flex items-center gap-3 rounded-lg px-3 py-2.5
                   justify-center md:justify-start
-                  ${isActive ? "text-[var(--nav-active)]" : "text-[var(--creamy)] hover:text-[var(--nav-active)]"}
+                  ${isActive ? "bg-[var(--nav-active-bg)] text-[var(--nav-active)]" : "text-[var(--creamy)] hover:bg-[var(--creamy)]/10"}
                 `}
               >
                 <Icon icon={item.icon} className="w-6 h-6 shrink-0" />
@@ -112,31 +85,99 @@ export default function Sidebar() {
         </nav>
       </div>
 
-      {/* Bottom: profile summary, driven entirely by AuthContext */}
-      <MotionLink
-        href={user ? "/profile" : "/signup"}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        transition={{ type: "spring", stiffness: 400, damping: 25 }}
-        className="
-          flex items-center gap-3 px-3 py-4 mx-2 mb-2
-          justify-center md:justify-start
-        "
-      >
-        <Icon icon="iconamoon:profile-circle-bold" className="w-10 h-10 shrink-0" />
-        <div className="hidden md:flex md:flex-col md:min-w-0">
-          {user ? (
-            <>
-              <span className="text-lg font-bold truncate">{user.firstName}</span>
-              <span className="text-[10px] font-light truncate">
-                {user.studyField || t.sidebar.noFieldSet}
-              </span>
-            </>
-          ) : (
-            <span className="text-sm font-bold">{t.sidebar.signUpPrompt}</span>
+      <div className="px-2 pb-2 md:px-4">
+        <AnimatePresence initial={false}>
+          {prefsOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="overflow-hidden"
+            >
+              <div className="mb-2 flex flex-col gap-2 rounded-lg bg-[var(--creamy)]/10 p-2">
+                <div className="flex gap-1">
+                  {(["en", "tr"] as const).map((code) => (
+                    <button
+                      key={code}
+                      type="button"
+                      onClick={() => setLanguage(code)}
+                      className={`
+                        flex-1 rounded-md py-1 text-xs font-black uppercase
+                        ${language === code
+                          ? "bg-[var(--nav-active-bg)] text-[var(--nav-active)]"
+                          : "text-[var(--creamy)] hover:bg-[var(--creamy)]/10"}
+                      `}
+                    >
+                      {code}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  className="
+                    flex items-center justify-center gap-2 rounded-md py-1.5
+                    text-[var(--creamy)] hover:bg-[var(--creamy)]/10
+                    md:justify-start md:px-2
+                  "
+                >
+                  <Icon
+                    icon={theme === "dark" ? "solar:moon-linear" : "solar:sun-2-linear"}
+                    className="w-5 h-5 shrink-0"
+                  />
+                  <span className="sr-only md:not-sr-only text-sm font-semibold">
+                    {theme === "light" ? t.settings.lightMode : t.settings.darkMode}
+                  </span>
+                </button>
+              </div>
+            </motion.div>
           )}
-        </div>
-      </MotionLink>
+        </AnimatePresence>
+
+        <button
+          type="button"
+          onClick={() => setPrefsOpen((open) => !open)}
+          aria-expanded={prefsOpen}
+          className="
+            flex w-full items-center gap-3 rounded-lg px-3 py-2.5
+            justify-center md:justify-start
+            text-[var(--creamy)] hover:bg-[var(--creamy)]/10
+          "
+        >
+          <Icon icon="solar:tuning-2-linear" className="w-6 h-6 shrink-0" />
+          <span className="sr-only md:not-sr-only text-lg font-black">
+            {t.sidebar.preferences}
+          </span>
+        </button>
+
+        {/* Bottom: profile summary, driven entirely by AuthContext */}
+        <MotionLink
+          href={user ? "/profile" : "/signup"}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          transition={{ type: "spring", stiffness: 400, damping: 25 }}
+          className="
+            flex items-center gap-3 px-3 py-4
+            justify-center md:justify-start
+          "
+        >
+          <Icon icon="iconamoon:profile-circle-bold" className="w-10 h-10 shrink-0" />
+          <div className="hidden md:flex md:flex-col md:min-w-0">
+            {user ? (
+              <>
+                <span className="text-lg font-bold truncate">{user.firstName}</span>
+                <span className="text-[10px] font-light truncate">
+                  {user.studyField || t.sidebar.noFieldSet}
+                </span>
+              </>
+            ) : (
+              <span className="text-sm font-bold">{t.sidebar.signUpPrompt}</span>
+            )}
+          </div>
+        </MotionLink>
+      </div>
     </aside>
   );
 }

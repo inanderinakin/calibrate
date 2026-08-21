@@ -4,7 +4,7 @@ import re
 # of being repeated as a literal string on every skill that shares it.
 # (Previously TERMS and SKILL_CATEGORIES were two separate flat dicts keyed
 # by the same skill names, which had to be kept in sync by hand and could
-# silently drift — e.g. a new TERMS entry with no matching SKILL_CATEGORIES
+# silently drift, e.g. a new TERMS entry with no matching SKILL_CATEGORIES
 # entry would KeyError at request time in main.py.)
 CATEGORIES = {
     "computer programming": {

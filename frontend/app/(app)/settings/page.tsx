@@ -2,28 +2,58 @@
 
 import { useEffect, useRef, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Icon } from "@iconify/react";
+import { Icon } from "@/components/Icon";
 import { motion } from "framer-motion";
 import AppShell from "@/components/AppShell";
 import { useAuth, clearStoredProfile } from "@/contexts/AuthContext";
-import { deleteAccount, updateProfile } from "@/lib/api";
+import { changePassword, deleteAccount, getProfile, updateProfile } from "@/lib/api";
+import SuggestInput from "@/components/SuggestInput";
+import { countryAliases, countryLabel, countrySuggestions, toStoredCountry } from "@/lib/countries";
+import { studyFieldSuggestions } from "@/lib/studyFields";
 import { session } from "@/lib/session";
+import { clearAnalysisMarker } from "@/lib/useRestoreAnalysis";
 import { tokens } from "@/lib/tokens";
-import { useTheme } from "@/contexts/ThemeContext";
-import { useLanguage, type Language } from "@/contexts/LanguageContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
 
 const HOLD_TO_DELETE_MS = 5000;
+
+// Drawn in CSS rather than with an Icon: an icon resolves its SVG after mount,
+// so it measures 0 wide for a frame and shoves the label sideways on every
+// keystroke. Kept in the layout when there is nothing to flag, for the same reason.
+function UnsavedDot({ on, title }: { on: boolean; title: string }) {
+  return (
+    <span
+      title={on ? title : undefined}
+      aria-label={on ? title : undefined}
+      role={on ? "img" : undefined}
+      className={`h-2 w-2 shrink-0 rounded-full bg-(--warning) ${on ? "" : "invisible"}`}
+    />
+  );
+}
 
 export default function SettingsPage() {
   const router = useRouter();
 
   const { user, updateUser, logout } = useAuth();
-  const { theme, toggleTheme } = useTheme();
-  const { language, setLanguage } = useLanguage();
+  const { language } = useLanguage();
 
   const [firstName, setFirstName] = useState(user?.firstName ?? "");
   const [lastName, setLastName] = useState(user?.lastName ?? "");
+  const [country, setCountry] = useState(countryLabel(user?.country ?? "", language));
+  const [studyField, setStudyField] = useState(user?.studyField ?? "");
+  const [original, setOriginal] = useState({
+    firstName: user?.firstName ?? "",
+    lastName: user?.lastName ?? "",
+    country: countryLabel(user?.country ?? "", language),
+    studyField: user?.studyField ?? "",
+  });
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordChanged, setPasswordChanged] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -97,6 +127,55 @@ export default function SettingsPage() {
 
   const t = getTranslations(language).settings;
 
+  // The account is the source of truth. These two used to live only in
+  // localStorage, so a new device showed them empty however often they were saved.
+  useEffect(() => {
+    if (!tokens.getIdToken()) return;
+
+    getProfile()
+      .then((saved) => {
+        const savedCountry = saved.country ? countryLabel(saved.country, language) : "";
+        if (saved.country) setCountry(savedCountry);
+        if (saved.study_field) setStudyField(saved.study_field);
+
+        setOriginal((prev) => ({
+          ...prev,
+          country: saved.country ? savedCountry : prev.country,
+          studyField: saved.study_field || prev.studyField,
+        }));
+      })
+      .catch(() => {});
+  }, [language]);
+
+  async function handleChangePassword(e: FormEvent) {
+    e.preventDefault();
+
+    setPasswordChanged(false);
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError(t.passwordMismatch);
+      return;
+    }
+
+    setChangingPassword(true);
+    setPasswordError(null);
+
+    try {
+      await changePassword(currentPassword, newPassword);
+
+      setPasswordChanged(true);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    }
+    catch (err) {
+      setPasswordError(err instanceof Error ? err.message : t.passwordFailed);
+    }
+    finally {
+      setChangingPassword(false);
+    }
+  }
+
   async function handleSave(e: FormEvent) {
     e.preventDefault();
 
@@ -105,11 +184,25 @@ export default function SettingsPage() {
     setSaved(false);
 
     try {
-      const result = await updateProfile(firstName, lastName);
+      const result = await updateProfile(
+        firstName,
+        lastName,
+        toStoredCountry(country, language),
+        studyField
+      );
 
       updateUser({
         firstName: result.first_name,
         lastName: result.last_name,
+        country: result.country,
+        studyField: result.study_field,
+      });
+
+      setOriginal({
+        firstName: result.first_name,
+        lastName: result.last_name,
+        country: countryLabel(result.country, language),
+        studyField: result.study_field,
       });
 
       setSaved(true);
@@ -122,12 +215,6 @@ export default function SettingsPage() {
     }
   }
 
-  function handleLanguageChange(
-    e: React.ChangeEvent<HTMLSelectElement>
-  ) {
-    setLanguage(e.target.value as Language);
-  }
-
   async function handleDelete() {
     setDeleting(true);
     setDeleteError(null);
@@ -135,6 +222,9 @@ export default function SettingsPage() {
     try {
       await deleteAccount();
 
+      // Before tokens.clear(): the marker is keyed by the account, so dropping the
+      // token first would leave it behind with no way to name it.
+      clearAnalysisMarker();
       tokens.clear();
       session.clear();
       clearStoredProfile();
@@ -155,6 +245,15 @@ export default function SettingsPage() {
      */
     router.push("/");
   }
+
+  const changed = {
+    firstName: firstName !== original.firstName,
+    lastName: lastName !== original.lastName,
+    country: country !== original.country,
+    studyField: studyField !== original.studyField,
+  };
+
+  const hasChanges = Object.values(changed).some(Boolean);
 
   return (
     <AppShell backHref="/dashboard">
@@ -188,7 +287,8 @@ export default function SettingsPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <label className="flex flex-col gap-2">
-                <span className="text-(--accent-bg) font-medium">
+                <span className="flex items-center gap-1.5 text-(--accent-bg) font-medium">
+                  <UnsavedDot on={changed.firstName} title={t.unsavedChange} />
                   {t.firstName}
                 </span>
 
@@ -200,7 +300,8 @@ export default function SettingsPage() {
               </label>
 
               <label className="flex flex-col gap-2">
-                <span className="text-(--accent-bg) font-medium">
+                <span className="flex items-center gap-1.5 text-(--accent-bg) font-medium">
+                  <UnsavedDot on={changed.lastName} title={t.unsavedChange} />
                   {t.lastName}
                 </span>
 
@@ -210,6 +311,31 @@ export default function SettingsPage() {
                   className="glass-input border-2 border-(--accent-bg) rounded-[20px] px-4 py-3 text-[var(--text-primary)] outline-none"
                 />
               </label>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <SuggestInput
+                id="settings-country"
+                label={t.country}
+                value={country}
+                onChange={setCountry}
+                suggestions={countrySuggestions(language)}
+                aliases={countryAliases(language)}
+                variant="form"
+                changed={changed.country}
+                changedTitle={t.unsavedChange}
+              />
+
+              <SuggestInput
+                id="settings-study-field"
+                label={t.studyField}
+                value={studyField}
+                onChange={setStudyField}
+                suggestions={studyFieldSuggestions(language)}
+                variant="form"
+                changed={changed.studyField}
+                changedTitle={t.unsavedChange}
+              />
             </div>
 
             <label className="flex flex-col gap-2">
@@ -240,75 +366,90 @@ export default function SettingsPage() {
 
             <motion.button
               type="submit"
-              disabled={saving}
-              whileHover={saving ? undefined : { scale: 1.02 }}
-              whileTap={saving ? undefined : { scale: 0.97 }}
-              className="self-end bg-[var(--accent)] text-[var(--on-accent)] rounded-[20px] px-6 py-2.5 font-medium disabled:opacity-60"
+              disabled={saving || !hasChanges}
+              whileHover={saving || !hasChanges ? undefined : { scale: 1.02 }}
+              whileTap={saving || !hasChanges ? undefined : { scale: 0.97 }}
+              className="self-end bg-[var(--accent)] text-[var(--on-accent)] rounded-[20px] px-6 py-2.5 font-medium disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {saving ? t.saving : t.saveChanges}
             </motion.button>
           </div>
 
-          {/* Language & Appearance */}
-          <div className="glass-card rounded-[30px] shadow-lg p-6 md:p-9 flex flex-col gap-4">
+        </motion.form>
+
+        <motion.form
+          onSubmit={handleChangePassword}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.15 }}
+          className="glass-card rounded-[30px] shadow-lg p-6 md:p-9 flex flex-col gap-6"
+        >
+          <div>
             <h2 className="text-2xl font-medium text-(--accent-bg)">
-              {t.languageAppearance}
+              {t.changePassword}
             </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Language */}
-              <div className="flex flex-col gap-2">
-                <span className="text-(--accent-bg) font-medium">
-                  {t.language}
-                </span>
-
-                <div className="border-2 border-(--accent-bg) rounded-[20px] px-4 py-3 flex items-center justify-between text-(--accent-bg)">
-                  <select
-                    value={language}
-                    onChange={handleLanguageChange}
-                    className="w-full bg-transparent outline-none cursor-pointer text-(--accent-bg) appearance-none"
-                  >
-                    <option value="en">
-                      {t.english}
-                    </option>
-
-                    <option value="tr">
-                      {t.turkish}
-                    </option>
-                  </select>
-
-                  <Icon
-                    icon="weui:arrow-outlined"
-                    className="w-5 h-5 rotate-90 pointer-events-none"
-                  />
-                </div>
-              </div>
-
-              {/* Appearance */}
-              <div className="flex flex-col gap-2">
-                <span className="text-(--accent-bg) font-medium">
-                  {t.appearance}
-                </span>
-
-                <button
-                  type="button"
-                  onClick={toggleTheme}
-                  className="border-2 border-(--accent-bg) rounded-[20px] px-4 py-3 flex items-center justify-between text-(--accent-bg)"
-                >
-                  <span>
-                    {theme === "light"
-                      ? t.lightMode
-                      : t.darkMode}
-                  </span>
-
-                  <Icon
-                    icon="weui:arrow-outlined"
-                    className="w-5 h-5 rotate-90"
-                  />
-                </button>
-              </div>
-            </div>
+            <p className="mt-1 text-sm text-(--text-muted)">{t.changePasswordHint}</p>
           </div>
+
+          <label className="flex flex-col gap-2">
+            <span className="text-(--accent-bg) font-medium">{t.currentPassword}</span>
+            <input
+              type="password"
+              autoComplete="current-password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              className="glass-input border-2 border-(--accent-bg) rounded-[20px] px-4 py-3 text-[var(--text-primary)] outline-none"
+            />
+          </label>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <label className="flex flex-col gap-2">
+              <span className="text-(--accent-bg) font-medium">{t.newPassword}</span>
+              <input
+                type="password"
+                autoComplete="new-password"
+                minLength={8}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="glass-input border-2 border-(--accent-bg) rounded-[20px] px-4 py-3 text-[var(--text-primary)] outline-none"
+              />
+            </label>
+
+            <label className="flex flex-col gap-2">
+              <span className="text-(--accent-bg) font-medium">{t.confirmPassword}</span>
+              <input
+                type="password"
+                autoComplete="new-password"
+                minLength={8}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="glass-input border-2 border-(--accent-bg) rounded-[20px] px-4 py-3 text-[var(--text-primary)] outline-none"
+              />
+            </label>
+          </div>
+
+          {passwordError && (
+            <p role="alert" className="rounded-[20px] border-2 border-(--accent-2) px-4 py-3 font-medium text-[var(--text-primary)]">
+              {passwordError}
+            </p>
+          )}
+
+          {passwordChanged && !passwordError && (
+            <p className="flex items-center gap-2 font-medium text-[var(--text-primary)]">
+              <Icon icon="mdi:check-circle-outline" className="w-5 h-5" />
+              {t.passwordChanged}
+            </p>
+          )}
+
+          <motion.button
+            type="submit"
+            disabled={changingPassword || !currentPassword || !newPassword}
+            whileHover={changingPassword ? undefined : { scale: 1.02 }}
+            whileTap={changingPassword ? undefined : { scale: 0.97 }}
+            className="self-end bg-[var(--accent)] text-[var(--on-accent)] rounded-[20px] px-6 py-2.5 font-medium disabled:opacity-60"
+          >
+            {changingPassword ? t.changingPassword : t.changePassword}
+          </motion.button>
         </motion.form>
 
         <div className="self-end flex flex-col sm:flex-row items-stretch sm:items-center gap-3">

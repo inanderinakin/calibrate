@@ -4,7 +4,7 @@ import type { Language } from "@/contexts/LanguageContext";
 // backend/app/skills.py (SKILL_CATEGORIES). These are our own English
 // strings, not raw ESCO taxonomy labels, so we own the translation.
 // Categories that come straight from the raw ESCO dataset (via
-// normalize.py) aren't in this map and are shown as-is in English —
+// normalize.py) aren't in this map and are shown as-is in English,
 // same as the rest of that raw/data-driven content.
 const CATEGORY_LABELS_TR: Record<string, string> = {
   "computer programming": "Bilgisayar Programlama",

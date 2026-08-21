@@ -63,6 +63,29 @@ def write_analysis(userId: str, payload: dict):
     )
 
 
+profile = "profile"
+
+def read_profile(userId: str):
+    response = table.get_item(
+            Key = {
+            'userId': userId
+        }
+    )
+    item = response.get('Item', {})
+    return item.get(profile, {})
+
+
+def write_profile(userId: str, payload: dict):
+    table.update_item(
+        Key = {
+            'userId': userId
+        },
+        UpdateExpression = "SET #profile = :payload",
+        ExpressionAttributeNames = {'#profile': profile},
+        ExpressionAttributeValues = {':payload': payload}
+    )
+
+
 completed_projects = "completedProjects"
 
 def read_completed_projects(userId: str):

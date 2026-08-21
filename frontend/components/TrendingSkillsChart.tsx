@@ -180,6 +180,7 @@ export default function TrendingSkillsChart({
           <select
             value={selected}
             onChange={(event) => setSkill(event.target.value)}
+            aria-label={t.skillSelector}
             className="rounded-[10px] border border-black/10 bg-(--input-bg) px-3 py-2 text-sm text-(--text-primary)"
           >
             {skills.map((name) => (
@@ -356,11 +357,11 @@ export default function TrendingSkillsChart({
         )}
       </div>
 
-      <p className="text-xs text-(--text-muted)">
-        {role
-          ? t.roleCaption(selected, role)
-          : t.shareOfPostings(selected, data.sources)}
-      </p>
+      {!role && (
+        <p className="text-xs text-(--text-muted)">
+          {t.shareOfPostings(selected, data.sources)}
+        </p>
+      )}
     </div>
   );
 }

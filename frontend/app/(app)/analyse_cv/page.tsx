@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Icon } from "@iconify/react";
+import { Icon } from "@/components/Icon";
 import { motion } from "framer-motion";
 import AppShell from "@/components/AppShell";
 import StepIndicator from "@/components/StepIndicator";
@@ -106,6 +106,9 @@ export default function AnalyseCvPage() {
           gaps,
           report,
           cv_filename: session.getCvFilename(),
+          cv_size: session.getCvSize(),
+          cv_type: session.getCvType(),
+          cv_uploaded_at: session.getCvUploadedAt(),
         }).catch(() => {});
       } catch (e) {
         setError(

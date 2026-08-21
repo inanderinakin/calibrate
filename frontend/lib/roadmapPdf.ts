@@ -197,7 +197,7 @@ export async function downloadRoadmapPdf(
     const needed = skillHeight(skill);
     const pageSpace = height - MARGIN - (HEADER_HEIGHT + 12);
 
-    // Only force a break when the skill could actually fit on a fresh page —
+    // Only force a break when the skill could actually fit on a fresh page,
     // otherwise a very long one would page-break forever.
     if (y + needed > height - MARGIN && needed <= pageSpace) newPage();
 

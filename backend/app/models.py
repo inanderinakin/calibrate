@@ -21,6 +21,15 @@ class ResendCodeInfo(BaseModel):
 class ProfileInfo(BaseModel):
     first_name: str
     last_name: str
+    # Cognito holds the names. These two live in the user table instead: adding
+    # them as custom attributes means changing the pool schema, and that can
+    # replace the pool and take every account with it.
+    country: str = ""
+    study_field: str = ""
+
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str
 
 class CompletedSkills(BaseModel):
     skills: list[str]
@@ -30,9 +39,13 @@ class Analysis(BaseModel):
     target_roles: list[str] = []
     gaps: "GapResult | None" = None
     report: "Report | None" = None
-    # The uploaded file itself is never kept — only its name, so the upload page
-    # can show which CV is on file after sessionStorage is gone.
+    # The uploaded file itself is never kept, only what it was, so the upload page
+    # can show which CV is on file after sessionStorage is gone. All optional: the
+    # accounts that uploaded before these existed only have the name.
     cv_filename: str | None = None
+    cv_size: int | None = None
+    cv_type: str | None = None
+    cv_uploaded_at: str | None = None
 
 class MatchData(BaseModel):
     matched_demanded: int
