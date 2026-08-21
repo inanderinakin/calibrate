@@ -80,7 +80,7 @@ def test_no_shown_posting_is_past_its_closing_date():
     artifact is only filtered when it is built and is then served for days, so
     checking it directly just measured how old the file was.
     """
-    from handleposting import drop_expired
+    from postings_rules import drop_expired
 
     postings = load_json_artifact("active_postings.json")["postings"]
     today = "2026-08-21"

@@ -57,18 +57,6 @@ if __name__ == "__main__":
     load_trends()
 
 
-def drop_expired(postings: list[dict], today: str) -> list[dict]:
-    """Postings whose closing date has not passed.
-
-    build_postings.py already filters these out, but it does so once, and the artifact
-    is then served for days. Anything with no closing date stays: plenty of boards
-    never publish one, and dropping those would empty the page.
-    """
-    return [
-        posting for posting in postings
-        if not posting.get("closing_date") or posting["closing_date"] >= today
-    ]
-
 def build_skill_facts(postings: dict) -> dict:
     """What the live board says about each skill, so a project brief can be anchored
     to real demand instead of the agent's imagination."""

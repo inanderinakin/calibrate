@@ -22,7 +22,8 @@ from handlecv import compute_gaps, extract_skill_candidates, extract_cv_text, ex
 from normalize import normalize
 from models import Analysis, BulletRequest, CompletedProjects, CompletedSkills, GapResult, GapRequest, LoginInfo, NormalizedSkill, PasswordChange, ProfileInfo, ResendCodeInfo, SignUpInfo, VerifyEmailInfo
 from skills import PATTERNS, SKILL_CATEGORIES, base_skill_name
-from handleposting import drop_expired, load_demand_profile, load_postings, load_trends
+from handleposting import load_demand_profile, load_postings, load_trends
+from postings_rules import drop_expired
 from storage import delete_user_data, read_analysis, read_completed_projects, read_completed_skills, read_profile, write_analysis, write_completed_projects, write_completed_skills, write_profile
 from auth import verify_token, verify_token_claims
 
