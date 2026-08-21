@@ -2,7 +2,7 @@ import asyncio
 import os
 import tempfile
 import jwt
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing_extensions import Annotated
 import uuid
 from pathlib import Path
@@ -22,7 +22,7 @@ from handlecv import compute_gaps, extract_skill_candidates, extract_cv_text, ex
 from normalize import normalize
 from models import Analysis, BulletRequest, CompletedProjects, CompletedSkills, GapResult, GapRequest, LoginInfo, NormalizedSkill, PasswordChange, ProfileInfo, ResendCodeInfo, SignUpInfo, VerifyEmailInfo
 from skills import PATTERNS, SKILL_CATEGORIES, base_skill_name
-from handleposting import load_demand_profile, load_postings, load_trends
+from handleposting import drop_expired, load_demand_profile, load_postings, load_trends
 from storage import delete_user_data, read_analysis, read_completed_projects, read_completed_skills, read_profile, write_analysis, write_completed_projects, write_completed_skills, write_profile
 from auth import verify_token, verify_token_claims
 
@@ -544,7 +544,7 @@ async def get_postings(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=50),
 ):
-    matches = postings["postings"]
+    matches = drop_expired(postings["postings"], date.today().isoformat())
 
     if role:
         matches = [posting for posting in matches if posting["role"] in role]
