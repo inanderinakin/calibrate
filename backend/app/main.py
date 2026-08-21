@@ -43,6 +43,8 @@ origins = [
     "http://127.0.0.1",
     "http://127.0.0.1:3000",
     "https://main.d1nc4zzbkovnjv.amplifyapp.com",
+    "https://usecalibrate.dev",
+    "https://www.usecalibrate.dev",
 ]
 
 app.add_middleware(

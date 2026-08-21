@@ -65,6 +65,10 @@ class GapResult(BaseModel):
     target_roles: list[str]
     gaps: dict[str, list[Gap]]
     matched_data: dict[str, MatchData]
+    # the demanded skills the CV already covers. None rather than {} so an analysis
+    # saved before this field existed stays distinguishable from one where a role
+    # genuinely matched nothing
+    matched_skills: "dict[str, list[DemandedSkill]] | None" = None
 
 class NormalizedSkill(BaseModel):
     skill: str
