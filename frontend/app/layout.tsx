@@ -20,6 +20,26 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+// Runs while the HTML is still parsing, before anything paints. The providers used
+// to start on light/English and correct themselves in an effect, so a dark-mode
+// Turkish account got a white flash and then watched every string swap.
+const applyPreferences = `
+(function () {
+  try {
+    var theme = localStorage.getItem("calibrate_theme");
+    if (theme !== "light" && theme !== "dark") {
+      theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    document.documentElement.classList.toggle("dark", theme === "dark");
+
+    var language = localStorage.getItem("calibrate_language");
+    if (language === "en" || language === "tr") {
+      document.documentElement.lang = language;
+    }
+  } catch (e) {}
+})();
+`;
+
 export default function RootLayout({
   children,
 }: {
@@ -28,6 +48,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased`}>
+        <script dangerouslySetInnerHTML={{ __html: applyPreferences }} />
         <ThemeProvider>
           <LanguageProvider>
             <AuthProvider>{children}</AuthProvider>
