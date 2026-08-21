@@ -106,13 +106,15 @@ export default function RoadmapPage() {
 
   useEffect(() => {
     async function loadCompleted() {
-      try {
-        const saved = await getCompletedSkills();
-        setCompleted(new Set(saved));
-      }
-      catch {
-        setCompleted(new Set());
-      }
+      // Both, in parallel. Project ticks were being written to the account by
+      // toggleProject and never read back, so they vanished on every reload.
+      const [skills, projects] = await Promise.allSettled([
+        getCompletedSkills(),
+        getCompletedProjects(),
+      ]);
+
+      setCompleted(new Set(skills.status === "fulfilled" ? skills.value : []));
+      setDoneProjects(new Set(projects.status === "fulfilled" ? projects.value : []));
     }
 
     loadCompleted();

@@ -1,3 +1,4 @@
 fastapi[standard]
 jsonlines==4.0.0
 pytest==8.3.4
+ruff==0.16.4

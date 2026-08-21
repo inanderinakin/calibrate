@@ -1,0 +1,46 @@
+[tool.ruff]
+target-version = "py313"
+line-length = 120
+# experiments are throwaway analysis scripts, not shipped
+exclude = [".venv", ".aws-sam", "experiments", "normalizer/esco_dataset"]
+
+[tool.ruff.lint]
+# Rules that find bugs, not rules that find opinions. A linter nobody can get to
+# green is a linter nobody runs, which is how the frontend one ended up broken.
+select = [
+    "F",    # pyflakes: undefined names, unused variables, bad annotations
+    "B",    # bugbear: mutable defaults, loop variable capture
+    "S",    # bandit security rules
+    "SIM",  # obvious simplifications
+]
+
+ignore = [
+    # FastAPI's own idiom is a call in the default argument: Query(...), File(...),
+    # Depends(...). Bugbear cannot tell that apart from a genuine mutable default.
+    "B008",
+    # The scrapers and artifact loaders catch broadly on purpose. One bad posting or
+    # a missing S3 object should not take the whole run down.
+    "BLE001",
+    # Style, and there are 35 of them in error paths we are not rewriting now.
+    "B904",
+    # A loop index that is not read is untidy, not wrong.
+    "B007",
+    # These zips pair collections that are meant to be one to one, so strict=True
+    # would be a real improvement: it turns a silent misalignment into a loud error,
+    # which matters when the output is which skill maps to which concept. Left off
+    # for now because the call sites need live Bedrock calls to exercise, and adding
+    # a new crash path to the matching flow days before the demo is the wrong trade.
+    # Worth turning on straight after.
+    "B905",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# These re-export the package API. main.py does `from handlecv import compute_gaps`
+# because of them, so they are the opposite of unused and must not be "fixed".
+"**/__init__.py" = ["F401"]
+# pytest is built on assert
+"tests/*" = ["S101"]
+# random jitters mouse movement so the scraper looks human, never anything cryptographic.
+# The swallowed exceptions are deliberate: one unreadable posting should not end a run.
+"scraper/*" = ["S311", "S110", "S112"]
+"pipeline/*" = ["S110", "S112"]
