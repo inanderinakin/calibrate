@@ -71,6 +71,57 @@ Resources:
       Policies:
         PasswordPolicy:
           MinimumLength: 8
+      # Cognito's built in sender is a shared address on a domain we do not control,
+      # it is filtered aggressively, and it is capped at 50 messages a day. Sending
+      # through SES from our own verified domain is what lets SPF, DKIM and DMARC
+      # line up, which is most of what keeps the message out of a spam folder.
+      EmailConfiguration:
+        EmailSendingAccount: DEVELOPER
+        SourceArn: !Sub "arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/usecalibrate.dev"
+        From: "Calibrate <verification@usecalibrate.dev>"
+        ReplyToEmailAddress: "verification@usecalibrate.dev"
+      VerificationMessageTemplate:
+        DefaultEmailOption: CONFIRM_WITH_CODE
+        EmailSubject: "Your Calibrate verification code"
+        EmailMessage: |
+          <!doctype html>
+          <html lang="en">
+            <body style="margin:0;padding:0;background:#f4f6f8;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f8;padding:32px 12px;">
+                <tr>
+                  <td align="center">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border:1px solid #d3dce3;border-radius:8px;">
+                      <tr>
+                        <td style="padding:28px 32px 8px 32px;font-family:Helvetica,Arial,sans-serif;">
+                          <p style="margin:0;font-size:19px;font-weight:bold;color:#14202b;">Calibrate</p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding:8px 32px 0 32px;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#35434f;">
+                          <p style="margin:0 0 18px 0;">Someone asked to create a Calibrate account with this email address. Enter the code below to confirm it is yours.</p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td align="center" style="padding:4px 32px 4px 32px;">
+                          <p style="margin:0;font-family:Consolas,Menlo,monospace;font-size:30px;font-weight:bold;letter-spacing:7px;color:#14202b;background:#e9eef2;border-radius:6px;padding:16px 20px;">{####}</p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding:16px 32px 0 32px;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#35434f;">
+                          <p style="margin:0 0 18px 0;">The code is valid for 24 hours. If you did not sign up for Calibrate, you can ignore this message and no account will be created.</p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding:8px 32px 28px 32px;border-top:1px solid #d3dce3;font-family:Helvetica,Arial,sans-serif;font-size:12px;line-height:1.6;color:#62717f;">
+                          <p style="margin:12px 0 0 0;">Calibrate compares your CV against skills employers are asking for in job postings. Sent from usecalibrate.dev because an account was requested with this address.</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </body>
+          </html>
   UserPoolDomain:
     Type: AWS::Cognito::UserPoolDomain
     Properties:
@@ -105,9 +156,13 @@ Resources:
       CallbackURLs:
         - http://localhost:3000/auth/callback
         - https://main.d1nc4zzbkovnjv.amplifyapp.com/auth/callback
+        - https://usecalibrate.dev/auth/callback
+        - https://www.usecalibrate.dev/auth/callback
       LogoutURLs:
         - http://localhost:3000/login
         - https://main.d1nc4zzbkovnjv.amplifyapp.com/login
+        - https://usecalibrate.dev/login
+        - https://www.usecalibrate.dev/login
 
 Outputs:
   FunctionUrl:
