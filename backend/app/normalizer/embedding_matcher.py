@@ -91,7 +91,7 @@ def build_catalog():
             concept_list = [concept.strip() for concept in concept_list]
             uri_to_category.setdefault(row['conceptUri'], concept_list[0])
 
-    uri_to_label.keys() == uri_to_category.keys()
+    assert uri_to_label.keys() == uri_to_category.keys(), "every concept needs both a label and a category"
     
     return pairs, uri_to_label, uri_to_category
 

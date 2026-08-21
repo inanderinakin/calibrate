@@ -49,10 +49,10 @@ export async function uploadCv(file: File) {
   const body = new FormData();
   body.append("file", file);
 
-  const res = await fetchWithTimeout("/upload_cv", {
+  const res = await authedFetch("/upload_cv", {
     method: "POST",
     body,
-  }, UPLOAD_TIMEOUT_MS);
+  }, UPLOAD_TIMEOUT_MS, false);
 
   if (!res.ok) {
     throw new Error(await errorMessage(res, "CV upload failed"));
@@ -83,15 +83,17 @@ export async function post_login(email: string, password: string) {
   return await loginResponse.json()
 }
 
-function authHeaders() {
+function authHeaders(json = true) {
   const idToken = tokens.getIdToken();
 
   if (!idToken) {
     throw new Error("You are not signed in.");
   }
 
+  // A multipart upload must be left to set its own Content-Type, because the
+  // boundary is generated with it. Forcing application/json here breaks the file.
   return {
-    "Content-Type": "application/json",
+    ...(json ? { "Content-Type": "application/json" } : {}),
     Authorization: `Bearer ${idToken}`,
   };
 }
@@ -107,8 +109,13 @@ function endSession(): never {
   throw new Error("Your session has expired. Please sign in again.");
 }
 
-async function authedFetch(path: string, init: RequestInit = {}) {
-  const res = await fetchWithTimeout(path, { ...init, headers: authHeaders() }, AUTH_TIMEOUT_MS);
+export async function authedFetch(
+  path: string,
+  init: RequestInit = {},
+  timeoutMs: number = AUTH_TIMEOUT_MS,
+  json = true
+) {
+  const res = await fetchWithTimeout(path, { ...init, headers: authHeaders(json) }, timeoutMs);
 
   if (res.status !== 401) return res;
 
@@ -124,7 +131,7 @@ async function authedFetch(path: string, init: RequestInit = {}) {
     endSession();
   }
 
-  return await fetchWithTimeout(path, { ...init, headers: authHeaders() }, AUTH_TIMEOUT_MS);
+  return await fetchWithTimeout(path, { ...init, headers: authHeaders(json) }, timeoutMs);
 }
 
 export async function updateProfile(
@@ -378,7 +385,7 @@ export async function getSkillCatalog(): Promise<NormalizedSkill[]> {
 }
 
 export async function getCvBullet(step: ProjectStep, notes: string, language: string): Promise<string> {
-  const res = await fetchWithTimeout("/cv_bullet", {
+  const res = await authedFetch("/cv_bullet", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ step, notes, language }),

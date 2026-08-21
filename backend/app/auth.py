@@ -18,22 +18,3 @@ def verify_token_claims(token: str):
 
 def verify_token(token: str):
     return verify_token_claims(token).get('sub')
-
-if __name__ == "__main__":
-    import boto3
-
-    cognito = boto3.client('cognito-idp')
-
-    response = cognito.initiate_auth(
-        ClientId= app_client_id,
-        AuthFlow='USER_PASSWORD_AUTH',
-        AuthParameters= {
-            'USERNAME': 'inandakin@gmail.com',
-            'PASSWORD': '123456789',
-        }
-    )
-
-    result = response.get('AuthenticationResult')
-    user_id = verify_token(result.get('IdToken'))
-
-    print(user_id)

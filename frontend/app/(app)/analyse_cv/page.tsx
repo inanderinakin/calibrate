@@ -7,7 +7,7 @@ import { Icon } from "@/components/Icon";
 import { motion } from "framer-motion";
 import AppShell from "@/components/AppShell";
 import StepIndicator from "@/components/StepIndicator";
-import { errorMessage, fetchWithTimeout, isTimeout, saveAnalysis } from "@/lib/api";
+import { authedFetch, errorMessage, isTimeout, saveAnalysis } from "@/lib/api";
 import { session } from "@/lib/session";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
@@ -56,7 +56,7 @@ export default function AnalyseCvPage() {
 
     async function run() {
       try {
-        const gapsRes = await fetchWithTimeout("/compute_gaps", {
+        const gapsRes = await authedFetch("/compute_gaps", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -79,7 +79,7 @@ export default function AnalyseCvPage() {
         session.setGaps(gaps);
         setStep(3);
 
-        const reportRes = await fetchWithTimeout(`/recommendations?language=${language}`, {
+        const reportRes = await authedFetch(`/recommendations?language=${language}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(gaps),
