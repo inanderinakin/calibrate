@@ -18,7 +18,6 @@ import re
 import sys
 import time
 import random
-from urllib.parse import quote
 from playwright.sync_api import sync_playwright
 from bs4 import BeautifulSoup
 import boto3
@@ -353,7 +352,7 @@ def _attempt_press_and_hold_once(page, container) -> bool:
         return False
 
 
-def collect_cards(base_url: str, page: "playwright Page") -> list[dict]:
+def collect_cards(base_url: str, page) -> list[dict]:
     """Scrape all job cards from a single listing page.
     kariyer.net renders all results server-side in one page (no AJAX pagination).
     We scroll down gradually to ensure any lazy-loaded cards appear.
@@ -411,7 +410,7 @@ def collect_cards(base_url: str, page: "playwright Page") -> list[dict]:
 
 # ── Single posting scraper ────────────────────────────────────────────────────
 
-def scrape_posting(url: str, page: "playwright Page", referer: str | None = None) -> dict | None:
+def scrape_posting(url: str, page, referer: str | None = None) -> dict | None:
     """Returns the parsed posting, or None if the page never loaded (e.g. a
     captcha we couldn't solve) — the caller should skip it. The failed URL is
     already logged to FAILED_LOG_FILE by wait_for_selector_with_challenge.

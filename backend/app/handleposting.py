@@ -2,7 +2,6 @@ import json
 from collections import Counter, defaultdict
 from pathlib import Path
 from dotenv import load_dotenv
-from fastapi.concurrency import run_in_threadpool
 from models import DemandedSkill
 import boto3
 

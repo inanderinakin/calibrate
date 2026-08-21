@@ -212,9 +212,7 @@ def is_cs_relevant(posting: dict) -> bool:
     # sector-only accept path is where the whole class of false positives
     # (satın alma, teknik servis, fotoğrafçı, ...) came from.
     cs_signal_in_dept = any(s in dept for s in CS_SECTORS) or any(s in dept for s in CS_DEPARTMENTS_ONLY)
-    if cs_signal_in_dept and not has_non_cs_dept:
-        return True
-    return False
+    return cs_signal_in_dept and not has_non_cs_dept
 
 
 # ── Cross-source duplicate detection ───────────────────────────────────────
