@@ -4,7 +4,7 @@ import Link from "next/link";
 import { resolveEntryPath } from "@/lib/entry";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Icon } from "@iconify/react";
+import { Icon } from "@/components/Icon";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";

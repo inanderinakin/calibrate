@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Icon } from "@iconify/react";
+import { Icon } from "@/components/Icon";
 import { AnimatePresence, motion } from "framer-motion";
 import AppShell from "@/components/AppShell";
 import { session } from "@/lib/session";

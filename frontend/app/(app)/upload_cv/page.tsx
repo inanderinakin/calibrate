@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Icon } from "@iconify/react";
+import { Icon } from "@/components/Icon";
 import { motion } from "framer-motion";
 import AppShell from "@/components/AppShell";
 import StepIndicator from "@/components/StepIndicator";
