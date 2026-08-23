@@ -12,6 +12,7 @@ import { studyFieldSuggestions } from "@/lib/studyFields";
 import { countryAliases, countrySuggestions, toStoredCountry } from "@/lib/countries";
 import BackButton from "@/components/BackButton";
 import SuggestInput from "@/components/SuggestInput";
+import PasswordRules, { passwordMeetsRules } from "@/components/PasswordRules";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -149,6 +150,8 @@ export default function SignupPage() {
           />
         </div>
 
+        <PasswordRules value={password} />
+
         <SuggestInput
           id="signup-study-field"
           required
@@ -179,10 +182,10 @@ export default function SignupPage() {
 
         <motion.button
           type="submit"
-          disabled={submitting}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.97 }}
-          className="rounded-lg bg-[var(--accent-bg)] text-[var(--accent-text)] py-2.5 font-medium mt-2"
+          disabled={submitting || !passwordMeetsRules(password)}
+          whileHover={submitting ? undefined : { scale: 1.02 }}
+          whileTap={submitting ? undefined : { scale: 0.97 }}
+          className="rounded-lg bg-[var(--accent-bg)] text-[var(--accent-text)] py-2.5 font-medium mt-2 disabled:opacity-70"
         >
           {t.signup.submit}
         </motion.button>

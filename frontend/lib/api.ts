@@ -6,6 +6,20 @@ import { session } from "@/lib/session";
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+/**
+ * Carries the HTTP status so a caller can translate the failure. The backend answers in
+ * English only, so its detail string is a last resort rather than something to show.
+ */
+export class ApiError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
 export async function errorMessage(
   res: Response,
   fallback: string
@@ -78,7 +92,7 @@ export async function post_login(email: string, password: string) {
   }, AUTH_TIMEOUT_MS);
 
   if (!loginResponse.ok ) {
-    throw new Error(await errorMessage(loginResponse, "Login failure"))
+    throw new ApiError(await errorMessage(loginResponse, "Login failure"), loginResponse.status)
   }
   return await loginResponse.json()
 }
@@ -265,6 +279,38 @@ export async function post_verify_email(email: string, code: string) {
 
   if (!res.ok) {
     throw new Error(await errorMessage(res, "Confirmation failed"));
+  }
+
+  return await res.json();
+}
+
+export async function post_forgot_password(email: string) {
+  const res = await fetchWithTimeout("/forgot_password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  }, AUTH_TIMEOUT_MS);
+
+  if (!res.ok) {
+    throw new ApiError(await errorMessage(res, "Could not send a reset code"), res.status);
+  }
+
+  return await res.json();
+}
+
+export async function post_reset_password(
+  email: string,
+  code: string,
+  newPassword: string
+) {
+  const res = await fetchWithTimeout("/reset_password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, code, new_password: newPassword }),
+  }, AUTH_TIMEOUT_MS);
+
+  if (!res.ok) {
+    throw new ApiError(await errorMessage(res, "Could not reset your password"), res.status);
   }
 
   return await res.json();

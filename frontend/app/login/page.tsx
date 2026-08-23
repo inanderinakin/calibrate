@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
-import { isTimeout, post_login } from "@/lib/api";
+import { ApiError, isTimeout, post_login } from "@/lib/api";
 import { tokens, readClaims } from "@/lib/tokens";
 import { resolveEntryPath } from "@/lib/entry";
 import BackButton from "@/components/BackButton";
@@ -50,7 +50,19 @@ export default function LoginPage() {
       router.replace(await resolveEntryPath());
     }
     catch (e) {
-      setError(isTimeout(e) ? t.login.timeoutError : e instanceof Error ? e.message : t.login.genericError);
+      // The API answers in English whatever the interface language, so the cases we
+      // know by status get a translated message and its prose is only the fallback.
+      setError(
+        isTimeout(e)
+          ? t.login.timeoutError
+          : e instanceof ApiError && e.status === 401
+            ? t.login.invalidCredentials
+            : e instanceof ApiError && e.status === 403
+              ? t.login.notConfirmed
+              : e instanceof Error
+                ? e.message
+                : t.login.genericError
+      );
       setSubmitting(false);
     }
   }
@@ -97,6 +109,15 @@ export default function LoginPage() {
           onChange={(e) => setPassword(e.target.value)}
           className="glass-input rounded-lg border border-[var(--border-color)] px-4 py-2.5 text-[var(--text-primary)] outline-none focus:border-[var(--accent-2)]"
         />
+
+        <Link
+          /* Hand the address they have already typed to the reset page, so nobody has
+             to type it twice to recover the account they were just trying to reach. */
+          href={email ? `/forgot_password?email=${encodeURIComponent(email)}` : "/forgot_password"}
+          className="-mt-2 self-end text-sm font-medium text-[var(--accent-2)] underline"
+        >
+          {t.login.forgotPassword}
+        </Link>
 
         {error && (
           <p

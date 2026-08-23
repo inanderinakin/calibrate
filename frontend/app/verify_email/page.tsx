@@ -96,6 +96,10 @@ function VerifyEmailForm() {
         </p>
       )}
 
+      <p className="text-sm text-[var(--text-muted)]">
+        {t.verifyEmail.spamHint}
+      </p>
+
       <input
         required
         inputMode="numeric"
