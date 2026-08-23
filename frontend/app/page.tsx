@@ -262,7 +262,10 @@ function MainLandingPage({ t, onBack }: { t: Translations; onBack?: () => void }
         >
           {t.landing.features.map((feature, i) => (
             <motion.article
-              key={feature.title}
+              /* Keyed by position, not by the translated title: switching language used
+                 to change every key, remount the cards at opacity 0, and leave them
+                 there because whileInView with once:true had already fired. */
+              key={i}
               variants={staggerItem}
               transition={{ type: "spring", stiffness: 260, damping: 24 }}
               whileHover={{ scale: 1.02 }}
