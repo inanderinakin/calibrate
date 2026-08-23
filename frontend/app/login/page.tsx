@@ -99,7 +99,9 @@ export default function LoginPage() {
         />
 
         <Link
-          href="/forgot_password"
+          /* Hand the address they have already typed to the reset page, so nobody has
+             to type it twice to recover the account they were just trying to reach. */
+          href={email ? `/forgot_password?email=${encodeURIComponent(email)}` : "/forgot_password"}
           className="-mt-2 self-end text-sm font-medium text-[var(--accent-2)] underline"
         >
           {t.login.forgotPassword}

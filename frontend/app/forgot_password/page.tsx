@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { Suspense, useState, FormEvent } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
@@ -10,12 +10,15 @@ import { isTimeout, post_forgot_password } from "@/lib/api";
 import BackButton from "@/components/BackButton";
 import { Icon } from "@/components/Icon";
 
-export default function ForgotPasswordPage() {
+function ForgotPasswordForm() {
   const router = useRouter();
+  const params = useSearchParams();
   const { language } = useLanguage();
   const t = getTranslations(language);
 
-  const [email, setEmail] = useState("");
+  // Seeded from the query the login page appends, still editable if they meant a
+  // different address.
+  const [email, setEmail] = useState(params.get("email") ?? "");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -35,13 +38,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col bg-[var(--page-bg)] p-6 md:p-10 lg:p-14">
-      <div className="mb-6 flex justify-start">
-        <BackButton fallbackHref="/login" />
-      </div>
-
-      <div className="flex flex-1 items-center justify-center">
-        <motion.form
+    <motion.form
           onSubmit={handleSubmit}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -107,7 +104,21 @@ export default function ForgotPasswordPage() {
               {t.forgotPassword.backToLogin}
             </Link>
           </p>
-        </motion.form>
+    </motion.form>
+  );
+}
+
+export default function ForgotPasswordPage() {
+  return (
+    <main className="min-h-screen flex flex-col bg-[var(--page-bg)] p-6 md:p-10 lg:p-14">
+      <div className="mb-6 flex justify-start">
+        <BackButton fallbackHref="/login" />
+      </div>
+
+      <div className="flex flex-1 items-center justify-center">
+        <Suspense>
+          <ForgotPasswordForm />
+        </Suspense>
       </div>
     </main>
   );
