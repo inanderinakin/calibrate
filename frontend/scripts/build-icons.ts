@@ -6,7 +6,9 @@ import { join } from "node:path";
 
 const ROOTS = ["app", "components", "lib"];
 const ICON_RE = /"([a-z0-9]+(?:-[a-z0-9]+)*):([a-z0-9]+(?:-[a-z0-9]+)*)"/g;
-const NOT_ICONS = new Set(["calibrate"]);
+// "md" is the Tailwind breakpoint: conditional classNames put bare "md:flex" strings
+// in the source, which look exactly like an icon reference to the regex above.
+const NOT_ICONS = new Set(["calibrate", "md", "sm", "lg", "xl"]);
 
 // The technology logos are detailed multi-path artwork and dwarf everything else
 // (devicon averages 42KB an icon). They only ever render on the dashboard, so they
