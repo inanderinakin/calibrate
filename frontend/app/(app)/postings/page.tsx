@@ -13,6 +13,7 @@ import { useDelayedLoading } from "@/lib/useDelayedLoading";
 import type { Posting, PostingsPayload } from "@/lib/types";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
+import { duration } from "@/lib/motion";
 
 const PAGE_SIZE = 20;
 const MODELS = ["onsite", "hybrid", "remote"] as const;
@@ -461,7 +462,7 @@ function PostingRow({
     <motion.li
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, delay: Math.min(index, 8) * 0.03 }}
+      transition={{ duration: duration.fast, delay: Math.min(index, 8) * duration.stagger }}
       className="flex flex-col gap-4 rounded-[16px] bg-(--card-bg) px-6 py-4 shadow-lg md:flex-row md:items-center md:gap-5"
     >
       <div className="min-w-0 flex-1">

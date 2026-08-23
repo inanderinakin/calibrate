@@ -15,6 +15,7 @@ import { getDisplaySkillName } from "@/lib/escoMapper";
 import type { NormalizedSkill } from "@/lib/types";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
+import { duration, ease } from "@/lib/motion";
 
 const MAX_FILE_SIZE_MB = 25;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
@@ -263,7 +264,7 @@ export default function UploadCvPage() {
             initial={{ opacity: 0, y: 24, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -16 }}
-            transition={{ duration: 0.45, ease: "easeOut" }}
+            transition={{ duration: duration.slow, ease: ease.smoothOut }}
             className="glass-card w-full rounded-[20px] border-2 border-(--pink) p-6 text-left"
           >
             <div className="flex items-start gap-4">
@@ -399,12 +400,20 @@ export default function UploadCvPage() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -16 }}
-            transition={{ duration: 0.35, ease: "easeOut" }}
+            transition={{ duration: duration.medium, ease: ease.smoothOut }}
             className="glass-card w-full rounded-[20px] border-2 border-(--pink) py-14 flex flex-col items-center gap-5"
           >
             <Icon icon="mdi:file-document-outline" className="h-20 w-20 text-(--accent-bg)" />
 
-            <p className="font-black text-xl text-(--accent-bg)">{t.uploadCv.analysing}</p>
+            {/* The string already carries a … glyph, which the bouncing dots replace. */}
+            <p className="font-black text-xl text-(--accent-bg)">
+              {t.uploadCv.analysing.replace(/…$/, "")}
+              <span className="t-dots" aria-hidden>
+                <span>.</span>
+                <span>.</span>
+                <span>.</span>
+              </span>
+            </p>
 
             {file && (
               <p className="max-w-[80%] truncate text-sm text-(--text-muted)">{file.name}</p>
@@ -424,7 +433,7 @@ export default function UploadCvPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -16 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
+            transition={{ duration: duration.slow, ease: ease.smoothOut }}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}

@@ -11,6 +11,7 @@ import { getDisplaySkillName } from "@/lib/escoMapper";
 import { getCategoryLabel } from "@/lib/skillCategories";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
+import { duration, ease } from "@/lib/motion";
 import { getCompletedProjects, getCompletedSkills, getCvBullet, setCompletedProjects, setCompletedSkills } from "@/lib/api";
 import { useRequireAuth } from "@/lib/useRequireAuth";
 import { useRestoreAnalysis } from "@/lib/useRestoreAnalysis";
@@ -356,7 +357,7 @@ export default function RoadmapPage() {
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.25, ease: "easeInOut" }}
+                        transition={{ duration: duration.fast, ease: ease.inOut }}
                         className="overflow-hidden"
                       >
                         <div className="flex flex-col gap-5">

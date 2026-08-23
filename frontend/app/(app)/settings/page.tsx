@@ -16,6 +16,7 @@ import { clearAnalysisMarker } from "@/lib/useRestoreAnalysis";
 import { tokens } from "@/lib/tokens";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
+import { duration, ease } from "@/lib/motion";
 
 const HOLD_TO_DELETE_MS = 5000;
 
@@ -495,7 +496,7 @@ export default function SettingsPage() {
             aria-labelledby="delete-title"
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: duration.fast, ease: ease.smoothOut }}
             className="w-full max-w-md rounded-[24px] bg-[var(--card-bg)] p-6 md:p-8 shadow-2xl flex flex-col gap-4 text-center"
           >
             <h2 id="delete-title" className="text-2xl font-bold text-(--danger)">

@@ -11,6 +11,7 @@ import { authedFetch, errorMessage, isTimeout, saveAnalysis } from "@/lib/api";
 import { session } from "@/lib/session";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
+import { duration } from "@/lib/motion";
 
 const GAPS_TIMEOUT_MS = 30_000;
 const REPORT_TIMEOUT_MS = 180_000;
@@ -215,7 +216,7 @@ export default function AnalyseCvPage() {
                 key={item.title}
                 initial={{ opacity: 0, x: -16 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.08, duration: 0.4 }}
+                transition={{ delay: i * duration.micro, duration: duration.slow }}
                 className="flex items-start gap-4"
               >
                 {isDone ? (

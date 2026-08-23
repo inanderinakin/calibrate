@@ -2,6 +2,25 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Motion tokens from transitions-dev (_root.css). One scale for every duration and
+   easing in the app so timings agree instead of each component inventing its own.
+   lib/motion.ts mirrors these for framer-motion, which wants seconds, not ms. */
+:root {
+  --duration-stagger: 40ms;
+  --duration-micro: 80ms;
+  --duration-quick: 150ms;
+  --duration-fast: 250ms;
+  --duration-medium: 350ms;
+  --duration-slow: 400ms;
+  --duration-very-slow: 500ms;
+
+  --ease-smooth-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: ease-in-out;
+  --ease-out: ease-out;
+  --ease-linear: linear;
+  --ease-bounce: cubic-bezier(0.34, 1.36, 0.64, 1);
+}
+
 /* font-sans previously resolved to Tailwind's default stack, so the font variable was
    defined on the body by next/font and then never read by anything. The face is loaded in
    layout.tsx and declared here, which is what actually puts it on the page. */
@@ -329,15 +348,6 @@ button:not(:disabled):active {
   }
 }
 
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
 .animate-fade-in-up {
   animation: fade-in-up 0.6s ease-out both;
 }
@@ -385,4 +395,23 @@ button:not(:disabled):active {
 .scroll-visible::-webkit-scrollbar-thumb {
   background: var(--text-muted);
   border-radius: 999px;
+}
+
+/* "Analysing" with three dots bouncing in sequence. The flat stretch from 45% to the
+   end of the cycle is the breathing room, so it lifts and then rests rather than
+   churning continuously. */
+.t-dots span {
+  display: inline-block;
+  animation: t-dot-bounce 1.6s var(--ease-in-out) infinite;
+}
+.t-dots span:nth-child(2) { animation-delay: 0.14s; }
+.t-dots span:nth-child(3) { animation-delay: 0.28s; }
+
+@keyframes t-dot-bounce {
+  0%, 45%, 100% { transform: translateY(0); }
+  22%          { transform: translateY(-0.32em); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-dots span { animation: none !important; }
 }
