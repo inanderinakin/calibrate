@@ -513,7 +513,7 @@ export default function DashboardPage() {
                               key={skill.name}
                               type="button"
                               onClick={() => setSelectedSkill(skill.name)}
-                              className={`grid w-full grid-cols-[58px_1fr_65px] items-center gap-3 rounded-xl text-left transition hover:text-[var(--pink)] dark:hover:text-[var(--light-blue)] hover:bg-(--hover-bg) ${
+                              className={`grid w-full grid-cols-[58px_1fr_65px] items-center gap-3 rounded-xl text-left transition hover:text-[var(--win)] dark:hover:text-[var(--light-blue)] hover:bg-(--hover-bg) ${
                                 selectedSkill === skill.name
                                   ? "scale-[1.01]"
                                   : ""
