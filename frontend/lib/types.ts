@@ -118,6 +118,8 @@ export interface Posting {
   days_open: number | null;
   skills: string[];
   matched_skills?: number;
+  /** What the CV is still missing for this posting. Empty means nothing. */
+  missing_skills?: string[];
 }
 
 export interface PostingsPayload {
