@@ -358,16 +358,36 @@ export default function PostingsPage() {
               showLoading ? "opacity-50" : ""
             }`}
           >
-            {data.postings.map((posting, index) => (
-              <PostingRow
-                key={posting.id}
-                posting={posting}
-                index={index}
-                t={t}
-                dateFormat={dateFormat}
-                showMatch={matchOnly}
-              />
-            ))}
+            {(() => {
+              const rows = data.postings.map((posting, index) => (
+                <PostingRow
+                  key={posting.id}
+                  posting={posting}
+                  index={index}
+                  t={t}
+                  dateFormat={dateFormat}
+                  showMatch={matchOnly}
+                />
+              ));
+
+              if (!matchOnly) return rows;
+
+              // The backend sorts by how much is missing, so the split is just the
+              // first posting that still needs something.
+              const firstGap = data.postings.findIndex(
+                (posting) => (posting.missing_skills?.length ?? 0) > 0
+              );
+
+              if (firstGap === -1) return rows;
+
+              return [
+                ...(firstGap > 0
+                  ? [<GroupLabel key="ready" text={t.readyGroup} />, ...rows.slice(0, firstGap)]
+                  : []),
+                <GroupLabel key="nearly" text={t.nearlyGroup} />,
+                ...rows.slice(firstGap),
+              ];
+            })()}
           </ul>
 
           <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -436,6 +456,22 @@ function PageButton({
 
 type PostingsText = ReturnType<typeof getTranslations>["postings"];
 
+function joinList(items: string[], and: string) {
+  if (items.length <= 1) return items[0] ?? "";
+  return `${items.slice(0, -1).join(", ")} ${and} ${items[items.length - 1]}`;
+}
+
+function GroupLabel({ text }: { text: string }) {
+  return (
+    <li className="mt-2 flex items-center gap-3 first:mt-0">
+      <span className="text-sm font-black uppercase tracking-wide text-(--text-muted)">
+        {text}
+      </span>
+      <span className="h-px flex-1 bg-(--border-color)/30" />
+    </li>
+  );
+}
+
 function PostingRow({
   posting,
   index,
@@ -472,6 +508,12 @@ function PostingRow({
           <span className="rounded-lg bg-[var(--accent-2)]/10 px-2.5 py-1 text-[11px] font-bold text-[var(--accent-2)] dark:bg-[var(--creamy)]/15 dark:text-[var(--creamy)]">
             {posting.role === UNCLASSIFIED ? t.otherRole : posting.role}
           </span>
+          {showMatch && posting.missing_skills && posting.missing_skills.length > 0 && (
+            <p className="mt-1 text-sm font-semibold text-(--accent-2)">
+              {t.learnLine(joinList(posting.missing_skills, t.listAnd))}
+            </p>
+          )}
+
           {showMatch && posting.matched_skills !== undefined && posting.skills.length > 1 && (
             <span className="rounded-lg bg-[var(--accent)] px-2.5 py-1 text-[11px] font-bold text-[var(--on-accent)]">
               {t.youHave(posting.matched_skills, posting.skills.length)}

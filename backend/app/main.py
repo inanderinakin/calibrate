@@ -624,11 +624,11 @@ async def get_postings(
     if source:
         matches = [posting for posting in matches if posting["source"] == source]
     if skill:
-        # Any of the picked skills rather than all of them: choosing a second one
-        # widens the board, which is what a filter list is normally taken to mean.
+        # All of the picked skills, not any: a second skill is read as a further
+        # requirement, so the board narrows rather than widening.
         matches = [
             posting for posting in matches
-            if any(name in posting["skills"] for name in skill)
+            if all(name in posting["skills"] for name in skill)
         ]
 
     # "Jobs I could apply to now": keep postings where the CV already covers
@@ -644,9 +644,16 @@ async def get_postings(
                 continue
             have = [name for name in wanted if name in owned]
             if len(have) / len(wanted) >= min_match:
-                covered.append({**posting, "matched_skills": len(have)})
+                covered.append({
+                    **posting,
+                    "matched_skills": len(have),
+                    # What stands between the CV and this posting. Empty means every
+                    # skill it asks for is already on the CV.
+                    "missing_skills": [name for name in wanted if name not in owned],
+                })
 
-        matches = covered
+        # Ready to apply first, then the ones a skill or two away, nearest first.
+        matches = sorted(covered, key=lambda posting: len(posting["missing_skills"]))
 
     if search:
         needle = search.casefold()
