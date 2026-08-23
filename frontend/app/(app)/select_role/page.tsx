@@ -52,7 +52,18 @@ export default function SelectRolePage() {
   function handleContinue() {
     if (selected.length === 0) return;
 
+    const previous = session.getTargetRoles() ?? [];
+    const changed =
+      previous.length !== selected.length ||
+      selected.some((role) => !previous.includes(role));
+
     session.setTargetRoles(selected);
+
+    // The gaps and the roadmap describe the roles they were built from, so a different
+    // selection makes them stale. Re-confirming the same roles leaves them alone, which
+    // is what lets the analyse step reuse a finished analysis instead of paying for it twice.
+    if (changed) session.clearDerived();
+
     persistSession().catch(() => {});
     router.push("/analyse_cv");
   }
