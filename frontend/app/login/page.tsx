@@ -98,6 +98,13 @@ export default function LoginPage() {
           className="glass-input rounded-lg border border-[var(--border-color)] px-4 py-2.5 text-[var(--text-primary)] outline-none focus:border-[var(--accent-2)]"
         />
 
+        <Link
+          href="/forgot_password"
+          className="-mt-2 self-end text-sm font-medium text-[var(--accent-2)] underline"
+        >
+          {t.login.forgotPassword}
+        </Link>
+
         {error && (
           <p
             role="alert"

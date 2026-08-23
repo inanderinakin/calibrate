@@ -270,6 +270,38 @@ export async function post_verify_email(email: string, code: string) {
   return await res.json();
 }
 
+export async function post_forgot_password(email: string) {
+  const res = await fetchWithTimeout("/forgot_password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  }, AUTH_TIMEOUT_MS);
+
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not send a reset code"));
+  }
+
+  return await res.json();
+}
+
+export async function post_reset_password(
+  email: string,
+  code: string,
+  newPassword: string
+) {
+  const res = await fetchWithTimeout("/reset_password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, code, new_password: newPassword }),
+  }, AUTH_TIMEOUT_MS);
+
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not reset your password"));
+  }
+
+  return await res.json();
+}
+
 export interface SavedAnalysis {
   cv_skills: NormalizedSkill[];
   target_roles: string[];

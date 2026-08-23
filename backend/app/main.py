@@ -20,7 +20,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from agent import get_cv_bullet, get_project_steps, get_recommendations, verify_skills
 from handlecv import compute_gaps, extract_skill_candidates, extract_cv_text, extract_docx_text
 from normalize import normalize
-from models import Analysis, BulletRequest, CompletedProjects, CompletedSkills, GapResult, GapRequest, LoginInfo, NormalizedSkill, PasswordChange, ProfileInfo, ResendCodeInfo, SignUpInfo, VerifyEmailInfo
+from models import Analysis, BulletRequest, CompletedProjects, CompletedSkills, ForgotPasswordInfo, GapResult, GapRequest, LoginInfo, NormalizedSkill, PasswordChange, PasswordReset, ProfileInfo, ResendCodeInfo, SignUpInfo, VerifyEmailInfo
 from skills import PATTERNS, SKILL_CATEGORIES, base_skill_name
 from handleposting import load_demand_profile, load_postings, load_trends
 from postings_rules import drop_expired
@@ -345,6 +345,72 @@ async def verify_email(verify_info: VerifyEmailInfo):
 
     return {"confirmed": True}
 
+
+@app.post("/forgot_password")
+async def forgot_password(info: ForgotPasswordInfo):
+    try:
+        response = cognito_client.forgot_password(
+            ClientId = os.getenv('APP_CLIENT'),
+            Username = info.email,
+        )
+    except ClientError as err:
+        code = err.response["Error"]["Code"]
+
+        # Answering "no such account" would turn this form into a way of asking which
+        # addresses are registered, so an email we do not know gets the same reply as
+        # one we do and simply never receives a code.
+        if code == "UserNotFoundException":
+            return {"detail": None}
+
+        if code == "NotAuthorizedException":
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="There is no password to reset on this account. If you signed up with Google, use the Google button to sign in")
+
+        # Cognito has nowhere to send the code until the address is verified, which for
+        # an account that never finished sign up means confirming it first.
+        if code == "InvalidParameterException":
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="This account has not been confirmed yet. Please confirm it before resetting the password")
+
+        if code == "LimitExceededException":
+            raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Too many attempts. Please wait a little before asking for another code")
+
+        print(f"Could not start the password reset: {err}")
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Password reset is unavailable right now")
+
+    return {"detail": response.get("CodeDeliveryDetails")}
+
+@app.post("/reset_password")
+async def reset_password(reset: PasswordReset):
+    if len(reset.new_password) < 8:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Your new password must be at least 8 characters")
+
+    try:
+        cognito_client.confirm_forgot_password(
+            ClientId = os.getenv('APP_CLIENT'),
+            Username = reset.email,
+            ConfirmationCode = reset.code,
+            Password = reset.new_password,
+        )
+    except ClientError as err:
+        code = err.response["Error"]["Code"]
+
+        if code == "ExpiredCodeException":
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Code has expired. Please ask for a new one")
+
+        if code == "InvalidPasswordException":
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="That new password does not meet the requirements")
+
+        if code in ("LimitExceededException", "TooManyFailedAttemptsException"):
+            raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Too many attempts. Please try again later")
+
+        # An address with no account behind it fails here as well, and it gets the same
+        # answer as a wrong code for the same reason /forgot_password stays quiet about it.
+        if code in ("CodeMismatchException", "UserNotFoundException", "NotAuthorizedException"):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="That code is not correct")
+
+        print(f"Could not reset the password: {err}")
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Password reset is unavailable right now")
+
+    return {"reset": True}
 
 @app.post("/login")
 async def login(login_info: LoginInfo):

@@ -2,6 +2,7 @@ export const verifyEmail = {
   en: {
     title: "Check your email",
     sentTo: (email: string) => `We sent a six digit code to ${email}.`,
+    spamHint: "Nothing arrived? Check your spam folder before asking for a new code.",
     code: "Confirmation code",
     submit: "Confirm",
     missingEmail: "We do not know which account to confirm. Please sign up again.",
@@ -14,6 +15,7 @@ export const verifyEmail = {
   tr: {
     title: "E-postanızı kontrol edin",
     sentTo: (email: string) => `${email} adresine altı haneli bir kod gönderdik.`,
+    spamHint: "Bir şey gelmediyse, yeni kod istemeden önce spam klasörünüzü kontrol edin.",
     code: "Doğrulama kodu",
     submit: "Onayla",
     missingEmail: "Hangi hesabın onaylanacağını bilmiyoruz. Lütfen tekrar kayıt olun.",
