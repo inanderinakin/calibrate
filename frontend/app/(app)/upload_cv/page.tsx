@@ -367,6 +367,10 @@ export default function UploadCvPage() {
                       value={draftSkill}
                       onChange={setDraftSkill}
                       suggestions={suggestions}
+                      // The default cuts the list to eight, which hides most of the
+                      // catalogue from someone browsing rather than typing. The menu
+                      // already scrolls, so it can hold the whole thing.
+                      limit={suggestions.length}
                     />
                   </div>
                   <button
