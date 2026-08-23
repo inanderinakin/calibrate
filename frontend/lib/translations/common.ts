@@ -12,6 +12,15 @@ export const common = {
       { text: "the market" },
       { text: "wants." },
     ],
+    passwordRules: {
+      title: "Password must have:",
+      length: "At least 8 characters",
+      lowercase: "A lowercase letter",
+      uppercase: "An uppercase letter",
+      number: "A number",
+      met: "done",
+      notMet: "still needed",
+    },
     trend: {
       Emerging: "Emerging",
       Stable: "Stable",
@@ -32,6 +41,15 @@ export const common = {
       { text: "istediğini" },
       { text: "öğrenin." },
     ],
+    passwordRules: {
+      title: "Parolanız şunları içermeli:",
+      length: "En az 8 karakter",
+      lowercase: "Bir küçük harf",
+      uppercase: "Bir büyük harf",
+      number: "Bir rakam",
+      met: "tamam",
+      notMet: "eksik",
+    },
     trend: {
       Emerging: "Yükseliyor",
       Stable: "Stabil",

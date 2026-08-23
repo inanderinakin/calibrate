@@ -8,6 +8,7 @@ import AppShell from "@/components/AppShell";
 import { useAuth, clearStoredProfile } from "@/contexts/AuthContext";
 import { changePassword, deleteAccount, getProfile, updateProfile } from "@/lib/api";
 import SuggestInput from "@/components/SuggestInput";
+import PasswordRules, { passwordMeetsRules } from "@/components/PasswordRules";
 import { countryAliases, countryLabel, countrySuggestions, toStoredCountry } from "@/lib/countries";
 import { studyFieldSuggestions } from "@/lib/studyFields";
 import { session } from "@/lib/session";
@@ -428,6 +429,8 @@ export default function SettingsPage() {
             </label>
           </div>
 
+          <PasswordRules value={newPassword} />
+
           {passwordError && (
             <p role="alert" className="rounded-[20px] border-2 border-(--accent-2) px-4 py-3 font-medium text-[var(--text-primary)]">
               {passwordError}
@@ -443,7 +446,7 @@ export default function SettingsPage() {
 
           <motion.button
             type="submit"
-            disabled={changingPassword || !currentPassword || !newPassword}
+            disabled={changingPassword || !currentPassword || !passwordMeetsRules(newPassword)}
             whileHover={changingPassword ? undefined : { scale: 1.02 }}
             whileTap={changingPassword ? undefined : { scale: 0.97 }}
             className="self-end bg-[var(--accent)] text-[var(--on-accent)] rounded-[20px] px-6 py-2.5 font-medium disabled:opacity-60"

@@ -68,9 +68,19 @@ Resources:
     Properties:
       UsernameAttributes: [email]
       AutoVerifiedAttributes: [email]
+      # Spelled out rather than left to the defaults, because PasswordRules.tsx shows
+      # this list to the user and the two have to say the same thing.
       Policies:
         PasswordPolicy:
           MinimumLength: 8
+          RequireLowercase: true
+          RequireUppercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
       # Cognito's built in sender is a shared address on a domain we do not control,
       # it is filtered aggressively, and it is capped at 50 messages a day. Sending
       # through SES from our own verified domain is what lets SPF, DKIM and DMARC
@@ -80,6 +90,9 @@ Resources:
         SourceArn: !Sub "arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/usecalibrate.dev"
         From: "Calibrate <verification@usecalibrate.dev>"
         ReplyToEmailAddress: "verification@usecalibrate.dev"
+      # Cognito has one code template, not one per flow: the password reset code goes
+      # out in this same message. Splitting them apart needs a CustomMessage Lambda
+      # trigger, so the wording covers both cases instead.
       VerificationMessageTemplate:
         DefaultEmailOption: CONFIRM_WITH_CODE
         EmailSubject: "Your Calibrate verification code"
@@ -98,22 +111,22 @@ Resources:
                       </tr>
                       <tr>
                         <td style="padding:8px 32px 0 32px;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#35434f;">
-                          <p style="margin:0 0 18px 0;">Someone asked to create a Calibrate account with this email address. Enter the code below to confirm it is yours.</p>
+                          <p style="margin:0 0 18px 0;">Someone asked to confirm this email address for a Calibrate account, or to reset the password on it. Enter the code below to continue.</p>
                         </td>
                       </tr>
                       <tr>
                         <td align="center" style="padding:4px 32px 4px 32px;">
-                          <p style="margin:0;font-family:Consolas,Menlo,monospace;font-size:30px;font-weight:bold;letter-spacing:7px;color:#14202b;background:#e9eef2;border-radius:6px;padding:16px 20px;">{####}</p>
+                          <p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:32px;font-weight:bold;letter-spacing:4px;color:#14202b;background:#e9eef2;border-radius:6px;padding:16px 20px;">{####}</p>
                         </td>
                       </tr>
                       <tr>
                         <td style="padding:16px 32px 0 32px;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#35434f;">
-                          <p style="margin:0 0 18px 0;">The code is valid for 24 hours. If you did not sign up for Calibrate, you can ignore this message and no account will be created.</p>
+                          <p style="margin:0 0 18px 0;">The code is valid for 24 hours. If you did not ask for it, you can ignore this message and nothing will change.</p>
                         </td>
                       </tr>
                       <tr>
                         <td style="padding:8px 32px 28px 32px;border-top:1px solid #d3dce3;font-family:Helvetica,Arial,sans-serif;font-size:12px;line-height:1.6;color:#62717f;">
-                          <p style="margin:12px 0 0 0;">Calibrate compares your CV against skills employers are asking for in job postings. Sent from usecalibrate.dev because an account was requested with this address.</p>
+                          <p style="margin:12px 0 0 0;">Calibrate compares your CV against skills employers are asking for in job postings. Sent from usecalibrate.dev because a code was requested for this address.</p>
                         </td>
                       </tr>
                     </table>

@@ -31,6 +31,14 @@ class PasswordChange(BaseModel):
     current_password: str
     new_password: str
 
+class ForgotPasswordInfo(BaseModel):
+    email: str
+
+class PasswordReset(BaseModel):
+    email: str
+    code: str
+    new_password: str
+
 class CompletedSkills(BaseModel):
     skills: list[str]
 
