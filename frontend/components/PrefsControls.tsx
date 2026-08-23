@@ -20,7 +20,7 @@ export default function PrefsControls({ className = "" }: { className?: string }
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      <div className="glass flex items-center gap-0.5 rounded-full p-1">
+      <div className="glass flex h-10 items-center gap-0.5 rounded-full px-1">
         {LANGUAGES.map(({ code, label, flag }) => (
           <button
             key={code}
@@ -44,7 +44,7 @@ export default function PrefsControls({ className = "" }: { className?: string }
         type="button"
         onClick={toggleTheme}
         aria-label={theme === "light" ? t.settings.darkMode : t.settings.lightMode}
-        className="glass flex items-center justify-center rounded-full p-1.5 text-[var(--text-primary)] transition-colors hover:text-[var(--accent-2)]"
+        className="glass flex h-10 w-10 items-center justify-center rounded-full text-[var(--text-primary)] transition-colors hover:text-[var(--accent-2)]"
       >
         <Icon
           icon={theme === "dark" ? "solar:moon-linear" : "solar:sun-2-linear"}
