@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
-import { isTimeout, post_forgot_password } from "@/lib/api";
+import { ApiError, isTimeout, post_forgot_password } from "@/lib/api";
 import BackButton from "@/components/BackButton";
 import { Icon } from "@/components/Icon";
 
@@ -32,7 +32,15 @@ function ForgotPasswordForm() {
       router.push(`/reset_password?email=${encodeURIComponent(email)}`);
     }
     catch (err) {
-      setError(isTimeout(err) ? t.forgotPassword.timeoutError : err instanceof Error ? err.message : t.forgotPassword.genericError);
+      setError(
+        isTimeout(err)
+          ? t.forgotPassword.timeoutError
+          : err instanceof ApiError && err.status === 429
+            ? t.forgotPassword.tooManyAttempts
+            : err instanceof Error
+              ? err.message
+              : t.forgotPassword.genericError
+      );
       setSubmitting(false);
     }
   }

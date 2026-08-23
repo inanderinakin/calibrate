@@ -7,6 +7,7 @@ export const forgotPassword = {
     sending: "Sending…",
     timeoutError: "We could not reach the server. Check your connection and try again.",
     genericError: "We could not send a code. Please try again.",
+    tooManyAttempts: "Too many attempts. Please wait a little and try again.",
     backToLogin: "Back to log in",
 
     resetTitle: "Choose a new password",
@@ -20,6 +21,7 @@ export const forgotPassword = {
     resetting: "Changing…",
     missingEmail: "We do not know which account to reset. Please start again.",
     resetError: "We could not change your password. Please try again.",
+    passwordRejected: "That password does not meet the requirements.",
     resend: "Send me a new code",
     resending: "Sending…",
     resendIn: (seconds: number) => `You can ask for a new code in ${seconds}s`,
@@ -37,6 +39,7 @@ export const forgotPassword = {
     sending: "Gönderiliyor…",
     timeoutError: "Sunucuya ulaşamadık. Bağlantınızı kontrol edip tekrar deneyin.",
     genericError: "Kod gönderilemedi. Lütfen tekrar deneyin.",
+    tooManyAttempts: "Çok fazla deneme yapıldı. Lütfen biraz bekleyip tekrar deneyin.",
     backToLogin: "Girişe dön",
 
     resetTitle: "Yeni bir parola belirleyin",
@@ -50,6 +53,7 @@ export const forgotPassword = {
     resetting: "Değiştiriliyor…",
     missingEmail: "Hangi hesabın sıfırlanacağını bilmiyoruz. Lütfen baştan başlayın.",
     resetError: "Parolanız değiştirilemedi. Lütfen tekrar deneyin.",
+    passwordRejected: "Bu parola gereklilikleri karşılamıyor.",
     resend: "Bana yeni bir kod gönder",
     resending: "Gönderiliyor…",
     resendIn: (seconds: number) => `${seconds} sn sonra yeni kod isteyebilirsiniz`,

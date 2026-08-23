@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
-import { post_forgot_password, post_reset_password } from "@/lib/api";
+import { ApiError, post_forgot_password, post_reset_password } from "@/lib/api";
 import BackButton from "@/components/BackButton";
 import { Icon } from "@/components/Icon";
 import PasswordRules, { passwordMeetsRules } from "@/components/PasswordRules";
@@ -78,7 +78,15 @@ function ResetPasswordForm() {
       setDone(true);
     }
     catch (err) {
-      setError(err instanceof Error ? err.message : t.forgotPassword.resetError);
+      setError(
+        err instanceof ApiError && err.status === 429
+          ? t.forgotPassword.tooManyAttempts
+          : err instanceof ApiError && err.status === 422
+            ? t.forgotPassword.passwordRejected
+            : err instanceof Error
+              ? err.message
+              : t.forgotPassword.resetError
+      );
     }
     finally {
       setSubmitting(false);
