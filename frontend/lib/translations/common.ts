@@ -4,6 +4,14 @@ export const common = {
     nothingToShowYet: "Nothing to show yet",
     uploadCvPrompt: "Upload your CV and pick your target roles to see how you match the market.",
     uploadYourCv: "Upload your CV",
+    back: "Back",
+    authBanner: [
+      { text: "Know" },
+      { text: "which" },
+      { text: "skills", accent: true },
+      { text: "the market" },
+      { text: "wants." },
+    ],
     passwordRules: {
       title: "Password must have:",
       length: "At least 8 characters",
@@ -25,6 +33,14 @@ export const common = {
     nothingToShowYet: "Henüz gösterilecek bir şey yok",
     uploadCvPrompt: "Piyasayla ne kadar eşleştiğinizi görmek için CV'nizi yükleyin ve hedef rollerinizi seçin.",
     uploadYourCv: "CV'nizi Yükleyin",
+    back: "Geri",
+    authBanner: [
+      { text: "Piyasanın" },
+      { text: "hangi" },
+      { text: "becerileri", accent: true },
+      { text: "istediğini" },
+      { text: "öğrenin." },
+    ],
     passwordRules: {
       title: "Parolanız şunları içermeli:",
       length: "En az 8 karakter",

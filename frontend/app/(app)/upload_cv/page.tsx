@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/Icon";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import AppShell from "@/components/AppShell";
 import StepIndicator from "@/components/StepIndicator";
 import SuggestInput from "@/components/SuggestInput";
@@ -52,6 +52,11 @@ export default function UploadCvPage() {
 
   const restored = useRestoreAnalysis();
   const hasCv = skills.length > 0;
+  const reduceMotion = useReducedMotion();
+
+  // One of three, never two: the dropzone hands over to the reader, the reader hands
+  // over to the results. AnimatePresence needs them exclusive to sequence the swap.
+  const phase = hasCv ? "done" : isUploading ? "analysing" : "pick";
 
   useEffect(() => {
     if (!restored) return;
@@ -251,11 +256,14 @@ export default function UploadCvPage() {
           <p className="-mt-4 text-(--text-secondary)">{t.uploadCv.onFileSubtitle}</p>
         )}
 
-        {hasCv ? (
+        <AnimatePresence mode="wait">
+        {phase === "done" && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
+            key="done"
+            initial={{ opacity: 0, y: 24, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.45, ease: "easeOut" }}
             className="glass-card w-full rounded-[20px] border-2 border-(--pink) p-6 text-left"
           >
             <div className="flex items-start gap-4">
@@ -307,9 +315,21 @@ export default function UploadCvPage() {
               <p className="font-bold text-(--text-primary)">{t.uploadCv.skillsTitle}</p>
               <p className="mt-0.5 text-sm text-(--text-muted)">{t.uploadCv.skillsHint}</p>
 
-              <ul className="mt-4 flex flex-wrap gap-2">
+              <motion.ul
+                initial="hidden"
+                animate="show"
+                variants={{ show: { transition: { staggerChildren: reduceMotion ? 0 : 0.035 } } }}
+                className="mt-4 flex flex-wrap gap-2"
+              >
                 {skills.map((entry) => (
-                  <li key={entry.skill} className="group relative">
+                  <motion.li
+                    key={entry.skill}
+                    variants={{
+                      hidden: reduceMotion ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.96 },
+                      show: { opacity: 1, y: 0, scale: 1 },
+                    }}
+                    className="group relative"
+                  >
                     <span className="flex items-center rounded-lg border border-(--border-color)/40 px-3 py-1.5 text-sm font-semibold text-(--text-primary)">
                       {getDisplaySkillName(entry.skill)}
                     </span>
@@ -321,7 +341,7 @@ export default function UploadCvPage() {
                     >
                       <Icon icon="mdi:trash-can-outline" className="h-3 w-3" />
                     </button>
-                  </li>
+                  </motion.li>
                 ))}
 
                 {!adding && (
@@ -336,7 +356,7 @@ export default function UploadCvPage() {
                     </button>
                   </li>
                 )}
-              </ul>
+              </motion.ul>
 
               {adding && (
                 <div className="mt-4 flex flex-wrap items-end gap-3">
@@ -347,6 +367,10 @@ export default function UploadCvPage() {
                       value={draftSkill}
                       onChange={setDraftSkill}
                       suggestions={suggestions}
+                      // The default cuts the list to eight, which hides most of the
+                      // catalogue from someone browsing rather than typing. The menu
+                      // already scrolls, so it can hold the whole thing.
+                      limit={suggestions.length}
                     />
                   </div>
                   <button
@@ -367,11 +391,40 @@ export default function UploadCvPage() {
               )}
             </div>
           </motion.div>
-        ) : (
+        )}
+
+        {phase === "analysing" && (
           <motion.div
+            key="analysing"
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+            className="glass-card w-full rounded-[20px] border-2 border-(--pink) py-14 flex flex-col items-center gap-5"
+          >
+            <Icon icon="mdi:file-document-outline" className="h-20 w-20 text-(--accent-bg)" />
+
+            <p className="font-black text-xl text-(--accent-bg)">{t.uploadCv.analysing}</p>
+
+            {file && (
+              <p className="max-w-[80%] truncate text-sm text-(--text-muted)">{file.name}</p>
+            )}
+
+            <div className="h-2.5 w-2/3 overflow-hidden rounded-full bg-(--hover-bg)">
+              <div className="h-full w-1/3 rounded-full bg-(--accent) animate-indeterminate" />
+            </div>
+
+            <p className="font-light text-(--text-primary)">{t.uploadCv.reading}</p>
+          </motion.div>
+        )}
+
+        {phase === "pick" && (
+          <motion.div
+            key="pick"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.15 }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
@@ -401,6 +454,7 @@ export default function UploadCvPage() {
             />
           </motion.div>
         )}
+        </AnimatePresence>
 
         {hasCv && (
           <p className="-mt-4 text-sm text-(--text-muted)">{t.uploadCv.removeCost}</p>
@@ -410,7 +464,7 @@ export default function UploadCvPage() {
           <p className="-mt-4 text-sm text-(--text-muted)">{t.uploadCv.noSkillsLeft}</p>
         )}
 
-        {!hasCv && file && (
+        {phase === "pick" && file && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -448,16 +502,6 @@ export default function UploadCvPage() {
               </motion.button>
             </div>
 
-            {isUploading && (
-              <>
-                <p className="font-light text-(--text-primary)">
-                  {t.uploadCv.reading}
-                </p>
-                <div className="h-2.5 rounded-full bg-(--hover-bg) overflow-hidden">
-                  <div className="h-full w-1/3 rounded-full bg-(--accent) animate-indeterminate" />
-                </div>
-              </>
-            )}
           </motion.div>
         )}
 

@@ -55,6 +55,16 @@ export default function AnalyseCvPage() {
     }
 
     async function run() {
+      // Coming back to this page with a finished analysis used to run the whole pipeline
+      // again, including the Bedrock roadmap call, and show the analysing screen for a
+      // couple of minutes to arrive at the answer already in hand. Anything that
+      // invalidates these clears them, so their presence means they still describe the
+      // current CV and roles.
+      if (session.getGaps() && session.getReport()) {
+        setStep(CHECKLIST.length);
+        return;
+      }
+
       try {
         const gapsRes = await authedFetch("/compute_gaps", {
           method: "POST",

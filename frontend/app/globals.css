@@ -2,6 +2,13 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* font-sans previously resolved to Tailwind's default stack, so the font variable was
+   defined on the body by next/font and then never read by anything. The face is loaded in
+   layout.tsx and declared here, which is what actually puts it on the page. */
+@theme {
+  --font-sans: var(--font-app), ui-sans-serif, system-ui, sans-serif;
+}
+
 :root {
   --burgundy: #001D39;   /* sidebar + primary accent, light mode */
   --win: #0A4174;        /* secondary accent, light mode (progress bars, "MATCH") */
@@ -45,7 +52,11 @@
 
   /* Marks a field edited but not saved. A bright yellow disappears on the light
      card, so this one is deep enough to clear 3:1 there. */
-  --warning: #a16207;
+  /* Deuteranopia maps this and --danger onto nearly the same colour: at #a16207 the
+     two sat 4.2 apart in RGB after simulation, which is indistinguishable, and the
+     settings page shows both at once. #d97706 puts them 56.6 apart. Only ever a dot,
+     never text, so 3:1 non-text contrast is the bar and this clears it at 3.19. */
+  --warning: #d97706;
 }
 
 .dark {
@@ -357,4 +368,21 @@ button:not(:disabled):active {
   .btn-hover:active {
     transform: none;
   }
+}
+
+/* macOS overlay scrollbars stay hidden until you scroll, so a long list that is
+   scrollable looks exactly like a short one that is not. */
+.scroll-visible {
+  scrollbar-width: thin;
+  scrollbar-color: var(--text-muted) transparent;
+}
+.scroll-visible::-webkit-scrollbar {
+  width: 8px;
+}
+.scroll-visible::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scroll-visible::-webkit-scrollbar-thumb {
+  background: var(--text-muted);
+  border-radius: 999px;
 }

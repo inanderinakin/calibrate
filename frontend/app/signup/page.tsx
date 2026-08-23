@@ -12,6 +12,8 @@ import { studyFieldSuggestions } from "@/lib/studyFields";
 import { countryAliases, countrySuggestions, toStoredCountry } from "@/lib/countries";
 import BackButton from "@/components/BackButton";
 import SuggestInput from "@/components/SuggestInput";
+import AuthBanner from "@/components/AuthBanner";
+import PrefsControls from "@/components/PrefsControls";
 import PasswordRules, { passwordMeetsRules } from "@/components/PasswordRules";
 
 export default function SignupPage() {
@@ -55,12 +57,16 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col bg-[var(--page-bg)] p-6 md:p-10 lg:p-14">
-      <div className="mb-6 flex justify-start">
-        <BackButton fallbackHref="/" />
-      </div>
+    <main className="min-h-screen bg-[var(--page-bg)] lg:grid lg:grid-cols-[4fr_7fr]">
+      <AuthBanner />
 
-      <div className="flex flex-1 items-center justify-center">
+      <div className="flex min-h-screen flex-col p-6 md:p-10 lg:p-14">
+        <div className="mb-6 flex items-center justify-between gap-4">
+          <BackButton fallbackHref="/" />
+          <PrefsControls />
+        </div>
+
+        <div className="flex flex-1 items-center justify-center">
         <motion.form
         onSubmit={handleSubmit}
         initial={{ opacity: 0, y: 20 }}
@@ -200,6 +206,7 @@ export default function SignupPage() {
           </Link>
         </p>
         </motion.form>
+        </div>
       </div>
     </main>
   );

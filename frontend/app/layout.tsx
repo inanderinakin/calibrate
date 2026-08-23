@@ -1,11 +1,20 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+// Hasköy, SIL OFL 1.1, licence in app/fonts/OFL.txt. One variable file covers the whole
+// 100-800 range and it carries the full Turkish set, which the interface needs on every
+// screen. Self hosted, so it is not a third party request on the critical path. The
+// variable is named for the slot rather than the face, so swapping fonts is this one line.
+const appFont = localFont({
+  src: "./fonts/Haskoy-variable.woff2",
+  variable: "--font-app",
+  weight: "100 800",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Calibrate",
@@ -46,8 +55,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased`}>
+    // The font variable has to live on <html>, not <body>. Tailwind declares
+    // --font-sans on :root, and a var() inside a custom property resolves against the
+    // element that declares it, so with the variable one level down on <body> the
+    // whole --font-sans declaration computed to invalid and font-family fell back.
+    <html lang="en" className={appFont.variable} suppressHydrationWarning>
+      <body className="font-sans antialiased">
         <script dangerouslySetInnerHTML={{ __html: applyPreferences }} />
         <ThemeProvider>
           <LanguageProvider>

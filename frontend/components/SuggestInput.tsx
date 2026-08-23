@@ -133,7 +133,7 @@ export default function SuggestInput({
             list stays mounted and is hidden with a class instead. */}
         <ul
           {...getMenuProps()}
-          className={`absolute inset-x-0 top-full z-20 mt-1 max-h-56 overflow-y-auto rounded-lg border border-[var(--border-color)] bg-white py-1 shadow-lg dark:bg-[var(--bg-blue)] ${
+          className={`scroll-visible absolute inset-x-0 top-full z-20 mt-1 max-h-56 overflow-y-auto rounded-lg border border-[var(--border-color)] bg-white py-1 shadow-lg dark:bg-[var(--bg-blue)] ${
             showMenu ? "" : "hidden"
           }`}
         >

@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations, type Translations } from "@/lib/translations";
+import PrefsControls from "@/components/PrefsControls";
 
 // Order matches t.landing.features in translations.ts, icons aren't
 // translatable text, so they're kept out of the language-keyed dictionary.
@@ -48,8 +49,10 @@ function IntroPage({ onContinue, t }: { onContinue: () => void; t: Translations 
   }, [onContinue]);
 
   return (
-    <main className="landing-texture min-h-screen flex items-center justify-center px-6">
-      <div className="flex flex-col items-center gap-[145px] text-center">
+    <main className="landing-texture relative min-h-screen flex items-center justify-center px-6">
+      <PrefsControls className="absolute right-6 top-6" />
+
+      <div className="flex flex-col items-center gap-10 sm:gap-12 md:gap-16 text-center">
         <div className="flex flex-col items-center gap-8">
           <motion.div
             initial={{ opacity: 0, y: -20, scale: 0.95 }}
@@ -152,6 +155,8 @@ function MainLandingPage({ t, onBack }: { t: Translations; onBack?: () => void }
           </Link>
 
           <nav className="flex items-center gap-2.5 sm:gap-3">
+            <PrefsControls className="mr-1" />
+
             {onBack && (
               <motion.button
                 type="button"
@@ -257,7 +262,10 @@ function MainLandingPage({ t, onBack }: { t: Translations; onBack?: () => void }
         >
           {t.landing.features.map((feature, i) => (
             <motion.article
-              key={feature.title}
+              /* Keyed by position, not by the translated title: switching language used
+                 to change every key, remount the cards at opacity 0, and leave them
+                 there because whileInView with once:true had already fired. */
+              key={i}
               variants={staggerItem}
               transition={{ type: "spring", stiffness: 260, damping: 24 }}
               whileHover={{ scale: 1.02 }}
