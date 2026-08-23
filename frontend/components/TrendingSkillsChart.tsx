@@ -11,9 +11,11 @@ const RANGES = [
   { label: "90D", weeks: 13 },
 ];
 
-const WIDTH = 720;
 const HEIGHT = 260;
-const PAD = { top: 16, right: 60, bottom: 34, left: 46 };
+// The trailing "%31 (n=638)" label measures 73px at its widest, so clearing the last
+// point (r=5) needs a 94px gutter. Narrow charts drop the label instead of spending a
+// third of their width on it.
+const END_LABEL_GUTTER = 94;
 
 function weekLabel(week: string, months: readonly string[]) {
   const [, month, day] = week.split("-");
@@ -54,6 +56,24 @@ export default function TrendingSkillsChart({
   const [skill, setSkill] = useState<string | null>(null);
   const [range, setRange] = useState(RANGES[1].label);
   const [hover, setHover] = useState<number | null>(null);
+
+  // The viewBox used to be a fixed 720 scaled by w-full, which shrank the 12px axis
+  // labels to ~6px on a phone. Tracking the container keeps one unit at one pixel, so
+  // type stays the size it is written at, whatever the width.
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(720);
+
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+
+    const observer = new ResizeObserver(([entry]) => {
+      setWidth(Math.max(300, Math.round(entry.contentRect.width)));
+    });
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
   const [shown, setShown] = useState<number[]>([]);
   const [bounds, setBounds] = useState<{ min: number; max: number } | null>(null);
   const shownRef = useRef<number[]>([]);
@@ -155,6 +175,11 @@ export default function TrendingSkillsChart({
     return <p className="text-(--text-secondary)">{t.loading}</p>;
   }
 
+  const showEndLabel = width >= 520;
+  const PAD = { top: 16, right: showEndLabel ? END_LABEL_GUTTER : 16, bottom: 34, left: 46 };
+  // 12px labels need ~40px each. Thin them rather than let them collide.
+  const labelStep = width < 420 ? 3 : width < 620 ? 2 : 1;
+
   const weeks = view.weeks.slice(-span);
   const values = shown.length === actual.length ? shown : actual;
 
@@ -163,7 +188,7 @@ export default function TrendingSkillsChart({
   const ticks = scale.ticks.filter(
     (tick) => tick >= axis.min - 1e-9 && tick <= axis.max + 1e-9
   );
-  const innerW = WIDTH - PAD.left - PAD.right;
+  const innerW = width - PAD.left - PAD.right;
   const innerH = HEIGHT - PAD.top - PAD.bottom;
   const x = (i: number) => PAD.left + (values.length === 1 ? innerW / 2 : (innerW * i) / (values.length - 1));
   const y = (v: number) =>
@@ -212,9 +237,12 @@ export default function TrendingSkillsChart({
         </div>
       </div>
 
-      <div className="relative">
+      {/* The viewBox scales uniformly, so a full-width svg on a phone renders the 12px
+          axis labels at ~6px. Holding a minimum width and letting the container scroll
+          keeps the chart at a legible size instead of shrinking the type with it. */}
+      <div ref={wrapRef} className="relative">
         <svg
-          viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+          viewBox={`0 0 ${width} ${HEIGHT}`}
           className="w-full rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-(--accent-bg)"
           role="img"
           aria-label={t.chartLabel(selected, weeks.length)}
@@ -239,7 +267,7 @@ export default function TrendingSkillsChart({
             <g key={tick}>
               <line
                 x1={PAD.left}
-                x2={WIDTH - PAD.right}
+                x2={width - PAD.right}
                 y1={y(tick)}
                 y2={y(tick)}
                 stroke="var(--chart-grid)"
@@ -257,7 +285,9 @@ export default function TrendingSkillsChart({
             </g>
           ))}
 
-          {weeks.map((week, i) => (
+          {/* 13 weekly labels need ~560px to read. Dropping every other one on a phone
+              halves that, so most screens stop needing to scroll at all. */}
+          {weeks.map((week, i) => (i % labelStep !== 0 ? null : (
             <text
               key={week}
               x={x(i)}
@@ -268,7 +298,7 @@ export default function TrendingSkillsChart({
             >
               {weekLabel(week, translations.common.months)}
             </text>
-          ))}
+          )))}
 
           {hover !== null && (
             <line
@@ -302,9 +332,11 @@ export default function TrendingSkillsChart({
             />
           ))}
 
+          {showEndLabel && (
           <text
-            x={WIDTH - PAD.right + 10}
+            x={width - 8}
             y={y(values[values.length - 1]) + 4}
+            textAnchor="end"
             className="fill-(--text-primary)"
             fontSize={13}
             fontWeight={700}
@@ -316,6 +348,7 @@ export default function TrendingSkillsChart({
               </tspan>
             )}
           </text>
+          )}
 
           {values.map((v, i) => (
             <rect
@@ -343,8 +376,16 @@ export default function TrendingSkillsChart({
 
         {hover !== null && (
           <div
-            className="pointer-events-none absolute -translate-x-1/2 rounded-[10px] bg-(--card-bg) px-3 py-2 text-xs shadow-lg ring-1 ring-black/10"
-            style={{ left: `${(x(hover) / WIDTH) * 100}%`, top: 0 }}
+            /* Centred on the point it would hang half outside the card at either end,
+               so the first and last few points anchor by their near edge instead. */
+            className={`pointer-events-none absolute rounded-[10px] bg-(--card-bg) px-3 py-2 text-xs shadow-lg ring-1 ring-black/10 ${
+              x(hover) / width < 0.18
+                ? "translate-x-0"
+                : x(hover) / width > 0.82
+                  ? "-translate-x-full"
+                  : "-translate-x-1/2"
+            }`}
+            style={{ left: `${(x(hover) / width) * 100}%`, top: 0 }}
           >
             <div className="font-bold text-(--text-primary)">{t.weekOf} {weekLabel(weeks[hover], translations.common.months)}</div>
             <div className="text-(--text-muted)">

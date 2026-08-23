@@ -21,6 +21,7 @@ import { useMeasuredHeight } from "@/lib/useMeasuredHeight";
 import { getCategoryLabel } from "@/lib/skillCategories";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
+import { duration, ease } from "@/lib/motion";
 
 type Skill = {
   name: string;
@@ -490,7 +491,7 @@ export default function DashboardPage() {
               <motion.div
                 initial={false}
                 animate={{ height: skillListHeight }}
-                transition={{ duration: 0.28, ease: "easeOut" }}
+                transition={{ duration: duration.fast, ease: ease.smoothOut }}
                 className="overflow-hidden"
               >
                 <div ref={skillListRef} className="relative">
@@ -500,7 +501,7 @@ export default function DashboardPage() {
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -8 }}
-                      transition={{ duration: 0.2, ease: "easeOut" }}
+                      transition={{ duration: duration.fast, ease: ease.smoothOut }}
                     >
                       {shownSkills.length === 0 ? (
                         <p className="text-[var(--text-muted)]">

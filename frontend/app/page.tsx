@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations, type Translations } from "@/lib/translations";
+import { duration, ease } from "@/lib/motion";
 import PrefsControls from "@/components/PrefsControls";
 
 // Order matches t.landing.features in translations.ts, icons aren't
@@ -57,7 +58,7 @@ function IntroPage({ onContinue, t }: { onContinue: () => void; t: Translations 
           <motion.div
             initial={{ opacity: 0, y: -20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.7, ease: "easeOut" }}
+            transition={{ duration: duration.verySlow, ease: ease.smoothOut }}
           >
             <h1 className="font-black text-[var(--landing-accent)] text-6xl sm:text-7xl md:text-8xl lg:text-[10rem] leading-none">
               CALIBRATE
@@ -67,7 +68,7 @@ function IntroPage({ onContinue, t }: { onContinue: () => void; t: Translations 
           <motion.p
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            transition={{ duration: duration.verySlow, delay: 0.3, ease: ease.smoothOut }}
             className="font-black text-[var(--landing-accent)] text-2xl sm:text-3xl md:text-5xl"
           >
             {t.landing.tagline}
@@ -80,7 +81,7 @@ function IntroPage({ onContinue, t }: { onContinue: () => void; t: Translations 
             onClick={onContinue}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
+            transition={{ duration: duration.verySlow, delay: 0.5, ease: ease.smoothOut }}
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.96 }}
             className="w-full bg-[var(--landing-accent)] text-[var(--on-accent)] rounded-[32px] px-9 py-3 font-black text-2xl md:text-3xl flex items-center justify-center gap-4"
