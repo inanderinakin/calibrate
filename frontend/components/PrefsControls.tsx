@@ -7,10 +7,10 @@ import { getTranslations } from "@/lib/translations";
 
 // The sidebar has the same two controls, but styled for the burgundy panel it sits
 // on. These are for the signed-out pages, which have no sidebar and a page-coloured
-// background. Language names stay in their own language, as they always should.
+// background. The flag is the whole control, so aria-label carries the language name.
 const LANGUAGES = [
-  { code: "en", label: "English" },
-  { code: "tr", label: "Türkçe" },
+  { code: "en", label: "English", flag: "🇺🇸" },
+  { code: "tr", label: "Türkçe", flag: "🇹🇷" },
 ] as const;
 
 export default function PrefsControls({ className = "" }: { className?: string }) {
@@ -21,7 +21,7 @@ export default function PrefsControls({ className = "" }: { className?: string }
   return (
     <div className={`flex items-center gap-2 ${className}`}>
       <div className="glass flex items-center gap-0.5 rounded-full p-1">
-        {LANGUAGES.map(({ code, label }) => (
+        {LANGUAGES.map(({ code, label, flag }) => (
           <button
             key={code}
             type="button"
@@ -29,13 +29,13 @@ export default function PrefsControls({ className = "" }: { className?: string }
             aria-label={label}
             aria-pressed={language === code}
             className={`
-              rounded-full px-3 py-1 text-xs font-black uppercase transition-colors
+              rounded-full px-3 py-1 text-base leading-4 transition-colors
               ${language === code
                 ? "bg-[var(--accent-bg)] text-[var(--accent-text)]"
                 : "text-[var(--text-primary)] hover:bg-[var(--hover-bg)]"}
             `}
           >
-            {code}
+            {flag}
           </button>
         ))}
       </div>
@@ -44,11 +44,11 @@ export default function PrefsControls({ className = "" }: { className?: string }
         type="button"
         onClick={toggleTheme}
         aria-label={theme === "light" ? t.settings.darkMode : t.settings.lightMode}
-        className="glass flex items-center justify-center rounded-full p-2.5 text-[var(--text-primary)] transition-colors hover:text-[var(--accent-2)]"
+        className="glass flex items-center justify-center rounded-full p-1.5 text-[var(--text-primary)] transition-colors hover:text-[var(--accent-2)]"
       >
         <Icon
           icon={theme === "dark" ? "solar:moon-linear" : "solar:sun-2-linear"}
-          className="h-5 w-5"
+          className={`h-5 w-5 ${theme === "dark" ? "rotate-[40deg]" : ""}`}
         />
       </button>
     </div>

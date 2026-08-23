@@ -58,7 +58,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[var(--page-bg)] lg:grid lg:grid-cols-[5fr_6fr]">
+    <main className="min-h-screen bg-[var(--page-bg)] lg:grid lg:grid-cols-[4fr_7fr]">
       <AuthBanner />
 
       <div className="flex min-h-screen flex-col p-6 md:p-10 lg:p-14">

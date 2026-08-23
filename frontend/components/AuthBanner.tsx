@@ -20,7 +20,9 @@ export default function AuthBanner() {
         initial={{ opacity: 0, x: -16 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="font-black uppercase leading-[0.9] tracking-[-0.02em] text-[clamp(3rem,5.5vw,5.5rem)] text-[var(--creamy)]"
+        className={`font-black uppercase tracking-[-0.02em] text-[clamp(2.5rem,4.2vw,4.5rem)] text-[var(--creamy)] ${
+          language === "tr" ? "leading-[1.08]" : "leading-[0.9]"
+        }`}
       >
         {t.common.authBanner.map((line, i) => (
           <span
