@@ -3,12 +3,13 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { useAuth } from "@/contexts/AuthContext";
+import { clearStoredProfile, useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
 import { exchangeCodeForTokens } from "@/lib/hostedUi";
 import { tokens, readClaims } from "@/lib/tokens";
 import { resolveEntryPath } from "@/lib/entry";
+import { getProfile } from "@/lib/api";
 
 function Callback() {
   const router = useRouter();
@@ -43,14 +44,27 @@ function Callback() {
         tokens.set(result.id_token, result.refresh_token);
 
         const claims = readClaims(result.id_token);
+        const savedProfile = await getProfile().catch(() => ({
+          country: "",
+          study_field: "",
+        }));
+
+        const profileIncomplete = !savedProfile.country || !savedProfile.study_field;
+
+        if (profileIncomplete) clearStoredProfile();
 
         login({
           email: claims?.email ?? "",
           firstName: claims?.given_name ?? "",
           lastName: claims?.family_name ?? "",
-          studyField: "",
-          country: "",
+          studyField: savedProfile.study_field,
+          country: savedProfile.country,
         });
+
+        if (profileIncomplete) {
+          router.replace("/complete_profile");
+          return;
+        }
 
         router.replace(await resolveEntryPath());
       }
