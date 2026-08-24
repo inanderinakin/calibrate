@@ -165,8 +165,8 @@ export default function SelectRolePage() {
                   />
                 </div>
 
-                <div>
-                  <p className="font-black text-lg text-(--text-primary)">
+                <div className="min-w-0 flex-1">
+                  <p className="break-words pr-8 font-black text-lg leading-tight text-(--text-primary)">
                     {label.title}
                   </p>
 

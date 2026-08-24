@@ -634,8 +634,8 @@ export default function DashboardPage() {
                         />
                       </div>
 
-                      <div>
-                        <h3 className="text-base font-bold text-[var(--text-primary)]">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="break-words pr-8 text-base font-bold leading-tight text-[var(--text-primary)]">
                           {skill.name}
                         </h3>
 
