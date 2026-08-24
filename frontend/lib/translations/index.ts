@@ -17,6 +17,7 @@ import { postings } from "./postings";
 import { profile } from "./profile";
 import { settings } from "./settings";
 import { trendChart } from "./trendChart";
+import { completeProfile } from "./completeProfile";
 
 // Adding a new page: create lib/translations/<page>.ts exporting
 // { en: {...}, tr: {...} }, then add one import + one line below.
@@ -41,6 +42,7 @@ function pick(language: Language) {
     profile: profile[language],
     settings: settings[language],
     trendChart: trendChart[language],
+    completeProfile: completeProfile[language],
   };
 }
 
