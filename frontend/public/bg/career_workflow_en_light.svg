@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" width="1200" height="420" role="img" aria-label="How Calibrate works: upload your CV, AI analysis, career matching, learning roadmap.">
+<g><path d="M242.0 130 H345.0" stroke="#0A4174" stroke-opacity="0.75" stroke-width="3.5" stroke-linecap="round"/><path d="M344.0 121.5 L358.0 130 L344.0 138.5 Z" fill="#0A4174" fill-opacity="0.75"/></g>
+<g><path d="M542.0 130 H645.0" stroke="#0A4174" stroke-opacity="0.75" stroke-width="3.5" stroke-linecap="round"/><path d="M644.0 121.5 L658.0 130 L644.0 138.5 Z" fill="#0A4174" fill-opacity="0.75"/></g>
+<g><path d="M842.0 130 H945.0" stroke="#0A4174" stroke-opacity="0.75" stroke-width="3.5" stroke-linecap="round"/><path d="M944.0 121.5 L958.0 130 L944.0 138.5 Z" fill="#0A4174" fill-opacity="0.75"/></g>
+<g>
+<circle cx="150" cy="130" r="82" fill="#0A4174" fill-opacity="0.07"/>
+<circle cx="150" cy="130" r="70" fill="none" stroke="#0A4174" stroke-opacity="0.34" stroke-width="1.6" stroke-dasharray="5 8" stroke-linecap="round"/>
+<rect x="120" y="90" width="60" height="82" rx="8" fill="#FFFFFF" fill-opacity="0.62" stroke="#0A4174" stroke-width="3"/>
+<rect x="132" y="102" width="15" height="15" rx="3.5" fill="#0A4174"/>
+<rect x="151" y="104" width="16" height="4" rx="2" fill="#0A4174" fill-opacity="0.5"/>
+<rect x="151" y="113" width="11" height="4" rx="2" fill="#0A4174" fill-opacity="0.5"/>
+<rect x="132" y="126" width="36" height="4" rx="2" fill="#0A4174" fill-opacity="0.5"/>
+<rect x="132" y="135" width="36" height="4" rx="2" fill="#0A4174" fill-opacity="0.5"/>
+<rect x="132" y="144" width="24" height="4" rx="2" fill="#0A4174" fill-opacity="0.5"/>
+<rect x="132" y="152" width="36" height="15" rx="4.5" fill="#0A4174"/>
+<text x="150" y="163.2" font-family="Haskoy, 'Segoe UI', ui-sans-serif, system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="10" font-weight="700" letter-spacing="0.4" text-anchor="middle" fill="#F8F1E7">PDF</text>
+<circle cx="181" cy="87" r="16" fill="#0A4174"/>
+<path d="M181 79 V95 M175 85 L181 79 L187 85" fill="none" stroke="#F8F1E7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="72" y="168" width="40" height="40" rx="13" fill="#0A4174"/>
+<text x="92" y="195.5" font-family="Haskoy, 'Segoe UI', ui-sans-serif, system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="21" font-weight="800" text-anchor="middle" fill="#F8F1E7">1</text>
+<text x="150" y="256" font-family="Haskoy, 'Segoe UI', ui-sans-serif, system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="27" font-weight="800" letter-spacing="-0.5" text-anchor="middle" fill="#001D39">Upload Your CV</text>
+<text x="150" y="291" font-family="Haskoy, 'Segoe UI', ui-sans-serif, system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="17" font-weight="500" text-anchor="middle" fill="#001D39" fill-opacity="0.72">Drop in your PDF and let</text>
+<text x="150" y="315" font-family="Haskoy, 'Segoe UI', ui-sans-serif, system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="17" font-weight="500" text-anchor="middle" fill="#001D39" fill-opacity="0.72">our AI take it from there.</text>
+</g>
+<g>
+<circle cx="450" cy="130" r="82" fill="#0A4174" fill-opacity="0.07"/>
+<circle cx="450" cy="130" r="70" fill="none" stroke="#0A4174" stroke-opacity="0.34" stroke-width="1.6" stroke-dasharray="5 8" stroke-linecap="round"/>
+<rect x="414" y="86" width="56" height="78" rx="8" fill="#FFFFFF" fill-opacity="0.62" stroke="#0A4174" stroke-width="3"/>
+<rect x="426" y="100" width="32" height="4" rx="2" fill="#0A4174" fill-opacity="0.5"/>
+<rect x="426" y="111" width="32" height="4" rx="2" fill="#0A4174" fill-opacity="0.5"/>
+<rect x="426" y="122" width="22" height="4" rx="2" fill="#0A4174" fill-opacity="0.5"/>
+<rect x="426" y="133" width="32" height="4" rx="2" fill="#0A4174" fill-opacity="0.5"/>
+<path d="M477 152 L494 169" stroke="#0A4174" stroke-width="7" stroke-linecap="round"/>
+<circle cx="463" cy="138" r="25" fill="#FFFFFF" fill-opacity="0.62"/>
+<circle cx="463" cy="138" r="25" fill="none" stroke="#0A4174" stroke-width="4"/>
+<path d="M463 125 Q465.6 135.4 476 138 Q465.6 140.6 463 151 Q460.4 140.6 450 138 Q460.4 135.4 463 125 Z" fill="#0A4174"/>
+<rect x="372" y="168" width="40" height="40" rx="13" fill="#0A4174"/>
+<text x="392" y="195.5" font-family="Haskoy, 'Segoe UI', ui-sans-serif, system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="21" font-weight="800" text-anchor="middle" fill="#F8F1E7">2</text>
+<text x="450" y="256" font-family="Haskoy, 'Segoe UI', ui-sans-serif, system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="27" font-weight="800" letter-spacing="-0.5" text-anchor="middle" fill="#001D39">AI Analysis</text>
+<text x="450" y="291" font-family="Haskoy, 'Segoe UI', ui-sans-serif, system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="17" font-weight="500" text-anchor="middle" fill="#001D39" fill-opacity="0.72">We read your skills,</text>
+<text x="450" y="315" font-family="Haskoy, 'Segoe UI', ui-sans-serif, system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="17" font-weight="500" text-anchor="middle" fill="#001D39" fill-opacity="0.72">experience and background.</text>
+</g>
+<g>
+<circle cx="750" cy="130" r="82" fill="#0A4174" fill-opacity="0.07"/>
+<circle cx="750" cy="130" r="70" fill="none" stroke="#0A4174" stroke-opacity="0.34" stroke-width="1.6" stroke-dasharray="5 8" stroke-linecap="round"/>
+<rect x="703" y="93" width="94" height="23" rx="11.5" fill="#FFFFFF" fill-opacity="0.62" stroke="#0A4174" stroke-opacity="0.4" stroke-width="1.6"/>
+<circle cx="716" cy="104.5" r="6" fill="#0A4174" fill-opacity="1.0"/>
+<rect x="728" y="101.5" width="40" height="6" rx="3" fill="#0A4174" fill-opacity="0.85"/>
+<rect x="768" y="96.5" width="27" height="16" rx="5" fill="#0A4174" fill-opacity="1.0"/>
+<text x="781.5" y="108" font-family="Haskoy, 'Segoe UI', ui-sans-serif, system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="9.5" font-weight="700" text-anchor="middle" fill="#F8F1E7">94%</text>
+<rect x="703" y="123" width="94" height="23" rx="11.5" fill="#FFFFFF" fill-opacity="0.62" stroke="#0A4174" stroke-opacity="0.4" stroke-width="1.6"/>
+<circle cx="716" cy="134.5" r="6" fill="#0A4174" fill-opacity="0.62"/>
+<rect x="728" y="131.5" width="36" height="6" rx="3" fill="#0A4174" fill-opacity="0.45"/>
+<rect x="768" y="126.5" width="27" height="16" rx="5" fill="#0A4174" fill-opacity="0.62"/>
+<text x="781.5" y="138" font-family="Haskoy, 'Segoe UI', ui-sans-serif, system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="9.5" font-weight="700" text-anchor="middle" fill="#F8F1E7">88%</text>
+<rect x="703" y="153" width="94" height="23" rx="11.5" fill="#FFFFFF" fill-opacity="0.62" stroke="#0A4174" stroke-opacity="0.4" stroke-width="1.6"/>
+<circle cx="716" cy="164.5" r="6" fill="#0A4174" fill-opacity="0.62"/>
+<rect x="728" y="161.5" width="31" height="6" rx="3" fill="#0A4174" fill-opacity="0.45"/>
+<rect x="768" y="156.5" width="27" height="16" rx="5" fill="#0A4174" fill-opacity="0.62"/>
+<text x="781.5" y="168" font-family="Haskoy, 'Segoe UI', ui-sans-serif, system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="9.5" font-weight="700" text-anchor="middle" fill="#F8F1E7">80%</text>
+<rect x="672" y="168" width="40" height="40" rx="13" fill="#0A4174"/>
+<text x="692" y="195.5" font-family="Haskoy, 'Segoe UI', ui-sans-serif, system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="21" font-weight="800" text-anchor="middle" fill="#F8F1E7">3</text>
+<text x="750" y="256" font-family="Haskoy, 'Segoe UI', ui-sans-serif, system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="27" font-weight="800" letter-spacing="-0.5" text-anchor="middle" fill="#001D39">Career Matching</text>
+<text x="750" y="291" font-family="Haskoy, 'Segoe UI', ui-sans-serif, system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="17" font-weight="500" text-anchor="middle" fill="#001D39" fill-opacity="0.72">Matched to the tech roles</text>
+<text x="750" y="315" font-family="Haskoy, 'Segoe UI', ui-sans-serif, system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="17" font-weight="500" text-anchor="middle" fill="#001D39" fill-opacity="0.72">that fit your profile best.</text>
+</g>
+<g>
+<circle cx="1050" cy="130" r="82" fill="#0A4174" fill-opacity="0.07"/>
+<circle cx="1050" cy="130" r="70" fill="none" stroke="#0A4174" stroke-opacity="0.34" stroke-width="1.6" stroke-dasharray="5 8" stroke-linecap="round"/>
+<path d="M1010 176 C1038 164, 1014 134, 1044 125 C1072 116, 1070 104, 1080 98" fill="none" stroke="#0A4174" stroke-opacity="0.75" stroke-width="5.5" stroke-linecap="round"/>
+<circle cx="1010.0" cy="176.0" r="7" fill="#0A4174" fill-opacity="0.9"/>
+<circle cx="1026.6" cy="146.4" r="6.5" fill="#0A4174" fill-opacity="0.6"/>
+<circle cx="1068.8" cy="110.4" r="6.5" fill="#0A4174" fill-opacity="0.6"/>
+<path d="M1080 100 V72" stroke="#0A4174" stroke-width="4" stroke-linecap="round"/>
+<path d="M1081 73 L1103 81 L1081 89 Z" fill="#0A4174"/>
+<rect x="972" y="168" width="40" height="40" rx="13" fill="#0A4174"/>
+<text x="992" y="195.5" font-family="Haskoy, 'Segoe UI', ui-sans-serif, system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="21" font-weight="800" text-anchor="middle" fill="#F8F1E7">4</text>
+<text x="1050" y="256" font-family="Haskoy, 'Segoe UI', ui-sans-serif, system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="27" font-weight="800" letter-spacing="-0.5" text-anchor="middle" fill="#001D39">Learning Roadmap</text>
+<text x="1050" y="291" font-family="Haskoy, 'Segoe UI', ui-sans-serif, system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="17" font-weight="500" text-anchor="middle" fill="#001D39" fill-opacity="0.72">A personal learning plan</text>
+<text x="1050" y="315" font-family="Haskoy, 'Segoe UI', ui-sans-serif, system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="17" font-weight="500" text-anchor="middle" fill="#001D39" fill-opacity="0.72">to close your skill gaps.</text>
+</g>
+<path d="M96 374 H425.0" stroke="#0A4174" stroke-opacity="0.32" stroke-width="2" stroke-linecap="round" stroke-dasharray="2 9"/>
+<path d="M775.0 374 H1104" stroke="#0A4174" stroke-opacity="0.32" stroke-width="2" stroke-linecap="round" stroke-dasharray="2 9"/>
+<rect x="447.0" y="351.0" width="306" height="46" rx="23.0" fill="#FFFFFF" fill-opacity="0.62" stroke="#0A4174" stroke-opacity="0.55" stroke-width="1.8"/>
+<text x="600" y="381" font-family="Haskoy, 'Segoe UI', ui-sans-serif, system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="-0.2" text-anchor="middle" fill="#001D39">Your Career Journey</text>
+</svg>
