@@ -25,3 +25,23 @@ July 24, 2026:
 
 If a link has expired, re-pull the dashboard frame (light `92:1222` / dark
 `92:3487`) and I'll hand you fresh ones.
+
+## 3. Landing hero — career workflow diagram
+
+Generated, not hand-drawn. Edit `scripts/build-career-workflow.py` and re-run it
+from `frontend/`; never edit the SVGs directly, they get overwritten.
+
+    python3 scripts/build-career-workflow.py
+
+| File | Used by |
+|---|---|
+| `career_workflow_en_light.svg` | `app/page.tsx`, English + light mode |
+| `career_workflow_en_dark.svg`  | English + dark mode |
+| `career_workflow_tr_light.svg` | Turkish + light mode |
+| `career_workflow_tr_dark.svg`  | Turkish + dark mode |
+
+One geometry source, four outputs, so the variants cannot drift apart — which is
+exactly what went wrong before: `career_workflow_navy_blue 2 (1).png` and
+`career_workflow_red 2 (1).png` were byte-identical, so the light/dark swap was a
+no-op and dark mode rendered navy text on a navy page. The step labels were baked
+into the raster as well, so Turkish never reached them.

@@ -8,7 +8,7 @@ import { Icon } from "@/components/Icon";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useLanguage, type Language } from "@/contexts/LanguageContext";
 import { getTranslations, type Translations } from "@/lib/translations";
 import { duration, ease } from "@/lib/motion";
 import PrefsControls from "@/components/PrefsControls";
@@ -99,7 +99,7 @@ function IntroPage({ onContinue, t }: { onContinue: () => void; t: Translations 
   );
 }
 
-function MainLandingPage({ t, onBack }: { t: Translations; onBack?: () => void }) {
+function MainLandingPage({ t, language, onBack }: { t: Translations; language: Language; onBack?: () => void }) {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const [isDark, setIsDark] = useState(false);
@@ -133,9 +133,11 @@ function MainLandingPage({ t, onBack }: { t: Translations; onBack?: () => void }
     return () => observer.disconnect();
   }, []);
 
-  const workflowImage = isDark
-    ? "/bg/career_workflow_navy_blue 2 (1).png"
-    : "/bg/career_workflow_red 2 (1).png";
+  // The two PNGs this used to point at were byte-identical, so the swap did nothing
+  // and dark mode got navy-on-navy text. The step labels were baked into the raster
+  // too, so Turkish never reached them. One SVG per locale x theme, all four built
+  // from scripts/build-career-workflow.py.
+  const workflowImage = `/bg/career_workflow_${language}_${isDark ? "dark" : "light"}.svg`;
 
   return (
     <main className="landing-texture min-h-screen overflow-x-hidden">
@@ -245,8 +247,8 @@ function MainLandingPage({ t, onBack }: { t: Translations; onBack?: () => void }
             <Image
               src={workflowImage}
               alt={t.landing.workflowImageAlt}
-              width={1000}
-              height={400}
+              width={1200}
+              height={420}
               priority
               className="w-full h-auto max-h-[46vh] object-contain"
             />
@@ -339,6 +341,7 @@ export default function LandingPage() {
   return (
     <MainLandingPage
       t={t}
+      language={language}
       onBack={() => {
         window.sessionStorage.removeItem(INTRO_SEEN);
         setShowIntro(true);
