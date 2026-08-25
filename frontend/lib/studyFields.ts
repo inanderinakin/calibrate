@@ -115,3 +115,19 @@ const STUDY_FIELDS: Record<Language, string[]> = {
 export function studyFieldSuggestions(language: Language): string[] {
   return STUDY_FIELDS[language];
 }
+
+function fold(value: string): string {
+  return value
+    .trim()
+    .toLocaleLowerCase("tr")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ı/g, "i");
+}
+
+export function isKnownStudyField(input: string): boolean {
+  const value = fold(input);
+  return Object.values(STUDY_FIELDS).some((fields) =>
+    fields.some((field) => fold(field) === value),
+  );
+}
