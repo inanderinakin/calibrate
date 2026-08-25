@@ -15,6 +15,9 @@ export const settings = {
     unsavedChange: "Changed, not saved yet",
     changePassword: "Change password",
     changePasswordHint: "Enter your current password to confirm it is you.",
+    passwordManagedByProvider: "Signed in with Google",
+    passwordManagedByProviderHint:
+      "This account has no password here, so there is nothing to change. Your password is managed by Google.",
     currentPassword: "Current password",
     newPassword: "New password",
     confirmPassword: "Confirm new password",
@@ -55,6 +58,9 @@ export const settings = {
     unsavedChange: "Değiştirildi, henüz kaydedilmedi",
     changePassword: "Parolayı değiştir",
     changePasswordHint: "Sizin olduğunuzu doğrulamak için mevcut parolanızı girin.",
+    passwordManagedByProvider: "Google ile giriş yapıldı",
+    passwordManagedByProviderHint:
+      "Bu hesabın burada bir parolası yok, bu yüzden değiştirilecek bir şey de yok. Parolanız Google tarafından yönetiliyor.",
     currentPassword: "Mevcut parola",
     newPassword: "Yeni parola",
     confirmPassword: "Yeni parolayı onaylayın",

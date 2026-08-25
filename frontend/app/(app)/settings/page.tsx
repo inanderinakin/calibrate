@@ -13,7 +13,7 @@ import { countryAliases, countryLabel, countrySuggestions, toStoredCountry } fro
 import { studyFieldSuggestions } from "@/lib/studyFields";
 import { session } from "@/lib/session";
 import { clearAnalysisMarker } from "@/lib/useRestoreAnalysis";
-import { tokens } from "@/lib/tokens";
+import { identityProviders, readClaims, tokens } from "@/lib/tokens";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
 import { duration, ease } from "@/lib/motion";
@@ -63,6 +63,10 @@ export default function SettingsPage() {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [holdProgress, setHoldProgress] = useState(0);
+  // Read after mount rather than during render: the token lives in localStorage,
+  // which is not there on the server, so deciding this inline would render the
+  // form once and then swap it out.
+  const [signInProvider, setSignInProvider] = useState<string | null>(null);
   const holdFrame = useRef<number | null>(null);
   const holdFromKeyboard = useRef(false);
 
@@ -104,6 +108,13 @@ export default function SettingsPage() {
   }
 
   useEffect(() => stopHold, []);
+
+  useEffect(() => {
+    const idToken = tokens.getIdToken();
+    if (!idToken) return;
+
+    setSignInProvider(identityProviders(readClaims(idToken))[0] ?? null);
+  }, []);
 
   function closeConfirm() {
     stopHold();
@@ -379,6 +390,20 @@ export default function SettingsPage() {
 
         </motion.form>
 
+        {signInProvider ? (
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.15 }}
+            className="glass-card rounded-[30px] shadow-lg p-6 md:p-9 flex flex-col gap-2"
+          >
+            <h2 className="text-2xl font-medium text-(--accent-bg) flex items-center gap-2">
+              <Icon icon="mdi:google" className="w-7 h-7" />
+              {t.passwordManagedByProvider}
+            </h2>
+            <p className="text-sm text-(--text-muted)">{t.passwordManagedByProviderHint}</p>
+          </motion.section>
+        ) : (
         <motion.form
           onSubmit={handleChangePassword}
           initial={{ opacity: 0, y: 20 }}
@@ -455,6 +480,7 @@ export default function SettingsPage() {
             {changingPassword ? t.changingPassword : t.changePassword}
           </motion.button>
         </motion.form>
+        )}
 
         <div className="self-end flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <motion.button

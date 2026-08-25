@@ -13,6 +13,15 @@ export interface IdTokenClaims {
   email: string;
   given_name?: string;
   family_name?: string;
+  // Cognito only writes this claim for users who arrived through an external
+  // provider, so its presence is what separates a Google account from one that
+  // signed up here with a password. It is usually an array, but a hosted-UI
+  // token can carry it as the same JSON in a string, so both are read.
+  identities?: TokenIdentity[] | string;
+}
+
+interface TokenIdentity {
+  providerName?: string;
 }
 
 export function readClaims(idToken: string): IdTokenClaims | null {
@@ -34,6 +43,27 @@ export function readClaims(idToken: string): IdTokenClaims | null {
   }
   catch {
     return null;
+  }
+}
+
+/** The external providers this account signs in with, empty for a password account. */
+export function identityProviders(claims: IdTokenClaims | null): string[] {
+  if (!claims?.identities) return [];
+
+  const list = typeof claims.identities === "string"
+    ? safeParse(claims.identities)
+    : claims.identities;
+
+  return list.map((identity) => identity.providerName ?? "").filter(Boolean);
+}
+
+function safeParse(value: string): TokenIdentity[] {
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [parsed];
+  }
+  catch {
+    return [];
   }
 }
 
