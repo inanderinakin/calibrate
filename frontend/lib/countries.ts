@@ -1,4 +1,4 @@
-import { registerLocale, getName, getNames, getAlpha2Code } from "i18n-iso-countries";
+import { alpha2ToAlpha3, alpha3ToAlpha2, getAlpha2Codes, registerLocale, getName, getNames, getAlpha2Code } from "i18n-iso-countries";
 import en from "i18n-iso-countries/langs/en.json";
 import tr from "i18n-iso-countries/langs/tr.json";
 import type { Language } from "@/contexts/LanguageContext";
@@ -40,9 +40,19 @@ export function countryAliases(language: Language): Record<string, string[]> {
   if (cached) return cached;
 
   const aliases: Record<string, string[]> = {};
-  for (const names of Object.values(getNames(language, { select: "all" }))) {
+  const localNames = getNames(language, { select: "all" });
+  const otherNames = getNames(language === "en" ? "tr" : "en", { select: "all" });
+
+  for (const [code, names] of Object.entries(localNames)) {
     const [display, ...rest] = names;
-    if (rest.length > 0) aliases[display] = rest;
+    aliases[display] = [
+      ...new Set([
+        ...rest,
+        ...(otherNames[code] ?? []),
+        code,
+        alpha2ToAlpha3(code) ?? "",
+      ].filter((name) => name && name !== display)),
+    ];
   }
 
   aliasesByLanguage[language] = aliases;
@@ -59,7 +69,22 @@ export function toStoredCountry(input: string, language: Language): string {
   const name = input.trim();
   if (!name) return "";
 
-  return getAlpha2Code(name, language) ?? name;
+  return countryCode(name, language) ?? name;
+}
+
+export function isKnownCountry(input: string, language: Language): boolean {
+  return Boolean(countryCode(input.trim(), language));
+}
+
+function countryCode(input: string, language: Language): string | undefined {
+  const upper = input.toUpperCase();
+  if (upper in getAlpha2Codes()) return upper;
+
+  return (
+    alpha3ToAlpha2(upper) ??
+    getAlpha2Code(input, language) ??
+    getAlpha2Code(input, language === "en" ? "tr" : "en")
+  );
 }
 
 /** Turns a stored country back into a name to show. */

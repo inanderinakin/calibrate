@@ -7,6 +7,8 @@ export const completeProfile = {
     submit: "Continue",
     saving: "Saving…",
     saveFailed: "We could not save your details. Please try again.",
+    invalidCountry: "Choose a country from the list.",
+    invalidStudyField: "Choose a field of study from the list.",
   },
   tr: {
     title: "Profilinizi tamamlayın",
@@ -16,5 +18,7 @@ export const completeProfile = {
     submit: "Devam et",
     saving: "Kaydediliyor…",
     saveFailed: "Bilgilerinizi kaydedemedik. Lütfen tekrar deneyin.",
+    invalidCountry: "Listeden bir ülke seçin.",
+    invalidStudyField: "Listeden bir çalışma alanı seçin.",
   },
 };

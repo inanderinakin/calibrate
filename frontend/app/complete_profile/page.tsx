@@ -9,9 +9,9 @@ import SuggestInput from "@/components/SuggestInput";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { updateProfile } from "@/lib/api";
-import { countryAliases, countryLabel, countrySuggestions, toStoredCountry } from "@/lib/countries";
+import { countryAliases, countryLabel, countrySuggestions, isKnownCountry, toStoredCountry } from "@/lib/countries";
 import { resolveEntryPath } from "@/lib/entry";
-import { studyFieldSuggestions } from "@/lib/studyFields";
+import { isKnownStudyField, studyFieldSuggestions } from "@/lib/studyFields";
 import { getTranslations } from "@/lib/translations";
 import { useRequireAuth } from "@/lib/useRequireAuth";
 
@@ -31,8 +31,19 @@ export default function CompleteProfilePage() {
     event.preventDefault();
     if (!user) return;
 
-    setSubmitting(true);
     setError(null);
+
+    if (!isKnownStudyField(studyField)) {
+      setError(t.invalidStudyField);
+      return;
+    }
+
+    if (!isKnownCountry(country, language)) {
+      setError(t.invalidCountry);
+      return;
+    }
+
+    setSubmitting(true);
 
     try {
       const result = await updateProfile(
@@ -99,6 +110,8 @@ export default function CompleteProfilePage() {
               onChange={setCountry}
               suggestions={countrySuggestions(language)}
               aliases={countryAliases(language)}
+              limit={countrySuggestions(language).length}
+              matchMode="startsWith"
             />
 
             {error && (

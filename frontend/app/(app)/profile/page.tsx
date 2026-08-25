@@ -24,7 +24,7 @@ export default function ProfilePage() {
   }
 
   const joinedDate = user?.joinedAt
-    ? new Date(user.joinedAt).toLocaleDateString(undefined, {
+    ? new Date(user.joinedAt).toLocaleDateString(language === "tr" ? "tr-TR" : "en-US", {
         month: "long",
         year: "numeric",
       })

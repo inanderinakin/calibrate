@@ -34,6 +34,7 @@ interface SuggestInputProps {
   required?: boolean;
   /** How many matches to show at once. */
   limit?: number;
+  matchMode?: "contains" | "startsWith";
   /**
    * "form" matches the heavier field styling the settings page uses for its
    * other inputs. Anything else keeps the compact look the upload page wants.
@@ -59,6 +60,7 @@ export default function SuggestInput({
   aliases,
   required = false,
   limit = 8,
+  matchMode = "contains",
   variant = "compact",
   changed = false,
   changedTitle,
@@ -67,18 +69,25 @@ export default function SuggestInput({
     const query = fold(value.trim());
     // An empty field offers the head of the list rather than nothing, so the
     // suggestions are discoverable before you know what to type.
+    const matchesTerm = (term: string) =>
+      matchMode === "startsWith"
+        ? fold(term).startsWith(query)
+        : fold(term).includes(query);
+
     const matches = query
       ? suggestions.filter(
           (suggestion) =>
-            fold(suggestion).includes(query) ||
+            matchesTerm(suggestion) ||
             (aliases?.[suggestion] ?? []).some((alias) =>
-              fold(alias).includes(query),
+              matchMode === "startsWith"
+                ? fold(alias) === query
+                : matchesTerm(alias),
             ),
         )
       : suggestions;
 
     return matches.slice(0, limit);
-  }, [suggestions, aliases, value, limit]);
+  }, [suggestions, aliases, value, limit, matchMode]);
 
   const {
     isOpen,

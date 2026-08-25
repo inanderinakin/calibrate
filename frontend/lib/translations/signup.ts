@@ -11,6 +11,8 @@ export const signup = {
     haveAccount: "Already have an account?",
     logInCta: "Click here to log in",
     genericError: "We could not create your account. Please try again.",
+    invalidCountry: "Choose a country from the list.",
+    invalidStudyField: "Choose a field of study from the list.",
   },
   tr: {
     title: "Hesabınızı Oluşturun",
@@ -24,5 +26,7 @@ export const signup = {
     haveAccount: "Zaten hesabınız var mı?",
     logInCta: "Giriş yapmak için tıklayın",
     genericError: "Hesabınız oluşturulamadı. Lütfen tekrar deneyin.",
+    invalidCountry: "Listeden bir ülke seçin.",
+    invalidStudyField: "Listeden bir çalışma alanı seçin.",
   },
 };

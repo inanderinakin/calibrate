@@ -9,8 +9,8 @@ import { useAuth, clearStoredProfile } from "@/contexts/AuthContext";
 import { changePassword, deleteAccount, getProfile, updateProfile } from "@/lib/api";
 import SuggestInput from "@/components/SuggestInput";
 import PasswordRules, { passwordMeetsRules } from "@/components/PasswordRules";
-import { countryAliases, countryLabel, countrySuggestions, toStoredCountry } from "@/lib/countries";
-import { studyFieldSuggestions } from "@/lib/studyFields";
+import { countryAliases, countryLabel, countrySuggestions, isKnownCountry, toStoredCountry } from "@/lib/countries";
+import { isKnownStudyField, studyFieldSuggestions } from "@/lib/studyFields";
 import { session } from "@/lib/session";
 import { clearAnalysisMarker } from "@/lib/useRestoreAnalysis";
 import { tokens } from "@/lib/tokens";
@@ -181,9 +181,20 @@ export default function SettingsPage() {
   async function handleSave(e: FormEvent) {
     e.preventDefault();
 
-    setSaving(true);
     setSaveError(null);
     setSaved(false);
+
+    if (!isKnownStudyField(studyField)) {
+      setSaveError(t.invalidStudyField);
+      return;
+    }
+
+    if (!isKnownCountry(country, language)) {
+      setSaveError(t.invalidCountry);
+      return;
+    }
+
+    setSaving(true);
 
     try {
       const result = await updateProfile(
@@ -199,6 +210,8 @@ export default function SettingsPage() {
         country: result.country,
         studyField: result.study_field,
       });
+
+      setCountry(countryLabel(result.country, language));
 
       setOriginal({
         firstName: result.first_name,
@@ -323,6 +336,8 @@ export default function SettingsPage() {
                 onChange={setCountry}
                 suggestions={countrySuggestions(language)}
                 aliases={countryAliases(language)}
+                limit={countrySuggestions(language).length}
+                matchMode="startsWith"
                 variant="form"
                 changed={changed.country}
                 changedTitle={t.unsavedChange}

@@ -8,8 +8,8 @@ import { saveProfile } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
 import { post_signup } from "@/lib/api";
-import { studyFieldSuggestions } from "@/lib/studyFields";
-import { countryAliases, countrySuggestions, toStoredCountry } from "@/lib/countries";
+import { isKnownStudyField, studyFieldSuggestions } from "@/lib/studyFields";
+import { countryAliases, countrySuggestions, isKnownCountry, toStoredCountry } from "@/lib/countries";
 import BackButton from "@/components/BackButton";
 import SuggestInput from "@/components/SuggestInput";
 import AuthBanner from "@/components/AuthBanner";
@@ -33,6 +33,17 @@ export default function SignupPage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (!isKnownStudyField(studyField)) {
+      setError(t.signup.invalidStudyField);
+      return;
+    }
+
+    if (!isKnownCountry(country, language)) {
+      setError(t.signup.invalidCountry);
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -175,6 +186,8 @@ export default function SignupPage() {
           onChange={setCountry}
           suggestions={countrySuggestions(language)}
           aliases={countryAliases(language)}
+          limit={countrySuggestions(language).length}
+          matchMode="startsWith"
         />
 
         {error && (
