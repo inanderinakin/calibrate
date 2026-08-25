@@ -28,6 +28,11 @@ CATEGORIES = {
         "Angular": ["angular"],
         "Vue": ["vue", "vuejs", "vue.js"],
         "Next.js": ["next.js", "nextjs"],
+        "GraphQL": ["graphql", "graph ql"],
+        # Bare "rest" is a word in both languages ("rest of the team", "restoran"),
+        # so only the compound forms are matched.
+        "REST API": ["rest api", "rest apis", "restful", "rest servis", "rest servisleri"],
+        "Microservices": ["microservice", "microservices", "mikroservis", "mikroservisler", "mikro servis"],
         ".NET": [".net", "dotnet"],
         "Spring": ["spring boot", "spring"],
         "Django": ["django"],
@@ -48,9 +53,11 @@ CATEGORIES = {
         "MongoDB": ["mongodb", "mongo"],
         "Redis": ["redis"],
         "Elasticsearch": ["elasticsearch", "elastic search"],
+        "Oracle": ["oracle"],
     },
     "data processing": {
         "Kafka": ["kafka"],
+        "RabbitMQ": ["rabbitmq", "rabbit mq"],
         "Spark": ["spark"],
         "Pandas": ["pandas"],
         "Power BI": ["power bi", "powerbi"],
@@ -85,6 +92,8 @@ CATEGORIES = {
     },
     "version control": {
         "Git": ["git"],
+        "GitHub": ["github"],
+        "GitLab": ["gitlab"],
     },
     "operating systems": {
         "Linux": ["linux"],
@@ -107,6 +116,7 @@ CATEGORIES = {
         "Cypress": ["cypress"],
         "JUnit": ["junit"],
         "Postman": ["postman"],
+        "Playwright": ["playwright"],
     },
     "enterprise resource planning": {
         "SAP": ["sap"],
@@ -130,6 +140,10 @@ CATEGORIES = {
     },
     "office productivity": {
         "Excel": ["excel"],
+    },
+    "project management": {
+        "Scrum": ["scrum"],
+        "Agile": ["agile", "çevik"],
     },
 }
 

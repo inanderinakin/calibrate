@@ -1,908 +1,1012 @@
 {
-    "SQL": [
-        {
-            "title": "SQLBolt",
-            "url": "https://sqlbolt.com",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "Kaggle Intro to SQL",
-            "url": "https://www.kaggle.com/learn/intro-to-sql",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "BTK Akademi Uygulamalarla SQL Öğreniyorum",
-            "url": "https://www.btkakademi.gov.tr/portal/course/uygulamalarla-sql-ogreniyorum-8249",
-            "type": "course",
-            "language": "tr"
-        }
-    ],
-    "Python": [
-        {
-            "title": "Python Official Tutorial",
-            "url": "https://docs.python.org/3/tutorial/",
-            "type": "documentation",
-            "language": "en"
-        },
-        {
-            "title": "freeCodeCamp - Scientific Computing with Python",
-            "url": "https://www.freecodecamp.org/learn/scientific-computing-with-python/",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "BTK Akademi - Sıfırdan İleri Seviye Python Programlama",
-            "url": "https://www.btkakademi.gov.tr/portal/course/sifirdan-ileri-seviye-python-programlama-5877",
-            "type": "course",
-            "language": "tr"
-        }
-    ],
-    "JavaScript": [
-        {
-            "title": "MDN Web Docs - JavaScript",
-            "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
-            "type": "documentation",
-            "language": "en"
-        },
-        {
-            "title": "The Odin Project - Foundations",
-            "url": "https://www.theodinproject.com/paths/foundations/courses/foundations",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "BTK Akademi - Javascript Temelleri",
-            "url": "https://www.btkakademi.gov.tr/portal/course/javascript-temelleri-25317",
-            "type": "course",
-            "language": "tr"
-        }
-    ],
-    "Git": [
-        {
-            "title": "Pro Git Book (Official)",
-            "url": "https://git-scm.com/book/en/v2",
-            "type": "documentation",
-            "language": "en"
-        },
-        {
-            "title": "Learn Git Branching",
-            "url": "https://learngitbranching.js.org",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "BTK Akademi - Versiyon Kontrolleri: Git ve GitHub",
-            "url": "https://www.btkakademi.gov.tr/portal/course/versiyon-kontrolleri-git-ve-github-19439",
-            "type": "course",
-            "language": "tr"
-        }
-    ],
-    "PostgreSQL": [
-        {
-            "title": "PostgreSQL Official Documentation",
-            "url": "https://www.postgresql.org/docs/",
-            "type": "documentation",
-            "language": "en"
-        },
-        {
-            "title": "PostgreSQL Tutorial",
-            "url": "https://www.postgresqltutorial.com/",
-            "type": "documentation",
-            "language": "en"
-        },
-        {
-            "title": "BTK Akademi - PostgreSQL için SQL Dili",
-            "url": "https://www.btkakademi.gov.tr/portal/course/postgresql-icin-sql-dili-65960",
-            "type": "course",
-            "language": "tr"
-        }
-    ],
-    "TypeScript": [
-        {
-            "title": "TypeScript Official Handbook",
-            "url": "https://www.typescriptlang.org/docs/handbook/intro.html",
-            "type": "documentation",
-            "language": "en"
-        },
-        {
-            "title": "Academind - TypeScript Course for Beginners",
-            "url": "https://www.youtube.com/watch?v=BwuLxPH8IDs",
-            "type": "video",
-            "language": "en"
-        },
-        {
-            "title": "BTK Akademi - Angular 7",
-            "url": "https://www.btkakademi.gov.tr/portal/course/angular-7-9914",
-            "type": "course",
-            "language": "tr"
-        }
-    ],
-    "C#": [
-        {
-            "title": "Microsoft C# Documentation",
-            "url": "https://learn.microsoft.com/en-us/dotnet/csharp/",
-            "type": "documentation",
-            "language": "en"
-        },
-        {
-            "title": "freeCodeCamp - C# Tutorial for Beginners",
-            "url": "https://www.youtube.com/watch?v=GhQdlIFylQ8",
-            "type": "video",
-            "language": "en"
-        },
-        {
-            "title": "BTK Akademi - C# ile Programlama",
-            "url": "https://www.btkakademi.gov.tr/portal/course/c-ile-programlama-59836",
-            "type": "course",
-            "language": "tr"
-        }
-    ],
-    "Java": [
-        {
-            "title": "Oracle Java Tutorials",
-            "url": "https://docs.oracle.com/javase/tutorial/",
-            "type": "documentation",
-            "language": "en"
-        },
-        {
-            "title": "MOOC.fi - Java Programming",
-            "url": "https://java-programming.mooc.fi/",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "BTK Akademi - JAVA ile Programlamaya Giriş",
-            "url": "https://www.btkakademi.gov.tr/portal/course/java-ile-programlamaya-giris-9617",
-            "type": "course",
-            "language": "tr"
-        }
-    ],
-    "CI/CD": [
-        {
-            "title": "Gitlab: How to learn CI/CD fast",
-            "url": "https://about.gitlab.com/blog/how-to-learn-ci-cd-fast/",
-            "type": "documentation",
-            "language": "en"
-        },
-        {
-            "title": "Implement CI/CD in Microsoft Fabric",
-            "url": "https://learn.microsoft.com/en-us/training/modules/implement-cicd-in-fabric/",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "GitLab ile CI/CD Süreçlerini Yönetin",
-            "url": "https://www.udemy.com/course/gitlab-ile-ci-cd-sureclerini-yonetin/",
-            "type": "course",
-            "language": "tr"
-        }
-    ],
-    "Docker": [
-        {
-            "title": "Docker: Beginner to Pro",
-            "url": "https://courses.devopsdirective.com/docker-beginner-to-pro/lessons/00-introduction/01-main",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "MOOC.fi - DevOps with Docker (Spring 2026)",
-            "url": "https://courses.mooc.fi/org/uh-cs/courses/devops-with-docker-spring-2026",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "techcareer.net: Docker: Temelden İleri Seviyeye",
-            "url": "https://www.techcareer.net/courses/docker-egitimi",
-            "type": "course",
-            "language": "tr"
-        }
-    ],
-    "AWS": [
-        {
-            "title": "AWS Educate",
-            "url": "https://aws.amazon.com/education/awseducate/",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "AWS Skill Builder: Cloud Essentials Knowledge Badge Readiness Path",
-            "url": "https://skillbuilder.aws/learning-plan/XKS3J4FAS7/cloud-essentials--knowledge-badge-readiness-path--includes-labs/Y4YASRJEVX",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "AWS Eğitimi ve Sertifikaları",
-            "url": "https://aws.amazon.com/tr/training/",
-            "type": "course",
-            "language": "tr"
-        }
-    ],
-    "Azure": [
-        {
-            "title": "Microsoft Learn: Describe Cloud Concepts",
-            "url": "https://learn.microsoft.com/en-us/training/paths/microsoft-azure-fundamentals-describe-cloud-concepts/",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "John Savill's Microsoft Azure Master Class",
-            "url": "https://www.youtube.com/playlist?list=PLlVtbbG169nGccbp8VSpAozu3w9xSQJoY",
-            "type": "video",
-            "language": "en"
-        },
-        {
-            "title": "BTK Akademi: Microsoft Azure ile Bulut Bilişim",
-            "url": "https://www.btkakademi.gov.tr/portal/course/microsoft-azure-ile-bulut-bilisim-12854",
-            "type": "course",
-            "language": "tr"
-        }
-    ],
-    "React": [
-        {
-            "title": "React Docs",
-            "url": "https://react.dev",
-            "type": "documentation",
-            "language": "en"
-        },
-        {
-            "title": "React JS Full Course 2024",
-            "url": "https://www.youtube.com/watch?v=lAFbKzO-fss",
-            "type": "video",
-            "language": "en"
-        },
-        {
-            "title": "Sıfırdan İleri Seviyeye REACT Eğitimi",
-            "url": "https://www.youtube.com/watch?v=nhhNRF1gb6M",
-            "type": "video",
-            "language": "tr"
-        }
-    ],
-    ".NET": [
-        {
-            "title": ".NET Learning Center",
-            "url": "https://dotnet.microsoft.com/en-us/learn",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "C# for Beginners",
-            "url": "https://www.youtube.com/playlist?list=PLdo4fOcmZ0oULFjxrOagaERVAMbmG20Xe",
-            "type": "video",
-            "language": "en"
-        },
-        {
-            "title": ".NET Dersleri - Yusuf SEZER",
-            "url": "https://www.yusufsezer.com.tr/net-dersleri/",
-            "type": "course",
-            "language": "tr"
-        }
-    ],
-    "Kubernetes": [
-        {
-            "title": "Learn Kubernetes Basics",
-            "url": "https://kubernetes.io/docs/tutorials/kubernetes-basics/",
-            "type": "documentation",
-            "language": "en"
-        },
-        {
-            "title": "kubelabs: Kubernetes Hands-on Labs and Tutorials",
-            "url": "https://collabnix.github.io/kubelabs/",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "BTK Akademi: Kubernetes",
-            "url": "https://www.btkakademi.gov.tr/portal/course/kubernetes-35490",
-            "type": "course",
-            "language": "tr"
-        }
-    ],
-    "Linux": [
-        {
-            "title": "Introduction to Linux (LFS101) - Linux Foundation",
-            "url": "https://training.linuxfoundation.org/training/introduction-to-linux/",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "The Linux Command Line - William Shotts",
-            "url": "https://linuxcommand.org/tlcl.php",
-            "type": "documentation",
-            "language": "en"
-        },
-        {
-            "title": "BTK Akademi: Linux Sistem Yönetimi",
-            "url": "https://www.btkakademi.gov.tr/portal/course/linux-sistem-yonetimi-874",
-            "type": "course",
-            "language": "tr"
-        }
-    ],
-    "Terraform": [
-        {
-            "title": "HashiCorp Terraform Tutorials",
-            "url": "https://developer.hashicorp.com/terraform/tutorials",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "Terraform Documentation",
-            "url": "https://developer.hashicorp.com/terraform/docs",
-            "type": "documentation",
-            "language": "en"
-        },
-        {
-            "title": "Terraform öğreniyoruz - Necdet Güner",
-            "url": "https://www.youtube.com/watch?v=yBqXr7qmAcw",
-            "type": "video",
-            "language": "tr"
-        }
-    ],
-    "Android": [
-        {
-            "title": "Android Basics with Compose",
-            "url": "https://developer.android.com/courses/android-basics-compose/course",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "Android Developers Training",
-            "url": "https://developer.android.com/courses",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "BTK Akademi: Android Programlama",
-            "url": "https://www.btkakademi.gov.tr/portal/course/android-programlama-3652",
-            "type": "course",
-            "language": "tr"
-        }
-    ],
-    "Kotlin": [
-        {
-            "title": "Get started with Kotlin",
-            "url": "https://kotlinlang.org/docs/getting-started.html",
-            "type": "documentation",
-            "language": "en"
-        },
-        {
-            "title": "Kotlin Koans",
-            "url": "https://play.kotlinlang.org/koans/overview",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "BTK Akademi: Kotlin ile Android Mobil Uygulama Geliştirme Temel Seviye",
-            "url": "https://www.btkakademi.gov.tr/portal/course/kotlin-ile-android-mobil-uygulama-gelistirme-egitimi-temel-seviye-10274",
-            "type": "course",
-            "language": "tr"
-        }
-    ],
-    "Swift": [
-        {
-            "title": "Develop in Swift Tutorials",
-            "url": "https://developer.apple.com/tutorials/develop-in-swift/",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "Swift.org Documentation",
-            "url": "https://www.swift.org/documentation/",
-            "type": "documentation",
-            "language": "en"
-        },
-        {
-            "title": "BTK Akademi: Swift ile iOS Programlama",
-            "url": "https://www.btkakademi.gov.tr/portal/course/swift-ile-ios-programlama-12273",
-            "type": "course",
-            "language": "tr"
-        }
-    ],
-    "iOS": [
-        {
-            "title": "Introducing SwiftUI",
-            "url": "https://developer.apple.com/tutorials/swiftui",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "Apple Developer Documentation",
-            "url": "https://developer.apple.com/documentation/",
-            "type": "documentation",
-            "language": "en"
-        },
-        {
-            "title": "BTK Akademi: SwiftUI ile iOS Mobil Geliştirme Temel Seviye",
-            "url": "https://www.btkakademi.gov.tr/portal/course/swift-ui-ile-ios-mobil-gelistirme-12696",
-            "type": "course",
-            "language": "tr"
-        }
-    ],
-    "Flutter": [
-        {
-            "title": "Learn Flutter",
-            "url": "https://docs.flutter.dev/get-started/learn-flutter",
-            "type": "documentation",
-            "language": "en"
-        },
-        {
-            "title": "Flutter Codelabs",
-            "url": "https://docs.flutter.dev/codelabs",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "BTK Akademi: Google Flutter ile Mobil Uygulama",
-            "url": "https://www.btkakademi.gov.tr/portal/course/google-flutter-ile-mobil-uygulama-10150",
-            "type": "course",
-            "language": "tr"
-        }
-    ],
-    "React Native": [
-        {
-            "title": "React Native Getting Started",
-            "url": "https://reactnative.dev/docs/getting-started",
-            "type": "documentation",
-            "language": "en"
-        },
-        {
-            "title": "Expo Tutorial: Build Your First App",
-            "url": "https://docs.expo.dev/tutorial/introduction/",
-            "type": "course",
-            "language": "en"
-        }
-    ],
-    "TensorFlow": [
-        {
-            "title": "TensorFlow Tutorials",
-            "url": "https://www.tensorflow.org/tutorials",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "Google Machine Learning Crash Course",
-            "url": "https://developers.google.com/machine-learning/crash-course",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "BTK Akademi: Keras ile Derin Öğrenmeye Giriş",
-            "url": "https://www.btkakademi.gov.tr/portal/course/keras-ile-derin-ogrenmeye-giris-10599",
-            "type": "course",
-            "language": "tr"
-        }
-    ],
-    "PyTorch": [
-        {
-            "title": "PyTorch Tutorials",
-            "url": "https://pytorch.org/tutorials/",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "Deep Learning with PyTorch: A 60 Minute Blitz",
-            "url": "https://pytorch.org/tutorials/beginner/deep_learning_60min_blitz.html",
-            "type": "course",
-            "language": "en"
-        }
-    ],
-    "LLM": [
-        {
-            "title": "Hugging Face LLM Course",
-            "url": "https://huggingface.co/learn/llm-course/chapter1/1",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "Neural Networks: Zero to Hero - Andrej Karpathy",
-            "url": "https://karpathy.ai/zero-to-hero.html",
-            "type": "video",
-            "language": "en"
-        }
-    ],
-    "Selenium": [
-        {
-            "title": "Selenium Documentation",
-            "url": "https://www.selenium.dev/documentation/",
-            "type": "documentation",
-            "language": "en"
-        },
-        {
-            "title": "Selenium WebDriver",
-            "url": "https://www.selenium.dev/documentation/webdriver/",
-            "type": "documentation",
-            "language": "en"
-        },
-        {
-            "title": "BTK Akademi: Yazılım Test Otomasyonu",
-            "url": "https://www.btkakademi.gov.tr/portal/course/yaz-l-m-test-otomasyonu-12117",
-            "type": "course",
-            "language": "tr"
-        }
-    ],
-    "Postman": [
-        {
-            "title": "Get started in Postman",
-            "url": "https://learning.postman.com/docs/introduction/overview/",
-            "type": "documentation",
-            "language": "en"
-        },
-        {
-            "title": "Postman Beginner's Course - API Testing",
-            "url": "https://www.youtube.com/watch?v=VywxIQ2ZXw4",
-            "type": "video",
-            "language": "en"
-        }
-    ],
-    "Redis": [
-        {
-            "title": "Redis Documentation",
-            "url": "https://redis.io/docs/latest/",
-            "type": "documentation",
-            "language": "en"
-        },
-        {
-            "title": "Redis Dev Hub",
-            "url": "https://redis.io/learn/",
-            "type": "course",
-            "language": "en"
-        }
-    ],
-    "Kafka": [
-        {
-            "title": "Apache Kafka Quickstart",
-            "url": "https://kafka.apache.org/quickstart",
-            "type": "documentation",
-            "language": "en"
-        },
-        {
-            "title": "Confluent Developer: Apache Kafka Courses",
-            "url": "https://developer.confluent.io/courses/",
-            "type": "course",
-            "language": "en"
-        }
-    ],
-    "GCP": [
-        {
-            "title": "Google Cloud Skills Boost",
-            "url": "https://www.cloudskillsboost.google/",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "Google Cloud Training Resources",
-            "url": "https://cloud.google.com/learn/training",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "BTK Akademi: Google Cloud ile Bulut Bilişim Temel Seviye",
-            "url": "https://www.btkakademi.gov.tr/portal/course/google-cloud-ile-bulut-bilisim-16431",
-            "type": "course",
-            "language": "tr"
-        }
-    ],
-    "Spark": [
-        {
-            "title": "Apache Spark Quick Start",
-            "url": "https://spark.apache.org/docs/latest/quick-start.html",
-            "type": "documentation",
-            "language": "en"
-        },
-        {
-            "title": "Apache Spark Documentation",
-            "url": "https://spark.apache.org/docs/latest/",
-            "type": "documentation",
-            "language": "en"
-        }
-    ],
-    "Angular": [
-        {
-            "title": "Angular Tutorials",
-            "url": "https://angular.dev/tutorials",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "Angular Essentials",
-            "url": "https://angular.dev/essentials",
-            "type": "documentation",
-            "language": "en"
-        },
-        {
-            "title": "BTK Akademi: Angular ile Web Programcılığı",
-            "url": "https://www.btkakademi.gov.tr/portal/course/angular-ile-web-programc-l-g--9914",
-            "type": "course",
-            "language": "tr"
-        }
-    ],
-    "Vue": [
-        {
-            "title": "Vue.js Tutorial",
-            "url": "https://vuejs.org/tutorial/",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "Vue.js Guide",
-            "url": "https://vuejs.org/guide/introduction.html",
-            "type": "documentation",
-            "language": "en"
-        },
-        {
-            "title": "BTK Akademi: Vue.JS",
-            "url": "https://www.btkakademi.gov.tr/portal/course/vue-js-22502",
-            "type": "course",
-            "language": "tr"
-        }
-    ],
-    "Node.js": [
-        {
-            "title": "Introduction to Node.js",
-            "url": "https://nodejs.org/en/learn/getting-started/introduction-to-nodejs",
-            "type": "documentation",
-            "language": "en"
-        },
-        {
-            "title": "Learn Node.js",
-            "url": "https://nodejs.org/en/learn",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "BTK Akademi: Node.js ile Web Programlama",
-            "url": "https://www.btkakademi.gov.tr/portal/course/node-js-ile-web-programlama-14301",
-            "type": "course",
-            "language": "tr"
-        }
-    ],
-    "C++": [
-        {
-            "title": "LearnCpp.com",
-            "url": "https://www.learncpp.com/",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "cppreference.com",
-            "url": "https://en.cppreference.com/w/",
-            "type": "documentation",
-            "language": "en"
-        },
-        {
-            "title": "BTK Akademi: C++ ile Programlamaya Giriş",
-            "url": "https://www.btkakademi.gov.tr/portal/course/c-ile-programlamaya-giris-20172",
-            "type": "course",
-            "language": "tr"
-        }
-    ],
-    "Grafana": [
-        {
-            "title": "Grafana Tutorials",
-            "url": "https://grafana.com/tutorials/",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "Grafana Documentation",
-            "url": "https://grafana.com/docs/grafana/latest/",
-            "type": "documentation",
-            "language": "en"
-        }
-    ],
-    "Pandas": [
-        {
-            "title": "10 minutes to pandas",
-            "url": "https://pandas.pydata.org/docs/user_guide/10min.html",
-            "type": "documentation",
-            "language": "en"
-        },
-        {
-            "title": "Kaggle Learn - Pandas",
-            "url": "https://www.kaggle.com/learn/pandas",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "freeCodeCamp - Data Analysis with Python",
-            "url": "https://www.freecodecamp.org/learn/data-analysis-with-python/",
-            "type": "course",
-            "language": "en"
-        }
-    ],
-    "SAP": [
-        {
-            "title": "SAP Learning",
-            "url": "https://learning.sap.com",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "BT Akademi: SAP ERP Uygulamaları Eğitimi",
-            "url": "https://www.btakademi.com/egitim/sap-erp-uygulamalari-egitimi-2947",
-            "type": "course",
-            "language": "tr"
-        }
-    ],
-    "ABAP": [
-        {
-            "title": "SAP Learning: Learn the Basics of ABAP Programming",
-            "url": "https://learning.sap.com/courses/learn-the-basics-of-abap-programming-on-sap-btp",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "BT Akademi: SAP ABAP Programlama Temel Eğitimi",
-            "url": "https://www.btakademi.com/egitim/sap-abap-programlama-temel-egitimi-2389",
-            "type": "course",
-            "language": "tr"
-        }
-    ],
-    "Netsis": [
-        {
-            "title": "Udemy: Örneklerle Netsis ERP Üretim Süreçleri",
-            "url": "https://www.udemy.com/course/netsis-uretim-modulu/",
-            "type": "course",
-            "language": "tr"
-        }
-    ],
-    "Logo": [
-        {
-            "title": "Udemy: Logo GO3/Tiger3 Bilgisayarlı Muhasebe Eğitimi",
-            "url": "https://www.udemy.com/course/logo-erp-go3-tiger-bilgisayarl-muhasebe-egitimi/",
-            "type": "course",
-            "language": "tr"
-        }
-    ],
-    "Active Directory": [
-        {
-            "title": "Microsoft Learn: Active Directory Domain Services",
-            "url": "https://learn.microsoft.com/en-us/training/paths/active-directory-domain-services/",
-            "type": "course",
-            "language": "en"
-        },
-        {
-            "title": "BT Akademi: Active Directory Services with Windows Server",
-            "url": "https://btakademi.com/egitim/active-directory-services-with-windows-server-2472",
-            "type": "course",
-            "language": "tr"
-        }
-    ],
-    "Windows Server": [
-        {
-            "title": "Microsoft Learn: Windows Server Deployment, Configuration, and Administration",
-            "url": "https://learn.microsoft.com/en-us/training/paths/windows-server-deployment-configuration-administration/",
-            "type": "course",
-            "language": "en"
-        }
-    ],
-    "ITIL": [
-        {
-            "title": "Simplilearn: Free ITIL 4 Foundation Course",
-            "url": "https://www.simplilearn.com/free-itil-v-four-course-skillup",
-            "type": "course",
-            "language": "en"
-        }
-    ],
-    "ServiceNow": [
-        {
-            "title": "ServiceNow University",
-            "url": "https://learning.servicenow.com/",
-            "type": "course",
-            "language": "en"
-        }
-    ],
-    "Zendesk": [
-        {
-            "title": "Zendesk Academy",
-            "url": "https://academy.zendesk.com/",
-            "type": "course",
-            "language": "en"
-        }
-    ],
-    "Microsoft 365": [
-        {
-            "title": "Microsoft Learn: Explore Microsoft 365 Administration",
-            "url": "https://learn.microsoft.com/en-us/training/paths/explore-microsoft-365-administration/",
-            "type": "course",
-            "language": "en"
-        }
-    ],
-    "Jira": [
-        {
-            "title": "Atlassian University: Foundation Free Courses",
-            "url": "https://university.atlassian.com/student/collection/1112824-atlassian-foundation-free-courses",
-            "type": "course",
-            "language": "en"
-        }
-    ],
-    "SCCM": [
-        {
-            "title": "Microsoft Learn: Configuration Manager Documentation",
-            "url": "https://learn.microsoft.com/en-us/intune/configmgr/core/understand/introduction",
-            "type": "documentation",
-            "language": "en"
-        }
-    ],
-    "Artificial Intelligence": [
-        {
-            "title": "Learn Prompting: Prompt Engineering Guide",
-            "url": "https://learnprompting.org/docs/introduction",
-            "type": "documentation",
-            "language": "en"
-        }
-    ],
-    "Firewall": [
-        {
-            "title": "Cisco NetAcad: Network Defense",
-            "url": "https://www.netacad.com/courses/network-defense",
-            "type": "course",
-            "language": "en"
-        }
-    ],
-    "Penetration Testing": [
-        {
-            "title": "TryHackMe: Jr Penetration Tester Path",
-            "url": "https://tryhackme.com/path/outline/jrpenetrationtester",
-            "type": "course",
-            "language": "en"
-        }
-    ],
-    "ERP": [
-        {
-            "title": "Alison: A Beginner's Guide to Enterprise Resource Planning (ERP) Systems",
-            "url": "https://alison.com/course/a-beginner-s-guide-to-enterprise-resource-planning-erp-systems",
-            "type": "course",
-            "language": "en"
-        }
-    ],
-    "CRM": [
-        {
-            "title": "HubSpot Academy",
-            "url": "https://academy.hubspot.com/",
-            "type": "course",
-            "language": "en"
-        }
-    ],
-    "Excel": [
-        {
-            "title": "Microsoft Learn: Excel Training",
-            "url": "https://learn.microsoft.com/en-us/training/browse/?products=office-excel",
-            "type": "course",
-            "language": "en"
-        }
-    ],
-    "Windows": [
-        {
-            "title": "Microsoft Learn: Explore the Windows Client",
-            "url": "https://learn.microsoft.com/en-us/training/modules/explore-windows-client/",
-            "type": "course",
-            "language": "en"
-        }
-    ],
-    "Networking": [
-        {
-            "title": "Cisco NetAcad: Networking Basics",
-            "url": "https://www.netacad.com/courses/networking-basics",
-            "type": "course",
-            "language": "en"
-        }
-    ],
-    "Power BI": [
-        {
-            "title": "Microsoft Learn: Get Started Building With Power BI",
-            "url": "https://learn.microsoft.com/en-us/training/modules/get-started-with-power-bi/",
-            "type": "course",
-            "language": "en"
-        }
-    ],
-    "Cybersecurity": [
-        {
-            "title": "Cisco NetAcad: Network Defense",
-            "url": "https://www.netacad.com/courses/network-defense",
-            "type": "course",
-            "language": "en"
-        }
-    ]
+  "SQL": [
+    {
+      "title": "SQLBolt",
+      "url": "https://sqlbolt.com",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "Kaggle Intro to SQL",
+      "url": "https://www.kaggle.com/learn/intro-to-sql",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "BTK Akademi Uygulamalarla SQL Öğreniyorum",
+      "url": "https://www.btkakademi.gov.tr/portal/course/uygulamalarla-sql-ogreniyorum-8249",
+      "type": "course",
+      "language": "tr"
+    }
+  ],
+  "Python": [
+    {
+      "title": "Python Official Tutorial",
+      "url": "https://docs.python.org/3/tutorial/",
+      "type": "documentation",
+      "language": "en"
+    },
+    {
+      "title": "freeCodeCamp - Scientific Computing with Python",
+      "url": "https://www.freecodecamp.org/learn/scientific-computing-with-python/",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "BTK Akademi - Sıfırdan İleri Seviye Python Programlama",
+      "url": "https://www.btkakademi.gov.tr/portal/course/sifirdan-ileri-seviye-python-programlama-5877",
+      "type": "course",
+      "language": "tr"
+    }
+  ],
+  "JavaScript": [
+    {
+      "title": "MDN Web Docs - JavaScript",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
+      "type": "documentation",
+      "language": "en"
+    },
+    {
+      "title": "The Odin Project - Foundations",
+      "url": "https://www.theodinproject.com/paths/foundations/courses/foundations",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "BTK Akademi - Javascript Temelleri",
+      "url": "https://www.btkakademi.gov.tr/portal/course/javascript-temelleri-25317",
+      "type": "course",
+      "language": "tr"
+    }
+  ],
+  "Git": [
+    {
+      "title": "Pro Git Book (Official)",
+      "url": "https://git-scm.com/book/en/v2",
+      "type": "documentation",
+      "language": "en"
+    },
+    {
+      "title": "Learn Git Branching",
+      "url": "https://learngitbranching.js.org",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "BTK Akademi - Versiyon Kontrolleri: Git ve GitHub",
+      "url": "https://www.btkakademi.gov.tr/portal/course/versiyon-kontrolleri-git-ve-github-19439",
+      "type": "course",
+      "language": "tr"
+    }
+  ],
+  "PostgreSQL": [
+    {
+      "title": "PostgreSQL Official Documentation",
+      "url": "https://www.postgresql.org/docs/",
+      "type": "documentation",
+      "language": "en"
+    },
+    {
+      "title": "PostgreSQL Tutorial",
+      "url": "https://www.postgresqltutorial.com/",
+      "type": "documentation",
+      "language": "en"
+    },
+    {
+      "title": "BTK Akademi - PostgreSQL için SQL Dili",
+      "url": "https://www.btkakademi.gov.tr/portal/course/postgresql-icin-sql-dili-65960",
+      "type": "course",
+      "language": "tr"
+    }
+  ],
+  "TypeScript": [
+    {
+      "title": "TypeScript Official Handbook",
+      "url": "https://www.typescriptlang.org/docs/handbook/intro.html",
+      "type": "documentation",
+      "language": "en"
+    },
+    {
+      "title": "Academind - TypeScript Course for Beginners",
+      "url": "https://www.youtube.com/watch?v=BwuLxPH8IDs",
+      "type": "video",
+      "language": "en"
+    },
+    {
+      "title": "BTK Akademi - Angular 7",
+      "url": "https://www.btkakademi.gov.tr/portal/course/angular-7-9914",
+      "type": "course",
+      "language": "tr"
+    }
+  ],
+  "C#": [
+    {
+      "title": "Microsoft C# Documentation",
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/",
+      "type": "documentation",
+      "language": "en"
+    },
+    {
+      "title": "freeCodeCamp - C# Tutorial for Beginners",
+      "url": "https://www.youtube.com/watch?v=GhQdlIFylQ8",
+      "type": "video",
+      "language": "en"
+    },
+    {
+      "title": "BTK Akademi - C# ile Programlama",
+      "url": "https://www.btkakademi.gov.tr/portal/course/c-ile-programlama-59836",
+      "type": "course",
+      "language": "tr"
+    }
+  ],
+  "Java": [
+    {
+      "title": "Oracle Java Tutorials",
+      "url": "https://docs.oracle.com/javase/tutorial/",
+      "type": "documentation",
+      "language": "en"
+    },
+    {
+      "title": "MOOC.fi - Java Programming",
+      "url": "https://java-programming.mooc.fi/",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "BTK Akademi - JAVA ile Programlamaya Giriş",
+      "url": "https://www.btkakademi.gov.tr/portal/course/java-ile-programlamaya-giris-9617",
+      "type": "course",
+      "language": "tr"
+    }
+  ],
+  "CI/CD": [
+    {
+      "title": "Gitlab: How to learn CI/CD fast",
+      "url": "https://about.gitlab.com/blog/how-to-learn-ci-cd-fast/",
+      "type": "documentation",
+      "language": "en"
+    },
+    {
+      "title": "Implement CI/CD in Microsoft Fabric",
+      "url": "https://learn.microsoft.com/en-us/training/modules/implement-cicd-in-fabric/",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "GitLab ile CI/CD Süreçlerini Yönetin",
+      "url": "https://www.udemy.com/course/gitlab-ile-ci-cd-sureclerini-yonetin/",
+      "type": "course",
+      "language": "tr"
+    }
+  ],
+  "Docker": [
+    {
+      "title": "Docker: Beginner to Pro",
+      "url": "https://courses.devopsdirective.com/docker-beginner-to-pro/lessons/00-introduction/01-main",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "MOOC.fi - DevOps with Docker (Spring 2026)",
+      "url": "https://courses.mooc.fi/org/uh-cs/courses/devops-with-docker-spring-2026",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "techcareer.net: Docker: Temelden İleri Seviyeye",
+      "url": "https://www.techcareer.net/courses/docker-egitimi",
+      "type": "course",
+      "language": "tr"
+    }
+  ],
+  "AWS": [
+    {
+      "title": "AWS Educate",
+      "url": "https://aws.amazon.com/education/awseducate/",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "AWS Skill Builder: Cloud Essentials Knowledge Badge Readiness Path",
+      "url": "https://skillbuilder.aws/learning-plan/XKS3J4FAS7/cloud-essentials--knowledge-badge-readiness-path--includes-labs/Y4YASRJEVX",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "AWS Eğitimi ve Sertifikaları",
+      "url": "https://aws.amazon.com/tr/training/",
+      "type": "course",
+      "language": "tr"
+    }
+  ],
+  "Azure": [
+    {
+      "title": "Microsoft Learn: Describe Cloud Concepts",
+      "url": "https://learn.microsoft.com/en-us/training/paths/microsoft-azure-fundamentals-describe-cloud-concepts/",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "John Savill's Microsoft Azure Master Class",
+      "url": "https://www.youtube.com/playlist?list=PLlVtbbG169nGccbp8VSpAozu3w9xSQJoY",
+      "type": "video",
+      "language": "en"
+    },
+    {
+      "title": "BTK Akademi: Microsoft Azure ile Bulut Bilişim",
+      "url": "https://www.btkakademi.gov.tr/portal/course/microsoft-azure-ile-bulut-bilisim-12854",
+      "type": "course",
+      "language": "tr"
+    }
+  ],
+  "React": [
+    {
+      "title": "React Docs",
+      "url": "https://react.dev",
+      "type": "documentation",
+      "language": "en"
+    },
+    {
+      "title": "React JS Full Course 2024",
+      "url": "https://www.youtube.com/watch?v=lAFbKzO-fss",
+      "type": "video",
+      "language": "en"
+    },
+    {
+      "title": "Sıfırdan İleri Seviyeye REACT Eğitimi",
+      "url": "https://www.youtube.com/watch?v=nhhNRF1gb6M",
+      "type": "video",
+      "language": "tr"
+    }
+  ],
+  ".NET": [
+    {
+      "title": ".NET Learning Center",
+      "url": "https://dotnet.microsoft.com/en-us/learn",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "C# for Beginners",
+      "url": "https://www.youtube.com/playlist?list=PLdo4fOcmZ0oULFjxrOagaERVAMbmG20Xe",
+      "type": "video",
+      "language": "en"
+    },
+    {
+      "title": ".NET Dersleri - Yusuf SEZER",
+      "url": "https://www.yusufsezer.com.tr/net-dersleri/",
+      "type": "course",
+      "language": "tr"
+    }
+  ],
+  "Kubernetes": [
+    {
+      "title": "Learn Kubernetes Basics",
+      "url": "https://kubernetes.io/docs/tutorials/kubernetes-basics/",
+      "type": "documentation",
+      "language": "en"
+    },
+    {
+      "title": "kubelabs: Kubernetes Hands-on Labs and Tutorials",
+      "url": "https://collabnix.github.io/kubelabs/",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "BTK Akademi: Kubernetes",
+      "url": "https://www.btkakademi.gov.tr/portal/course/kubernetes-35490",
+      "type": "course",
+      "language": "tr"
+    }
+  ],
+  "Linux": [
+    {
+      "title": "Introduction to Linux (LFS101) - Linux Foundation",
+      "url": "https://training.linuxfoundation.org/training/introduction-to-linux/",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "The Linux Command Line - William Shotts",
+      "url": "https://linuxcommand.org/tlcl.php",
+      "type": "documentation",
+      "language": "en"
+    },
+    {
+      "title": "BTK Akademi: Linux Sistem Yönetimi",
+      "url": "https://www.btkakademi.gov.tr/portal/course/linux-sistem-yonetimi-874",
+      "type": "course",
+      "language": "tr"
+    }
+  ],
+  "Terraform": [
+    {
+      "title": "HashiCorp Terraform Tutorials",
+      "url": "https://developer.hashicorp.com/terraform/tutorials",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "Terraform Documentation",
+      "url": "https://developer.hashicorp.com/terraform/docs",
+      "type": "documentation",
+      "language": "en"
+    },
+    {
+      "title": "Terraform öğreniyoruz - Necdet Güner",
+      "url": "https://www.youtube.com/watch?v=yBqXr7qmAcw",
+      "type": "video",
+      "language": "tr"
+    }
+  ],
+  "Android": [
+    {
+      "title": "Android Basics with Compose",
+      "url": "https://developer.android.com/courses/android-basics-compose/course",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "Android Developers Training",
+      "url": "https://developer.android.com/courses",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "BTK Akademi: Android Programlama",
+      "url": "https://www.btkakademi.gov.tr/portal/course/android-programlama-3652",
+      "type": "course",
+      "language": "tr"
+    }
+  ],
+  "Kotlin": [
+    {
+      "title": "Get started with Kotlin",
+      "url": "https://kotlinlang.org/docs/getting-started.html",
+      "type": "documentation",
+      "language": "en"
+    },
+    {
+      "title": "Kotlin Koans",
+      "url": "https://play.kotlinlang.org/koans/overview",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "BTK Akademi: Kotlin ile Android Mobil Uygulama Geliştirme Temel Seviye",
+      "url": "https://www.btkakademi.gov.tr/portal/course/kotlin-ile-android-mobil-uygulama-gelistirme-egitimi-temel-seviye-10274",
+      "type": "course",
+      "language": "tr"
+    }
+  ],
+  "Swift": [
+    {
+      "title": "Develop in Swift Tutorials",
+      "url": "https://developer.apple.com/tutorials/develop-in-swift/",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "Swift.org Documentation",
+      "url": "https://www.swift.org/documentation/",
+      "type": "documentation",
+      "language": "en"
+    },
+    {
+      "title": "BTK Akademi: Swift ile iOS Programlama",
+      "url": "https://www.btkakademi.gov.tr/portal/course/swift-ile-ios-programlama-12273",
+      "type": "course",
+      "language": "tr"
+    }
+  ],
+  "iOS": [
+    {
+      "title": "Introducing SwiftUI",
+      "url": "https://developer.apple.com/tutorials/swiftui",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "Apple Developer Documentation",
+      "url": "https://developer.apple.com/documentation/",
+      "type": "documentation",
+      "language": "en"
+    },
+    {
+      "title": "BTK Akademi: SwiftUI ile iOS Mobil Geliştirme Temel Seviye",
+      "url": "https://www.btkakademi.gov.tr/portal/course/swift-ui-ile-ios-mobil-gelistirme-12696",
+      "type": "course",
+      "language": "tr"
+    }
+  ],
+  "Flutter": [
+    {
+      "title": "Learn Flutter",
+      "url": "https://docs.flutter.dev/get-started/learn-flutter",
+      "type": "documentation",
+      "language": "en"
+    },
+    {
+      "title": "Flutter Codelabs",
+      "url": "https://docs.flutter.dev/codelabs",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "BTK Akademi: Google Flutter ile Mobil Uygulama",
+      "url": "https://www.btkakademi.gov.tr/portal/course/google-flutter-ile-mobil-uygulama-10150",
+      "type": "course",
+      "language": "tr"
+    }
+  ],
+  "React Native": [
+    {
+      "title": "React Native Getting Started",
+      "url": "https://reactnative.dev/docs/getting-started",
+      "type": "documentation",
+      "language": "en"
+    },
+    {
+      "title": "Expo Tutorial: Build Your First App",
+      "url": "https://docs.expo.dev/tutorial/introduction/",
+      "type": "course",
+      "language": "en"
+    }
+  ],
+  "TensorFlow": [
+    {
+      "title": "TensorFlow Tutorials",
+      "url": "https://www.tensorflow.org/tutorials",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "Google Machine Learning Crash Course",
+      "url": "https://developers.google.com/machine-learning/crash-course",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "BTK Akademi: Keras ile Derin Öğrenmeye Giriş",
+      "url": "https://www.btkakademi.gov.tr/portal/course/keras-ile-derin-ogrenmeye-giris-10599",
+      "type": "course",
+      "language": "tr"
+    }
+  ],
+  "PyTorch": [
+    {
+      "title": "PyTorch Tutorials",
+      "url": "https://pytorch.org/tutorials/",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "Deep Learning with PyTorch: A 60 Minute Blitz",
+      "url": "https://pytorch.org/tutorials/beginner/deep_learning_60min_blitz.html",
+      "type": "course",
+      "language": "en"
+    }
+  ],
+  "LLM": [
+    {
+      "title": "Hugging Face LLM Course",
+      "url": "https://huggingface.co/learn/llm-course/chapter1/1",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "Neural Networks: Zero to Hero - Andrej Karpathy",
+      "url": "https://karpathy.ai/zero-to-hero.html",
+      "type": "video",
+      "language": "en"
+    }
+  ],
+  "Selenium": [
+    {
+      "title": "Selenium Documentation",
+      "url": "https://www.selenium.dev/documentation/",
+      "type": "documentation",
+      "language": "en"
+    },
+    {
+      "title": "Selenium WebDriver",
+      "url": "https://www.selenium.dev/documentation/webdriver/",
+      "type": "documentation",
+      "language": "en"
+    },
+    {
+      "title": "BTK Akademi: Yazılım Test Otomasyonu",
+      "url": "https://www.btkakademi.gov.tr/portal/course/yaz-l-m-test-otomasyonu-12117",
+      "type": "course",
+      "language": "tr"
+    }
+  ],
+  "Postman": [
+    {
+      "title": "Get started in Postman",
+      "url": "https://learning.postman.com/docs/introduction/overview/",
+      "type": "documentation",
+      "language": "en"
+    },
+    {
+      "title": "Postman Beginner's Course - API Testing",
+      "url": "https://www.youtube.com/watch?v=VywxIQ2ZXw4",
+      "type": "video",
+      "language": "en"
+    }
+  ],
+  "Redis": [
+    {
+      "title": "Redis Documentation",
+      "url": "https://redis.io/docs/latest/",
+      "type": "documentation",
+      "language": "en"
+    },
+    {
+      "title": "Redis Dev Hub",
+      "url": "https://redis.io/learn/",
+      "type": "course",
+      "language": "en"
+    }
+  ],
+  "Kafka": [
+    {
+      "title": "Apache Kafka Quickstart",
+      "url": "https://kafka.apache.org/quickstart",
+      "type": "documentation",
+      "language": "en"
+    },
+    {
+      "title": "Confluent Developer: Apache Kafka Courses",
+      "url": "https://developer.confluent.io/courses/",
+      "type": "course",
+      "language": "en"
+    }
+  ],
+  "GCP": [
+    {
+      "title": "Google Cloud Skills Boost",
+      "url": "https://www.cloudskillsboost.google/",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "Google Cloud Training Resources",
+      "url": "https://cloud.google.com/learn/training",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "BTK Akademi: Google Cloud ile Bulut Bilişim Temel Seviye",
+      "url": "https://www.btkakademi.gov.tr/portal/course/google-cloud-ile-bulut-bilisim-16431",
+      "type": "course",
+      "language": "tr"
+    }
+  ],
+  "Spark": [
+    {
+      "title": "Apache Spark Quick Start",
+      "url": "https://spark.apache.org/docs/latest/quick-start.html",
+      "type": "documentation",
+      "language": "en"
+    },
+    {
+      "title": "Apache Spark Documentation",
+      "url": "https://spark.apache.org/docs/latest/",
+      "type": "documentation",
+      "language": "en"
+    }
+  ],
+  "Angular": [
+    {
+      "title": "Angular Tutorials",
+      "url": "https://angular.dev/tutorials",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "Angular Essentials",
+      "url": "https://angular.dev/essentials",
+      "type": "documentation",
+      "language": "en"
+    },
+    {
+      "title": "BTK Akademi: Angular ile Web Programcılığı",
+      "url": "https://www.btkakademi.gov.tr/portal/course/angular-ile-web-programc-l-g--9914",
+      "type": "course",
+      "language": "tr"
+    }
+  ],
+  "Vue": [
+    {
+      "title": "Vue.js Tutorial",
+      "url": "https://vuejs.org/tutorial/",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "Vue.js Guide",
+      "url": "https://vuejs.org/guide/introduction.html",
+      "type": "documentation",
+      "language": "en"
+    },
+    {
+      "title": "BTK Akademi: Vue.JS",
+      "url": "https://www.btkakademi.gov.tr/portal/course/vue-js-22502",
+      "type": "course",
+      "language": "tr"
+    }
+  ],
+  "Node.js": [
+    {
+      "title": "Introduction to Node.js",
+      "url": "https://nodejs.org/en/learn/getting-started/introduction-to-nodejs",
+      "type": "documentation",
+      "language": "en"
+    },
+    {
+      "title": "Learn Node.js",
+      "url": "https://nodejs.org/en/learn",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "BTK Akademi: Node.js ile Web Programlama",
+      "url": "https://www.btkakademi.gov.tr/portal/course/node-js-ile-web-programlama-14301",
+      "type": "course",
+      "language": "tr"
+    }
+  ],
+  "C++": [
+    {
+      "title": "LearnCpp.com",
+      "url": "https://www.learncpp.com/",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "cppreference.com",
+      "url": "https://en.cppreference.com/w/",
+      "type": "documentation",
+      "language": "en"
+    },
+    {
+      "title": "BTK Akademi: C++ ile Programlamaya Giriş",
+      "url": "https://www.btkakademi.gov.tr/portal/course/c-ile-programlamaya-giris-20172",
+      "type": "course",
+      "language": "tr"
+    }
+  ],
+  "Grafana": [
+    {
+      "title": "Grafana Tutorials",
+      "url": "https://grafana.com/tutorials/",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "Grafana Documentation",
+      "url": "https://grafana.com/docs/grafana/latest/",
+      "type": "documentation",
+      "language": "en"
+    }
+  ],
+  "Pandas": [
+    {
+      "title": "10 minutes to pandas",
+      "url": "https://pandas.pydata.org/docs/user_guide/10min.html",
+      "type": "documentation",
+      "language": "en"
+    },
+    {
+      "title": "Kaggle Learn - Pandas",
+      "url": "https://www.kaggle.com/learn/pandas",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "freeCodeCamp - Data Analysis with Python",
+      "url": "https://www.freecodecamp.org/learn/data-analysis-with-python/",
+      "type": "course",
+      "language": "en"
+    }
+  ],
+  "SAP": [
+    {
+      "title": "SAP Learning",
+      "url": "https://learning.sap.com",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "BT Akademi: SAP ERP Uygulamaları Eğitimi",
+      "url": "https://www.btakademi.com/egitim/sap-erp-uygulamalari-egitimi-2947",
+      "type": "course",
+      "language": "tr"
+    }
+  ],
+  "ABAP": [
+    {
+      "title": "SAP Learning: Learn the Basics of ABAP Programming",
+      "url": "https://learning.sap.com/courses/learn-the-basics-of-abap-programming-on-sap-btp",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "BT Akademi: SAP ABAP Programlama Temel Eğitimi",
+      "url": "https://www.btakademi.com/egitim/sap-abap-programlama-temel-egitimi-2389",
+      "type": "course",
+      "language": "tr"
+    }
+  ],
+  "Netsis": [
+    {
+      "title": "Udemy: Örneklerle Netsis ERP Üretim Süreçleri",
+      "url": "https://www.udemy.com/course/netsis-uretim-modulu/",
+      "type": "course",
+      "language": "tr"
+    }
+  ],
+  "Logo": [
+    {
+      "title": "Udemy: Logo GO3/Tiger3 Bilgisayarlı Muhasebe Eğitimi",
+      "url": "https://www.udemy.com/course/logo-erp-go3-tiger-bilgisayarl-muhasebe-egitimi/",
+      "type": "course",
+      "language": "tr"
+    }
+  ],
+  "Active Directory": [
+    {
+      "title": "Microsoft Learn: Active Directory Domain Services",
+      "url": "https://learn.microsoft.com/en-us/training/paths/active-directory-domain-services/",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "BT Akademi: Active Directory Services with Windows Server",
+      "url": "https://btakademi.com/egitim/active-directory-services-with-windows-server-2472",
+      "type": "course",
+      "language": "tr"
+    }
+  ],
+  "Windows Server": [
+    {
+      "title": "Microsoft Learn: Windows Server Deployment, Configuration, and Administration",
+      "url": "https://learn.microsoft.com/en-us/training/paths/windows-server-deployment-configuration-administration/",
+      "type": "course",
+      "language": "en"
+    }
+  ],
+  "ITIL": [
+    {
+      "title": "Simplilearn: Free ITIL 4 Foundation Course",
+      "url": "https://www.simplilearn.com/free-itil-v-four-course-skillup",
+      "type": "course",
+      "language": "en"
+    }
+  ],
+  "ServiceNow": [
+    {
+      "title": "ServiceNow University",
+      "url": "https://learning.servicenow.com/",
+      "type": "course",
+      "language": "en"
+    }
+  ],
+  "Zendesk": [
+    {
+      "title": "Zendesk Academy",
+      "url": "https://academy.zendesk.com/",
+      "type": "course",
+      "language": "en"
+    }
+  ],
+  "Microsoft 365": [
+    {
+      "title": "Microsoft Learn: Explore Microsoft 365 Administration",
+      "url": "https://learn.microsoft.com/en-us/training/paths/explore-microsoft-365-administration/",
+      "type": "course",
+      "language": "en"
+    }
+  ],
+  "Jira": [
+    {
+      "title": "Atlassian University: Foundation Free Courses",
+      "url": "https://university.atlassian.com/student/collection/1112824-atlassian-foundation-free-courses",
+      "type": "course",
+      "language": "en"
+    }
+  ],
+  "SCCM": [
+    {
+      "title": "Microsoft Learn: Configuration Manager Documentation",
+      "url": "https://learn.microsoft.com/en-us/intune/configmgr/core/understand/introduction",
+      "type": "documentation",
+      "language": "en"
+    }
+  ],
+  "Artificial Intelligence": [
+    {
+      "title": "Learn Prompting: Prompt Engineering Guide",
+      "url": "https://learnprompting.org/docs/introduction",
+      "type": "documentation",
+      "language": "en"
+    }
+  ],
+  "Firewall": [
+    {
+      "title": "Cisco NetAcad: Network Defense",
+      "url": "https://www.netacad.com/courses/network-defense",
+      "type": "course",
+      "language": "en"
+    }
+  ],
+  "Penetration Testing": [
+    {
+      "title": "TryHackMe: Jr Penetration Tester Path",
+      "url": "https://tryhackme.com/path/outline/jrpenetrationtester",
+      "type": "course",
+      "language": "en"
+    }
+  ],
+  "ERP": [
+    {
+      "title": "Alison: A Beginner's Guide to Enterprise Resource Planning (ERP) Systems",
+      "url": "https://alison.com/course/a-beginner-s-guide-to-enterprise-resource-planning-erp-systems",
+      "type": "course",
+      "language": "en"
+    }
+  ],
+  "CRM": [
+    {
+      "title": "HubSpot Academy",
+      "url": "https://academy.hubspot.com/",
+      "type": "course",
+      "language": "en"
+    }
+  ],
+  "Excel": [
+    {
+      "title": "Microsoft Learn: Excel Training",
+      "url": "https://learn.microsoft.com/en-us/training/browse/?products=office-excel",
+      "type": "course",
+      "language": "en"
+    }
+  ],
+  "Windows": [
+    {
+      "title": "Microsoft Learn: Explore the Windows Client",
+      "url": "https://learn.microsoft.com/en-us/training/modules/explore-windows-client/",
+      "type": "course",
+      "language": "en"
+    }
+  ],
+  "Networking": [
+    {
+      "title": "Cisco NetAcad: Networking Basics",
+      "url": "https://www.netacad.com/courses/networking-basics",
+      "type": "course",
+      "language": "en"
+    }
+  ],
+  "Power BI": [
+    {
+      "title": "Microsoft Learn: Get Started Building With Power BI",
+      "url": "https://learn.microsoft.com/en-us/training/modules/get-started-with-power-bi/",
+      "type": "course",
+      "language": "en"
+    }
+  ],
+  "Cybersecurity": [
+    {
+      "title": "Cisco NetAcad: Network Defense",
+      "url": "https://www.netacad.com/courses/network-defense",
+      "type": "course",
+      "language": "en"
+    }
+  ],
+  "REST API": [
+    {
+      "title": "MDN: An overview of HTTP",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Overview",
+      "type": "documentation",
+      "language": "en"
+    },
+    {
+      "title": "REST API Tutorial",
+      "url": "https://restfulapi.net",
+      "type": "course",
+      "language": "en"
+    }
+  ],
+  "GraphQL": [
+    {
+      "title": "Introduction to GraphQL",
+      "url": "https://graphql.org/learn/",
+      "type": "documentation",
+      "language": "en"
+    }
+  ],
+  "Microservices": [
+    {
+      "title": "Microservices Patterns",
+      "url": "https://microservices.io/patterns/microservices.html",
+      "type": "documentation",
+      "language": "en"
+    },
+    {
+      "title": "Martin Fowler: Microservices",
+      "url": "https://martinfowler.com/articles/microservices.html",
+      "type": "article",
+      "language": "en"
+    }
+  ],
+  "Oracle": [
+    {
+      "title": "Oracle Database Documentation",
+      "url": "https://docs.oracle.com/en/database/",
+      "type": "documentation",
+      "language": "en"
+    }
+  ],
+  "RabbitMQ": [
+    {
+      "title": "RabbitMQ Tutorials",
+      "url": "https://www.rabbitmq.com/tutorials",
+      "type": "course",
+      "language": "en"
+    }
+  ],
+  "GitHub": [
+    {
+      "title": "GitHub Skills",
+      "url": "https://skills.github.com",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "GitHub Docs: Get started",
+      "url": "https://docs.github.com/en/get-started",
+      "type": "documentation",
+      "language": "en"
+    }
+  ],
+  "GitLab": [
+    {
+      "title": "GitLab Tutorials",
+      "url": "https://docs.gitlab.com/tutorials/",
+      "type": "course",
+      "language": "en"
+    }
+  ],
+  "Playwright": [
+    {
+      "title": "Playwright Getting Started",
+      "url": "https://playwright.dev/docs/intro",
+      "type": "documentation",
+      "language": "en"
+    }
+  ],
+  "Scrum": [
+    {
+      "title": "The Scrum Guide",
+      "url": "https://scrumguides.org",
+      "type": "documentation",
+      "language": "en"
+    }
+  ],
+  "Agile": [
+    {
+      "title": "Manifesto for Agile Software Development",
+      "url": "https://agilemanifesto.org",
+      "type": "article",
+      "language": "en"
+    },
+    {
+      "title": "Atlassian Agile Coach",
+      "url": "https://www.atlassian.com/agile",
+      "type": "course",
+      "language": "en"
+    }
+  ]
 }
