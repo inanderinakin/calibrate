@@ -15,6 +15,13 @@ Skills come from the keyword patterns, the same ones build_demand_profile.py
 uses, not from the ESCO normaliser. ESCO names read badly on a job card
 ("computer technology", "digital camera sensors") and only cover part of the
 corpus.
+
+A card has room for six of them, and which six is not arbitrary: they are ranked
+by how much the posting's own role demands each skill, so a QA posting leads with
+its testing tools rather than with whatever language happens to sit earliest in
+PATTERNS. Before this, the cut was dict order -- a Senior QA Automation posting
+kept Java, PHP, React and Spring, which it named once while describing the system
+under test, and dropped CI/CD, which it actually asked for.
 """
 import json
 from collections import Counter
@@ -30,6 +37,7 @@ from pipeline.cities import nationwide, normalize_city, provinces
 postings_path = Path(__file__).parent.parent / "scraper" / "postings.jsonl"
 link_status_path = Path(__file__).parent.parent / "app" / "link_status.json"
 output_path = Path(__file__).parent.parent / "app" / "active_postings.json"
+demand_profile_path = Path(__file__).parent.parent / "app" / "demand_profile.json"
 
 undated_window_days = 45
 max_skills = 6
@@ -114,9 +122,32 @@ def canonical(value, table):
     return None
 
 
-def extract_skills(posting):
+def load_role_demand():
+    """skill -> demand share, per role, from the profile built alongside this file."""
+    try:
+        with open(demand_profile_path, encoding="utf-8") as handle:
+            profile = json.load(handle)
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+    table = {}
+    for role, entry in profile.items():
+        skills = entry.get("skills", []) if isinstance(entry, dict) else entry
+        table[role] = {item["skill"]: float(item["demand_percentage"]) for item in skills}
+    return table
+
+
+role_demand = load_role_demand()
+
+
+def extract_skills(posting, role):
     text = f"{posting.get('title', '')} {posting.get('description_text') or ''}"
     found = [skill for skill, pattern in PATTERNS.items() if pattern.search(text)]
+
+    # Rank by what this role actually asks for. Anything the profile does not
+    # mention scores 0 and keeps its relative order behind those that do.
+    demand = role_demand.get(role, {})
+    found.sort(key=lambda skill: demand.get(skill, 0.0), reverse=True)
     return found[:max_skills]
 
 
@@ -124,13 +155,14 @@ def slim(posting, today):
     posted = parse_date(posting.get("date_posted"))
     closing = parse_date(posting.get("closing_date"))
     work_model = canonical(posting.get("work_model"), work_models) or canonical(posting.get("work_type"), work_models)
+    role = resolve_role(posting["title"], posting.get("description_text"), posting.get("role"))
 
     return {
         "id": posting["id"],
         "title": posting["title"],
         "company": posting["company"],
         "city": normalize_city(posting.get("city")),
-        "role": resolve_role(posting["title"], posting.get("description_text"), posting.get("role")),
+        "role": role,
         "source": posting["source"],
         "url": posting["url"],
         "work_model": work_model,
@@ -139,7 +171,7 @@ def slim(posting, today):
         "date_posted": posted.isoformat() if posted else None,
         "closing_date": closing.isoformat() if closing else None,
         "days_open": (closing - today).days if closing else None,
-        "skills": extract_skills(posting),
+        "skills": extract_skills(posting, role),
     }
 
 

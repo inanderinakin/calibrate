@@ -5,13 +5,19 @@ Every board says "gone" differently, and none of them do it with a status code
 you can trust on its own:
 
   kariyer.net   a dead posting 302s to the /is-ilanlari listing page
-  linkedin      a dead posting really does 404
+  linkedin      a dead posting really does 404, but a posting that is merely
+                closed still returns 200 and renders normally -- the only
+                difference is the line "Artık başvuru kabul etmiyor" where the
+                apply button used to be. 56% of the LinkedIn postings the page
+                was showing were closed like this.
   yenibiris     dead pages still return 200, but drop the JobPosting JSON-LD
   secretcv      same as yenibiris
 
-Text matching does not work here. Live pages ship the strings "bulunamadı" and
-"404" inside their own script bundles, so grepping the body marks everything
-dead.
+Text matching for deadness does not work here. Live pages ship the strings
+"bulunamadı" and "404" inside their own script bundles, so grepping the body
+marks everything dead. The closed-applications line is different, and was
+checked before it was trusted: it appears on 10 of 18 sampled pages, not 18 of
+18, so it is rendered content rather than bundled string.
 
 The boards rate limit hard: 6 workers with no delay got 429 on 1,345 of 1,821
 requests. One worker per host at 2s is fine. Requests are bucketed by host so
@@ -33,6 +39,9 @@ link_status_path = Path(__file__).parent.parent / "app" / "link_status.json"
 
 undated_window_days = 45
 recheck_after_days = 7
+# Bumped when the rules in verdict() change, so answers decided by the old rules
+# are re-asked instead of sitting in the cache until they age out on their own.
+rule_version = 2
 default_budget = 600
 request_spacing_seconds = 2.0
 # (connect, read). A bare total timeout let a stalled read on a keep-alive
@@ -50,6 +59,13 @@ headers = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36",
     "Accept-Language": "tr-TR,tr;q=0.9,en;q=0.8",
 }
+# LinkedIn serves Turkish to requests from Turkey and English elsewhere, so both
+# wordings have to be recognised.
+linkedin_closed = re.compile(
+    r"Art[ıi]k ba[şs]vuru kabul etmiyor|No longer accepting applications",
+    re.IGNORECASE,
+)
+
 job_posting_schema = re.compile(r'"@type"\s*:\s*"JobPosting"')
 throttled_codes = {403, 429}
 
@@ -83,6 +99,8 @@ def read_status():
 
 
 def is_stale(entry, today):
+    if entry.get("rule_version") != rule_version:
+        return True
     checked = parse_date(entry.get("checked_at"))
     return not checked or (today - checked).days >= recheck_after_days
 
@@ -97,6 +115,8 @@ def verdict(source, status_code, final_url, body):
             return False, "redirected to listing"
         return True, ""
     if source == "linkedin":
+        if linkedin_closed.search(body):
+            return False, "closed to applications"
         return True, ""
     if not job_posting_schema.search(body):
         return False, "no JobPosting schema"
@@ -144,6 +164,7 @@ def check_host(postings, results, lock, deadline):
                         "status": status_code,
                         "reason": reason,
                         "checked_at": date.today().isoformat(),
+                        "rule_version": rule_version,
                     }
                     done = len(results["checked"]) + results["skipped"]
                     if done % 50 == 0:
