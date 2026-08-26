@@ -2,20 +2,7 @@
 
 import { useMemo } from "react";
 import { useCombobox } from "downshift";
-
-// Matching is accent- and case-insensitive so someone typing on a keyboard
-// without Turkish characters still finds their answer: "muhendislik" has to
-// match "Mühendisliği". Lowercasing with the Turkish locale first ("I" -> "ı",
-// "İ" -> "i"), then stripping the combining marks NFD splits off (ü -> u,
-// ğ -> g, ç -> c, ş -> s), then folding the dotless "ı" onto "i", which does
-// not decompose, so it needs its own pass.
-function fold(text: string): string {
-  return text
-    .toLocaleLowerCase("tr")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/ı/g, "i");
-}
+import { fold } from "@/lib/fold";
 
 interface SuggestInputProps {
   /** Used as the id prefix for the input, label and listbox. */

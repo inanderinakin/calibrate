@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Icon } from "@/components/Icon";
 import { motion } from "framer-motion";
 import AppShell from "@/components/AppShell";
+import SearchableSelect from "@/components/SearchableSelect";
 import { Skeleton } from "@/components/Skeleton";
 import { getPostings } from "@/lib/api";
 import { session } from "@/lib/session";
@@ -195,13 +196,14 @@ export default function PostingsPage() {
           />
         </div>
 
-        <Select value="" onChange={(value) => addFilter(setSelectedRoles, value)} label={t.allRoles}>
-          {(data?.roles ?? []).filter((option) => !selectedRoles.includes(option)).map((option) => (
-            <option key={option} value={option}>
-              {option === UNCLASSIFIED ? t.otherRole : option}
-            </option>
-          ))}
-        </Select>
+        <SearchableSelect
+          id="role-filter"
+          label={t.allRoles}
+          emptyText={t.noMatches}
+          options={(data?.roles ?? []).filter((option) => !selectedRoles.includes(option))}
+          labelFor={(option) => (option === UNCLASSIFIED ? t.otherRole : option)}
+          onSelect={(value) => addFilter(setSelectedRoles, value)}
+        />
 
         <Select value={city} onChange={setCity} label={t.allCities}>
           {(data?.cities ?? []).map((option) => (
@@ -217,11 +219,13 @@ export default function PostingsPage() {
           ))}
         </Select>
 
-        <Select value="" onChange={(value) => addFilter(setSelectedSkills, value)} label={t.allSkills}>
-          {(data?.skills ?? []).filter((option) => !selectedSkills.includes(option)).map((option) => (
-            <option key={option} value={option}>{option}</option>
-          ))}
-        </Select>
+        <SearchableSelect
+          id="skill-filter"
+          label={t.allSkills}
+          emptyText={t.noMatches}
+          options={(data?.skills ?? []).filter((option) => !selectedSkills.includes(option))}
+          onSelect={(value) => addFilter(setSelectedSkills, value)}
+        />
 
         <div className="ml-auto">
           <Select value={sort} onChange={(value) => setSort(value as Sort)}>
@@ -421,16 +425,27 @@ function Select({
   label?: string;
   children: React.ReactNode;
 }) {
+  // appearance-none drops the arrow the OS draws, which is a double chevron on
+  // macOS and a single triangle elsewhere, and neither matches the one the
+  // searchable filters use. Drawing our own keeps the row consistent.
   return (
-    <select
-      value={value}
-      onChange={(event) => onChange(event.target.value)}
-      aria-label={label}
-      className="max-w-[170px] truncate rounded-xl border border-[var(--accent)]/20 bg-transparent px-3 py-2.5 text-sm font-medium text-[var(--text-primary)] outline-none"
-    >
-      {label && <option value="">{label}</option>}
-      {children}
-    </select>
+    <div className="relative inline-flex shrink-0">
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        aria-label={label}
+        className="max-w-[170px] appearance-none truncate rounded-xl border border-[var(--accent)]/20 bg-transparent py-2.5 pl-3 pr-7 text-sm font-medium text-[var(--text-primary)] outline-none"
+      >
+        {label && <option value="">{label}</option>}
+        {children}
+      </select>
+
+      <Icon
+        icon="mdi:chevron-down"
+        aria-hidden
+        className="pointer-events-none absolute inset-y-0 right-2 my-auto h-4 w-4 text-[var(--text-muted)]"
+      />
+    </div>
   );
 }
 
