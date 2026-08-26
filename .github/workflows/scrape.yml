@@ -29,7 +29,13 @@ on:
 jobs:
   scrape:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    # The scrapers alone take two hours and change: kariyer runs 36-39 minutes
+    # and LinkedIn 96-110, and link checking needs another 45 after them. At 180
+    # the run that succeeded on 24 Aug finished with twenty seconds to spare, so
+    # the 25th, when LinkedIn was 13 minutes slower, was cancelled mid-check and
+    # the upload never happened -- three of five nights died that way, and a
+    # cancelled job silently leaves the site on stale data.
+    timeout-minutes: 300
     defaults:
       run:
         working-directory: backend/scraper
