@@ -1008,5 +1008,19 @@
       "type": "course",
       "language": "en"
     }
+  ],
+  "Unity": [
+    {
+      "title": "Unity Learn",
+      "url": "https://learn.unity.com",
+      "type": "course",
+      "language": "en"
+    },
+    {
+      "title": "Unity Manual",
+      "url": "https://docs.unity3d.com/Manual/index.html",
+      "type": "documentation",
+      "language": "en"
+    }
   ]
 }

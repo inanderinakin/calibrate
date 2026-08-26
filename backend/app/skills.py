@@ -43,6 +43,10 @@ CATEGORIES = {
         "Android": ["android"],
         "iOS": ["ios"],
         "Flutter": ["flutter"],
+        # Bare "unity" also catches "a culture that values unity", about 3 of 80
+        # mentions. Dropping it would cost the far more common "Experience with
+        # Unity is a plus", so the false positives are the cheaper side.
+        "Unity": ["unity", "unity3d", "unity 3d"],
     },
     "query languages": {
         "SQL": ["sql"],
