@@ -135,7 +135,7 @@ jobs:
       # whole corpus at once. Postings it has not reached yet stay off the page.
       - name: Verify posting links and build the job board
         id: postings
-        if: steps.generate.outcome == 'success'
+        if: steps.generate.outcome == 'success' && !cancelled()
         run: |
           aws s3 cp s3://calibrate-teamthrow/pipeline-data/link_status.json app/link_status.json || true
           python pipeline/check_links.py
@@ -145,13 +145,13 @@ jobs:
           PYTHONPATH: app:.
       - name: Test
         id: test
-        if: steps.postings.outcome == 'success'
+        if: steps.postings.outcome == 'success' && !cancelled()
         run: |
           pytest
         working-directory: backend
       - name: Upload trend and demand data to S3.
         id: upload
-        if: steps.test.outcome == 'success'
+        if: steps.test.outcome == 'success' && !cancelled()
         run: |
           aws s3 cp app/trends.json s3://calibrate-teamthrow/pipeline-data/trends.json
           aws s3 cp app/demand_profile.json s3://calibrate-teamthrow/pipeline-data/demand_profile.json
@@ -159,7 +159,7 @@ jobs:
           aws s3 cp app/link_status.json s3://calibrate-teamthrow/pipeline-data/link_status.json
         working-directory: backend
       - name: Test the live api
-        if: steps.upload.outcome == 'success'
+        if: steps.upload.outcome == 'success' && !cancelled()
         run: |
           curl -f https://2rhhcqbv25oz3p7lgb7rzpkova0fnsdk.lambda-url.eu-central-1.on.aws/
 

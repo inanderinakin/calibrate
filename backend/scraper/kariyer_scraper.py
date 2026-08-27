@@ -358,7 +358,19 @@ def collect_cards(base_url: str, page) -> list[dict]:
     We scroll down gradually to ensure any lazy-loaded cards appear.
     """
     print(f"  Loading: {base_url}")
-    page.goto(base_url, timeout=60000)
+
+    # One dropped connection used to end the whole run, losing every source after
+    # it. Give the page a few tries, and if it still will not load, return nothing
+    # so this source drops out of the rotation like any other empty page.
+    for attempt in range(1, 4):
+        try:
+            page.goto(base_url, timeout=60000)
+            break
+        except Exception as err:
+            print(f"  Load failed ({attempt}/3): {err}")
+            if attempt == 3:
+                return []
+            time.sleep(5)
 
     if not wait_for_selector_with_challenge(page, '[data-test="ad-card"]', base_url):
         return []
