@@ -1,4 +1,9 @@
-# Calibrate backend
+# Calibrate — Backend
+
+FastAPI application plus the job-market data pipeline behind
+[usecalibrate.dev](https://usecalibrate.dev). The API runs on AWS Lambda through
+Mangum; the pipeline runs nightly on GitHub Actions and publishes its results to
+S3, so collecting job postings never happens on a user's request path.
 
 ## Setup
 
@@ -39,12 +44,66 @@ bun install
 bun dev
 ```
 
-## Rebuild the demand profile
+## Layout
+
+```
+backend/
+├── app/
+│   ├── main.py            # Every route
+│   ├── auth.py            # Cognito sign-up, sign-in, token verification
+│   ├── storage.py         # DynamoDB and S3
+│   ├── normalize.py       # Skill extraction and ESCO/embedding matching
+│   ├── skills.py          # The bilingual keyword vocabulary
+│   ├── handleposting.py   # Reads the pipeline artifacts, serves the job board
+│   ├── postings_rules.py  # Role and facet rules for the board
+│   ├── agent/
+│   │   ├── agent.py       # Roadmap and project steps (Strands + Claude Sonnet 4.6)
+│   │   └── verifier.py    # Checks extracted skills against the CV text
+│   └── *.json             # Bundled fallbacks for the pipeline artifacts
+├── pipeline/
+│   ├── build_trends.py    # Demand over time, from the corpus
+│   ├── build_demand_profile.py  # Per-role skill demand and sample size
+│   ├── check_links.py     # Is the posting still open?
+│   └── build_postings.py  # The job board artifact
+├── scraper/               # Four job boards, merged through merge_new.py
+└── tests/                 # Data integrity checks — see below
+```
+
+## The data pipeline
+
+`.github/workflows/scrape.yml` runs at 03:00 UTC and takes around three hours.
+It scrapes the four boards, rebuilds the trend and demand artifacts, checks
+posting links, runs the tests, and only then uploads to S3. The API reads those
+artifacts from S3 at request time and falls back to the copies bundled in `app/`
+if S3 is unreachable — which means the files in `app/*.json` are stale by design.
+Do not rebuild them locally and commit the result; the nightly is the only thing
+that should be writing them.
+
+The upload is gated on `pytest` passing. That gate exists because a schema change
+once shipped a demand profile the deployed API couldn't read and took the site
+down. If the tests fail, the old data stays live.
+
+Rebuild a single artifact locally (for inspection, not for committing):
 
 ```
 cd backend
 PYTHONPATH=app:. python pipeline/build_demand_profile.py
 ```
+
+## Tests
+
+```
+cd backend
+pytest
+```
+
+These are data checks rather than unit tests. They assert that every skill in the
+demand profile exists in the keyword vocabulary and has a learning resource, that
+no posting is shown without a link that was checked and reached, that no shown
+posting is past its closing date, and that the trends aren't uniformly flat.
+
+Adding a skill to `app/skills.py` therefore means adding it to
+`app/resources.json` too, or the nightly stops publishing.
 
 ## Deploy
 
@@ -54,6 +113,19 @@ sam build --use-container
 sam deploy
 ```
 
-Needs Docker running. Imports inside `app/` must stay bare (`from models import ...`) —
-`CodeUri: app/` puts the contents of `app/` at the Lambda root, so `from backend.app.models import ...`
-fails there. Editors rewrite these on file moves; check before deploying.
+Needs Docker running. Imports inside `app/` must stay bare
+(`from models import ...`) — `CodeUri: app/` puts the contents of `app/` at the
+Lambda root, so `from backend.app.models import ...` fails there. Editors rewrite
+these on file moves; check before deploying.
+
+Note that the S3 lifecycle rule expiring uploaded CVs after a day was set on the
+bucket directly and is not in `template.yaml`, so it will not be recreated by a
+stack rebuild.
+
+## Lint
+
+```
+ruff check .
+```
+
+Runs in CI on every PR that touches `backend/`, together with the tests above.
