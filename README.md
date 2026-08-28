@@ -1,5 +1,7 @@
 # Calibrate
 
+![Calibrate](docs/banner.png)
+
 A job-skill gap analyzer for computer science students in Turkey. Upload a CV,
 pick the roles you are aiming for, and find out which skills those roles ask for
 that your CV does not have, measured against job postings that are open right
@@ -23,6 +25,19 @@ Live at **[usecalibrate.dev](https://usecalibrate.dev)**.
   links checked nightly.
 - **Accounts.** Cognito sign-up with email verification, Google sign-in, Turkish
   and English, light and dark themes.
+
+## Screenshots
+
+![Calibrate landing page](docs/screenshots/landing.png)
+
+**Job board.** Every posting the pipeline collected, filtered by role, skill and
+city.
+
+![Job board](docs/screenshots/job-board.png)
+
+**CV upload.** Step one of the analysis flow.
+
+![CV upload](docs/screenshots/upload-cv.png)
 
 ## Tech Stack
 
@@ -83,6 +98,10 @@ NEXT_PUBLIC_COGNITO_DOMAIN="https://calibrate-auth.auth.eu-central-1.amazoncogni
 NEXT_PUBLIC_APP_CLIENT_ID="ar9ujl2ru4lvcoe4g5gblq507"
 ```
 
+Running the tests and deploying are covered in
+[backend/README.md](backend/README.md) and
+[frontend/README.md](frontend/README.md).
+
 ## Project Structure
 
 ```
@@ -95,27 +114,6 @@ calibrate/
     ├── scrape.yml            the nightly pipeline
     └── backend-tests.yml     pytest and ruff on every PR touching backend/
 ```
-
-## Testing
-
-```bash
-cd backend && pytest
-```
-
-Data integrity checks rather than unit tests: every demand-profile skill has a
-vocabulary entry and a learning resource, every shown posting has a working link,
-and nothing past its closing date reaches the board.
-
-## Deployment
-
-Backend, from `backend/` with Docker running:
-
-```bash
-sam build --use-container
-sam deploy
-```
-
-The frontend deploys itself: Amplify builds from `main` on push.
 
 ## Team
 
