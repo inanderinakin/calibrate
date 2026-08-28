@@ -14,7 +14,7 @@ demand_profile.json
 .aws-sam/
 .claude/
 backend/normalized_postings.jsonl
-
+backend/app/link_status.json
 !backend/app/normalizer/vectors_array.npz
 !backend/app/normalizer/esco_dataset/catalog.csv
 !backend/app/demand_profile.json
