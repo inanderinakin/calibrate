@@ -3,6 +3,7 @@ import { common } from "./common";
 import { sidebar } from "./sidebar";
 import { stepIndicator } from "./stepIndicator";
 import { landing } from "./landing";
+import { legal } from "./legal";
 import { login } from "./login";
 import { signup } from "./signup";
 import { verifyEmail } from "./verifyEmail";
@@ -28,6 +29,7 @@ function pick(language: Language) {
     sidebar: sidebar[language],
     stepIndicator: stepIndicator[language],
     landing: landing[language],
+    legal: legal[language],
     login: login[language],
     signup: signup[language],
     verifyEmail: verifyEmail[language],

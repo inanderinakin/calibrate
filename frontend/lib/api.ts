@@ -487,3 +487,17 @@ export async function setCompletedProjects(skills: string[]): Promise<string[]> 
 
   return (await res.json()).completed_projects;
 }
+
+export async function sendContactMessage(name: string, email: string, message: string, website: string) {
+  const res = await fetchWithTimeout("/contact", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, email, message, website }),
+  }, AUTH_TIMEOUT_MS);
+
+  if (!res.ok) {
+    throw new ApiError(await errorMessage(res, "Could not send your message"), res.status);
+  }
+
+  return await res.json();
+}

@@ -12,6 +12,7 @@ import { useLanguage, type Language } from "@/contexts/LanguageContext";
 import { getTranslations, type Translations } from "@/lib/translations";
 import { duration, ease } from "@/lib/motion";
 import PrefsControls from "@/components/PrefsControls";
+import Footer from "@/components/Footer";
 
 // Order matches t.landing.features in translations.ts, icons aren't
 // translatable text, so they're kept out of the language-keyed dictionary.
@@ -294,6 +295,8 @@ function MainLandingPage({ t, language, onBack }: { t: Translations; language: L
           ))}
         </motion.section>
         </div>
+
+        <Footer className="text-[var(--landing-accent)] opacity-70" />
       </motion.div>
     </main>
   );
