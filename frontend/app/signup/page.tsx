@@ -15,6 +15,8 @@ import SuggestInput from "@/components/SuggestInput";
 import AuthBanner from "@/components/AuthBanner";
 import PrefsControls from "@/components/PrefsControls";
 import PasswordRules, { passwordMeetsRules } from "@/components/PasswordRules";
+import ConsentCheckbox from "@/components/ConsentCheckbox";
+import { CONSENT_VERSION } from "@/lib/consent";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -27,6 +29,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [studyField, setStudyField] = useState("");
   const [country, setCountry] = useState("");
+  const [consented, setConsented] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -44,10 +47,15 @@ export default function SignupPage() {
       return;
     }
 
+    if (!consented) {
+      setError(t.legal.consent.required);
+      return;
+    }
+
     setSubmitting(true);
 
     try {
-      await post_signup(email, password, firstName, lastName);
+      await post_signup(email, password, firstName, lastName, CONSENT_VERSION, language);
 
       saveProfile({
         firstName,
@@ -190,6 +198,8 @@ export default function SignupPage() {
           matchMode="startsWith"
         />
 
+        <ConsentCheckbox id="signup-consent" checked={consented} onChange={setConsented} />
+
         {error && (
           <p
             role="alert"
@@ -201,7 +211,7 @@ export default function SignupPage() {
 
         <motion.button
           type="submit"
-          disabled={submitting || !passwordMeetsRules(password)}
+          disabled={submitting || !passwordMeetsRules(password) || !consented}
           whileHover={submitting ? undefined : { scale: 1.02 }}
           whileTap={submitting ? undefined : { scale: 0.97 }}
           className="rounded-lg bg-[var(--accent-bg)] text-[var(--accent-text)] py-2.5 font-medium mt-2 disabled:opacity-70"

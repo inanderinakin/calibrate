@@ -173,6 +173,19 @@ export async function updateProfile(
   return await res.json();
 }
 
+export async function recordConsent(version: string, locale: Language) {
+  const res = await authedFetch("/consent", {
+    method: "POST",
+    body: JSON.stringify({ version, locale }),
+  });
+
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not record your consent"));
+  }
+
+  return await res.json();
+}
+
 export async function getProfile(): Promise<{ country: string; study_field: string }> {
   const res = await authedFetch("/profile");
 
@@ -238,7 +251,9 @@ export async function post_signup(
   email: string,
   password: string,
   firstName: string,
-  lastName: string
+  lastName: string,
+  consentVersion: string,
+  consentLocale: Language
 ) {
   const res = await fetchWithTimeout("/sign_up", {
     method: "POST",
@@ -248,6 +263,8 @@ export async function post_signup(
       password,
       first_name: firstName,
       last_name: lastName,
+      consent_version: consentVersion,
+      consent_locale: consentLocale,
     }),
   }, AUTH_TIMEOUT_MS);
 
