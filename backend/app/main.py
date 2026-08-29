@@ -780,7 +780,7 @@ async def contact(message: ContactMessage):
     try:
         await run_in_threadpool(
             ses_client.send_email,
-            Source = "Calibrate <verification@usecalibrate.dev>",
+            Source = "Calibrate <contact@usecalibrate.dev>",
             Destination = {"ToAddresses": [destination]},
             ReplyToAddresses = [address],
             Message = {
