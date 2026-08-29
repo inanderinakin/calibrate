@@ -513,10 +513,6 @@ export default function SettingsPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-5">
-            <Link href="/privacy" className="font-medium text-(--accent-2) underline underline-offset-2">
-              {legalText.footer.privacy}
-            </Link>
-
             <Link href="/terms" className="font-medium text-(--accent-2) underline underline-offset-2">
               {legalText.footer.terms}
             </Link>

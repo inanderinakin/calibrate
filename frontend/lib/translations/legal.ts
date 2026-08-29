@@ -1,106 +1,12 @@
 export const legal = {
   en: {
     footer: {
-      privacy: "Privacy",
       terms: "Terms",
-      kvkk: "KVKK",
+      kvkk: "Privacy",
       contact: "Contact",
     },
-    kvkkTurkishOnly: "This notice is published in Turkish, which is the governing text under Turkish law (KVKK 6698).",
-    kvkkSeePrivacy: "For how your CV is stored and which models read it, see the",
     settingsHeading: "Legal",
     settingsNote: "What we collect, what we do with it, and how to reach us.",
-    privacy: {
-      title: "Privacy Notice",
-      updated: "Last updated 31 August 2026",
-      intro: "Calibrate reads your CV, compares it against skills employers are asking for in job postings, and writes you a learning roadmap. Doing that means handling your personal data. This page says exactly what happens to it.",
-      sections: [
-        {
-          heading: "Your CV",
-          body: [
-            "The file you upload is stored in Amazon S3 in the eu-central-1 region, under an uploads prefix. Amazon Textract reads the text out of it, and that text is what the rest of the analysis works from.",
-            "A lifecycle rule on the bucket deletes the file one day after it is uploaded. In practice the window is up to about 48 hours, because S3 rounds the expiry to midnight UTC and sweeps asynchronously. We do not keep the file beyond that.",
-            "What we do keep is the file name, size, type and upload time, so the app can tell you which CV is on file after you close the tab.",
-          ],
-          note: "",
-          list: [],
-        },
-        {
-          heading: "Your account",
-          body: [
-            "Amazon Cognito holds your account. It stores:",
-          ],
-          note: "Your password is handled by Cognito and is never visible to us. If you sign in with Google, Google tells us your email address and name and nothing else.",
-          list: [
-            "Email address",
-            "First and last name",
-            "Field of study",
-            "Country",
-          ],
-        },
-        {
-          heading: "What we store about your analysis",
-          body: [
-            "Amazon DynamoDB holds the results of your analysis so they survive closing the tab:",
-          ],
-          note: "",
-          list: [
-            "The skills read out of your CV",
-            "The roles you picked as targets",
-            "The skill gaps we calculated",
-            "The roadmap that was written for you",
-            "Which skills and projects you have ticked off",
-            "Your consent record, with the date and the version of this notice you accepted",
-          ],
-        },
-        {
-          heading: "How the analysis is produced",
-          body: [
-            "Two models on Amazon Bedrock do the work. Cohere embed-multilingual-v3 matches the skills on your CV against the skills in job postings, across Turkish and English. Claude Sonnet 4.6 writes the roadmap text and the project briefs.",
-            "The skills and role names from your analysis are sent to these models to produce your result. Amazon Bedrock does not use content sent to it to train models.",
-          ],
-          note: "",
-          list: [],
-        },
-        {
-          heading: "Where the data lives",
-          body: [
-            "Everything runs in the eu-central-1 region in Frankfurt. Your CV, your account and your analysis stay in the European Union.",
-          ],
-          note: "",
-          list: [],
-        },
-        {
-          heading: "Who else is involved",
-          body: [
-            "We use these providers and no others:",
-          ],
-          note: "",
-          list: [
-            "Amazon Web Services, for hosting, storage, the models, accounts and email",
-            "Cloudflare, for DNS only, which means it resolves the domain name and does not see your data",
-            "Google, only if you choose to sign in with a Google account",
-          ],
-        },
-        {
-          heading: "Deleting your data",
-          body: [
-            "Settings has a delete account control. It removes your Cognito account and the whole DynamoDB record: your analysis, your roadmap, your progress and your consent record. This cannot be undone.",
-            "One honest limitation: deleting your account does not reach back and delete a CV uploaded inside the current lifecycle window. That file expires on its own, within about 48 hours of upload.",
-          ],
-          note: "",
-          list: [],
-        },
-        {
-          heading: "Your rights",
-          body: [
-            "Under KVKK and the GDPR you can ask what we hold about you, ask for it to be corrected, and ask for it to be erased. The delete account control does the last one immediately. For anything else, write to us on the contact page.",
-          ],
-          note: "",
-          list: [],
-        },
-      ],
-    },
     terms: {
       title: "Terms of Service",
       updated: "Last updated 31 August 2026",
@@ -189,106 +95,12 @@ export const legal = {
   },
   tr: {
     footer: {
-      privacy: "Gizlilik",
       terms: "Koşullar",
       kvkk: "KVKK",
       contact: "İletişim",
     },
-    kvkkTurkishOnly: "Bu metin Türkçe yayımlanmıştır ve KVKK 6698 kapsamında geçerli metindir.",
-    kvkkSeePrivacy: "CV'nizin nasıl saklandığı ve hangi modellerin okuduğu için bakınız:",
     settingsHeading: "Yasal",
     settingsNote: "Neleri topluyoruz, onlarla ne yapıyoruz ve bize nasıl ulaşırsınız.",
-    privacy: {
-      title: "Gizlilik Bildirimi",
-      updated: "Son güncelleme 31 Ağustos 2026",
-      intro: "Calibrate CV'nizi okur, iş ilanlarında işverenlerin aradığı becerilerle karşılaştırır ve size bir öğrenme yol haritası yazar. Bunu yapmak kişisel verilerinizi işlemeyi gerektirir. Bu sayfa verilerinize tam olarak ne olduğunu anlatır.",
-      sections: [
-        {
-          heading: "CV'niz",
-          body: [
-            "Yüklediğiniz dosya eu-central-1 bölgesinde Amazon S3'te, uploads önekiyle saklanır. Amazon Textract metni dosyadan çıkarır ve analizin geri kalanı bu metin üzerinden çalışır.",
-            "Paketteki bir yaşam döngüsü kuralı dosyayı yüklenmesinden bir gün sonra siler. Pratikte bu süre yaklaşık 48 saate kadar çıkabilir, çünkü S3 son kullanma zamanını UTC gece yarısına yuvarlar ve silmeyi eşzamansız yapar. Dosyayı bunun ötesinde tutmayız.",
-            "Sakladığımız şey dosyanın adı, boyutu, türü ve yüklenme zamanıdır. Bu, sekmeyi kapattıktan sonra uygulamanın hangi CV'nin kayıtlı olduğunu size gösterebilmesi içindir.",
-          ],
-          note: "",
-          list: [],
-        },
-        {
-          heading: "Hesabınız",
-          body: [
-            "Hesabınızı Amazon Cognito tutar. Sakladıkları:",
-          ],
-          note: "Parolanız Cognito tarafından yönetilir ve bizim tarafımızdan hiçbir zaman görülmez. Google ile giriş yaparsanız Google bize yalnızca e-posta adresinizi ve adınızı bildirir.",
-          list: [
-            "E-posta adresi",
-            "Ad ve soyad",
-            "Çalışma alanı",
-            "Ülke",
-          ],
-        },
-        {
-          heading: "Analiziniz hakkında ne saklıyoruz",
-          body: [
-            "Analiz sonuçlarınız, sekmeyi kapattığınızda kaybolmasınlar diye Amazon DynamoDB'de tutulur:",
-          ],
-          note: "",
-          list: [
-            "CV'nizden çıkarılan beceriler",
-            "Hedef olarak seçtiğiniz roller",
-            "Hesapladığımız beceri açıkları",
-            "Sizin için yazılan yol haritası",
-            "Tamamlandı olarak işaretlediğiniz beceriler ve projeler",
-            "Onay kaydınız, tarihi ve kabul ettiğiniz bildirim sürümü ile birlikte",
-          ],
-        },
-        {
-          heading: "Analiz nasıl üretiliyor",
-          body: [
-            "İşi Amazon Bedrock üzerindeki iki model yapar. Cohere embed-multilingual-v3, CV'nizdeki becerileri iş ilanlarındaki becerilerle Türkçe ve İngilizce arasında eşleştirir. Claude Sonnet 4.6, yol haritası metnini ve proje açıklamalarını yazar.",
-            "Analizinizdeki beceri ve rol adları sonucunuzu üretmek için bu modellere gönderilir. Amazon Bedrock kendisine gönderilen içeriği model eğitmek için kullanmaz.",
-          ],
-          note: "",
-          list: [],
-        },
-        {
-          heading: "Veriler nerede duruyor",
-          body: [
-            "Her şey Frankfurt'taki eu-central-1 bölgesinde çalışır. CV'niz, hesabınız ve analiziniz Avrupa Birliği içinde kalır.",
-          ],
-          note: "",
-          list: [],
-        },
-        {
-          heading: "Başka kimler devrede",
-          body: [
-            "Kullandığımız sağlayıcılar bunlardır, başkası yoktur:",
-          ],
-          note: "",
-          list: [
-            "Amazon Web Services: barındırma, depolama, modeller, hesaplar ve e-posta",
-            "Cloudflare: yalnızca DNS, yani alan adını çözer ve verilerinizi görmez",
-            "Google: yalnızca bir Google hesabıyla giriş yapmayı seçerseniz",
-          ],
-        },
-        {
-          heading: "Verilerinizi silmek",
-          body: [
-            "Ayarlar sayfasında hesap silme seçeneği vardır. Cognito hesabınızı ve DynamoDB kaydınızın tamamını siler: analiziniz, yol haritanız, ilerlemeniz ve onay kaydınız. Bu geri alınamaz.",
-            "Dürüst bir sınır: hesabınızı silmek, o anki yaşam döngüsü penceresi içinde yüklenmiş bir CV'yi geri dönüp silmez. O dosya yüklenmesinden yaklaşık 48 saat içinde kendiliğinden silinir.",
-          ],
-          note: "",
-          list: [],
-        },
-        {
-          heading: "Haklarınız",
-          body: [
-            "KVKK ve GDPR kapsamında hakkınızda ne tuttuğumuzu sorabilir, düzeltilmesini isteyebilir ve silinmesini talep edebilirsiniz. Hesap silme seçeneği sonuncusunu anında yapar. Diğer her şey için iletişim sayfasından bize yazın.",
-          ],
-          note: "",
-          list: [],
-        },
-      ],
-    },
     terms: {
       title: "Kullanım Koşulları",
       updated: "Son güncelleme 31 Ağustos 2026",

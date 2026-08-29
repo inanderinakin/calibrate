@@ -11,10 +11,6 @@ export default function Footer({ className = "" }: { className?: string }) {
   return (
     <footer className={`flex items-center justify-center gap-3 py-6 text-[13px] text-(--text-muted) ${className}`}>
       <nav className="flex flex-wrap items-center justify-center gap-5">
-        <Link href="/privacy" className="underline underline-offset-2 hover:text-(--text-primary)">
-          {t.privacy}
-        </Link>
-
         <Link href="/terms" className="underline underline-offset-2 hover:text-(--text-primary)">
           {t.terms}
         </Link>
