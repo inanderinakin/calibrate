@@ -58,6 +58,7 @@ Resources:
                 - "ses:SendEmail"
               Resource:
                 - !Sub "arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/usecalibrate.dev"
+                - !Sub "arn:aws:ses:${AWS::Region}:${AWS::AccountId}:configuration-set/*"
 
         - Statement:
             - Effect: Allow
