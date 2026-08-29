@@ -287,12 +287,18 @@ button:not(:disabled) {
     box-shadow 0.2s ease;
 }
 
-button:not(:disabled):hover {
+/*
+  Dropdown triggers are excluded: they are a field you open, not an action
+  you press, and they sit in a row beside text inputs that do not move. A
+  select tilting away under the cursor reads as a glitch rather than a
+  response, which is why this never showed while they were native <select>s.
+*/
+button:not(:disabled):not([role="combobox"]):not([aria-haspopup="listbox"]):hover {
   transform: translateY(-2px) skewX(-4deg);
   filter: brightness(1.06);
 }
 
-button:not(:disabled):active {
+button:not(:disabled):not([role="combobox"]):not([aria-haspopup="listbox"]):active {
   transform: translateY(0) scale(0.96) skewX(0deg);
 }
 
