@@ -9,10 +9,8 @@ export default function Footer({ className = "" }: { className?: string }) {
   const t = getTranslations(language).legal.footer;
 
   return (
-    <footer className={`flex flex-col items-center justify-between gap-3 py-6 text-[13px] text-(--text-muted) sm:flex-row ${className}`}>
-      <p>{t.note}</p>
-
-      <nav className="flex items-center gap-5">
+    <footer className={`flex items-center justify-center gap-3 py-6 text-[13px] text-(--text-muted) ${className}`}>
+      <nav className="flex flex-wrap items-center justify-center gap-5">
         <Link href="/privacy" className="underline underline-offset-2 hover:text-(--text-primary)">
           {t.privacy}
         </Link>
