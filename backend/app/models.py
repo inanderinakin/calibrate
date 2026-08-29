@@ -54,6 +54,7 @@ class Analysis(BaseModel):
     cv_size: int | None = None
     cv_type: str | None = None
     cv_uploaded_at: str | None = None
+    report_language: Literal["tr", "en"] | None = None
 
 class MatchData(BaseModel):
     matched_demanded: int

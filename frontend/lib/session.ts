@@ -1,3 +1,4 @@
+import type { Language } from "@/contexts/LanguageContext";
 import type { GapResult, NormalizedSkill, Report } from "./types";
 
 const KEYS = {
@@ -9,6 +10,7 @@ const KEYS = {
   targetRoles: "calibrate:target_roles",
   gaps: "calibrate:gaps",
   report: "calibrate:report",
+  reportLanguage: "calibrate:report_language",
   focusSkills: "calibrate:focus_skills",
 } as const;
 
@@ -57,6 +59,9 @@ export const session = {
   getReport: () => read<Report>(KEYS.report),
   setReport: (report: Report) => write(KEYS.report, report),
 
+  getReportLanguage: () => read<Language>(KEYS.reportLanguage),
+  setReportLanguage: (language: Language) => write(KEYS.reportLanguage, language),
+
   getFocusSkills: () => read<string[]>(KEYS.focusSkills),
   setFocusSkills: (skills: string[]) => write(KEYS.focusSkills, skills),
 
@@ -64,6 +69,7 @@ export const session = {
     if (typeof window === "undefined") return;
     window.sessionStorage.removeItem(KEYS.gaps);
     window.sessionStorage.removeItem(KEYS.report);
+    window.sessionStorage.removeItem(KEYS.reportLanguage);
     window.sessionStorage.removeItem(KEYS.focusSkills);
   },
 

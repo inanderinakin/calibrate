@@ -88,6 +88,7 @@ export function useRestoreAnalysis() {
           if (saved.target_roles?.length) session.setTargetRoles(saved.target_roles);
           if (saved.gaps) session.setGaps(saved.gaps);
           if (saved.report) session.setReport(saved.report);
+          if (saved.report_language) session.setReportLanguage(saved.report_language);
         }
 
         // The request answered, so we now know what this account holds.
