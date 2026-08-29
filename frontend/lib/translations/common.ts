@@ -20,6 +20,7 @@ export const common = {
       number: "A number",
       met: "done",
       notMet: "still needed",
+      allSet: "Everything is set",
     },
     trend: {
       Emerging: "Emerging",
@@ -49,6 +50,7 @@ export const common = {
       number: "Bir rakam",
       met: "tamam",
       notMet: "eksik",
+      allSet: "Her şey tamam",
     },
     trend: {
       Emerging: "Yükseliyor",

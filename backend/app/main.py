@@ -20,11 +20,11 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from agent import get_cv_bullet, get_project_steps, get_recommendations, verify_skills
 from handlecv import compute_gaps, extract_skill_candidates, extract_cv_text, extract_docx_text
 from normalize import normalize
-from models import Analysis, BulletRequest, CompletedProjects, CompletedSkills, ForgotPasswordInfo, GapResult, GapRequest, LoginInfo, NormalizedSkill, PasswordChange, PasswordReset, ProfileInfo, ResendCodeInfo, SignUpInfo, VerifyEmailInfo
+from models import Analysis, BulletRequest, CompletedProjects, CompletedSkills, ConsentInfo, ContactMessage, ForgotPasswordInfo, GapResult, GapRequest, LoginInfo, NormalizedSkill, PasswordChange, PasswordReset, ProfileInfo, ResendCodeInfo, SignUpInfo, VerifyEmailInfo
 from skills import PATTERNS, SKILL_CATEGORIES, base_skill_name
 from handleposting import load_demand_profile, load_postings, load_trends
 from postings_rules import drop_expired
-from storage import delete_user_data, read_analysis, read_completed_projects, read_completed_skills, read_profile, write_analysis, write_completed_projects, write_completed_skills, write_profile
+from storage import delete_user_data, read_analysis, read_completed_projects, read_completed_skills, read_profile, write_analysis, write_completed_projects, write_completed_skills, write_consent, write_profile
 from auth import verify_token, verify_token_claims
 
 profile = load_demand_profile()
@@ -36,6 +36,7 @@ briefs_timeout_seconds = 180
 app = FastAPI()
 security = HTTPBearer()
 cognito_client = boto3.client("cognito-idp")
+ses_client = boto3.client("ses")
 
 origins = [
     "http://localhost:3000",
@@ -54,6 +55,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
+
+def consent_record(version: str, locale: str):
+    return {
+        "accepted": True,
+        "accepted_at": datetime.now(timezone.utc).isoformat(),
+        "version": version,
+        "locale": locale,
+    }
+
 
 async def verify_token_dependency(credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)]):
     try:
@@ -297,6 +307,12 @@ async def sign_up(signup_info: SignUpInfo):
 
     result = response.get("UserSub")
     delivery_detail = response.get("CodeDeliveryDetails")
+
+    if result and signup_info.consent_version:
+        try:
+            await run_in_threadpool(write_consent, result, consent_record(signup_info.consent_version, signup_info.consent_locale))
+        except ClientError as err:
+            print(f"Could not save the consent record: {err}")
 
     return {"result": result, "detail": delivery_detail}
 
@@ -732,5 +748,50 @@ async def recommend_with_agent(report: GapResult, user_id: Annotated[str, Depend
         print(f"Project steps failed: {type(err).__name__}: {err}")
 
     return {"recommendations": result}
+
+@app.post("/consent")
+async def record_consent(info: ConsentInfo, user_id: Annotated[str, Depends(verify_token_dependency)]):
+    try:
+        await run_in_threadpool(write_consent, user_id, consent_record(info.version, info.locale))
+    except ClientError as err:
+        print(f"Could not save the consent record: {err}")
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="We could not record your consent right now")
+
+    return {"saved": True}
+
+@app.post("/contact")
+async def contact(message: ContactMessage):
+    if message.website:
+        return {"sent": True}
+
+    address = message.email.strip()
+
+    if "@" not in address or "." not in address.rsplit("@", 1)[-1]:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Please check the email address you entered")
+
+    destination = os.getenv("CONTACT_EMAIL")
+
+    if not destination:
+        print("CONTACT_EMAIL is not set, dropping a contact message")
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="The contact form is unavailable right now")
+
+    sender = " ".join(message.name.split())
+
+    try:
+        await run_in_threadpool(
+            ses_client.send_email,
+            Source = "Calibrate <contact@usecalibrate.dev>",
+            Destination = {"ToAddresses": [destination]},
+            ReplyToAddresses = [address],
+            Message = {
+                "Subject": {"Data": f"Calibrate contact from {sender}"},
+                "Body": {"Text": {"Data": f"{sender} <{address}>\n\n{message.message}"}},
+            },
+        )
+    except ClientError as err:
+        print(f"Could not send the contact message: {err}")
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="We could not send your message right now")
+
+    return {"sent": True}
 
 handler = Mangum(app, lifespan="off")

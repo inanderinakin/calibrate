@@ -8,12 +8,14 @@ import PrefsControls from "@/components/PrefsControls";
 import SuggestInput from "@/components/SuggestInput";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { updateProfile } from "@/lib/api";
+import { recordConsent, updateProfile } from "@/lib/api";
 import { countryAliases, countryLabel, countrySuggestions, isKnownCountry, toStoredCountry } from "@/lib/countries";
 import { resolveEntryPath } from "@/lib/entry";
 import { isKnownStudyField, studyFieldSuggestions } from "@/lib/studyFields";
 import { getTranslations } from "@/lib/translations";
 import { useRequireAuth } from "@/lib/useRequireAuth";
+import ConsentCheckbox from "@/components/ConsentCheckbox";
+import { CONSENT_VERSION } from "@/lib/consent";
 
 export default function CompleteProfilePage() {
   const allowed = useRequireAuth();
@@ -21,9 +23,11 @@ export default function CompleteProfilePage() {
   const { user, updateUser } = useAuth();
   const { language } = useLanguage();
   const t = getTranslations(language).completeProfile;
+  const consentText = getTranslations(language).legal.consent;
 
   const [country, setCountry] = useState(() => countryLabel(user?.country ?? "", language));
   const [studyField, setStudyField] = useState(user?.studyField ?? "");
+  const [consented, setConsented] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,9 +47,16 @@ export default function CompleteProfilePage() {
       return;
     }
 
+    if (!consented) {
+      setError(consentText.required);
+      return;
+    }
+
     setSubmitting(true);
 
     try {
+      await recordConsent(CONSENT_VERSION, language);
+
       const result = await updateProfile(
         user.firstName,
         user.lastName,
@@ -114,6 +125,8 @@ export default function CompleteProfilePage() {
               matchMode="startsWith"
             />
 
+            <ConsentCheckbox id="complete-profile-consent" checked={consented} onChange={setConsented} />
+
             {error && (
               <p role="alert" className="rounded-lg border border-[var(--accent-2)] px-4 py-2.5 text-sm font-medium text-[var(--text-primary)]">
                 {error}
@@ -122,7 +135,7 @@ export default function CompleteProfilePage() {
 
             <motion.button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || !consented}
               whileHover={submitting ? undefined : { scale: 1.02 }}
               whileTap={submitting ? undefined : { scale: 0.97 }}
               className="mt-2 rounded-lg bg-[var(--accent-bg)] py-2.5 font-medium text-[var(--accent-text)] disabled:opacity-70"

@@ -1,5 +1,5 @@
 from typing import Literal
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class LoginInfo(BaseModel):
     email: str
@@ -10,6 +10,8 @@ class SignUpInfo(BaseModel):
     password: str
     first_name: str
     last_name: str
+    consent_version: str = ""
+    consent_locale: Literal["tr", "en"] = "en"
 
 class VerifyEmailInfo(BaseModel):
     email: str
@@ -54,6 +56,7 @@ class Analysis(BaseModel):
     cv_size: int | None = None
     cv_type: str | None = None
     cv_uploaded_at: str | None = None
+    report_language: Literal["tr", "en"] | None = None
 
 class MatchData(BaseModel):
     matched_demanded: int
@@ -170,3 +173,13 @@ class BulletRequest(BaseModel):
 
 class CompletedProjects(BaseModel):
     skills: list[str]
+
+class ContactMessage(BaseModel):
+    name: str = Field(min_length=1, max_length=100)
+    email: str = Field(min_length=3, max_length=254)
+    message: str = Field(min_length=1, max_length=4000)
+    website: str = ""
+
+class ConsentInfo(BaseModel):
+    version: str = Field(min_length=1, max_length=40)
+    locale: Literal["tr", "en"] = "en"

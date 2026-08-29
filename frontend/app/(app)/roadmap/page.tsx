@@ -9,10 +9,10 @@ import { session } from "@/lib/session";
 import type { ProjectStep, Recommendation, Report } from "@/lib/types";
 import { getDisplaySkillName } from "@/lib/escoMapper";
 import { getCategoryLabel } from "@/lib/skillCategories";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useLanguage, type Language } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
 import { duration, ease } from "@/lib/motion";
-import { getCompletedProjects, getCompletedSkills, getCvBullet, setCompletedProjects, setCompletedSkills } from "@/lib/api";
+import { getCompletedProjects, getCompletedSkills, getCvBullet, getRecommendations, persistSession, setCompletedProjects, setCompletedSkills } from "@/lib/api";
 import { useRequireAuth } from "@/lib/useRequireAuth";
 import { useRestoreAnalysis } from "@/lib/useRestoreAnalysis";
 import { downloadRoadmapPdf } from "@/lib/roadmapPdf";
@@ -23,6 +23,9 @@ export default function RoadmapPage() {
   const { language } = useLanguage();
   const t = getTranslations(language);
   const [report, setReport] = useState<Report | null>(null);
+  const [reportLanguage, setReportLanguage] = useState<Language | null>(null);
+  const [regenerating, setRegenerating] = useState(false);
+  const [regenerateError, setRegenerateError] = useState<string | null>(null);
   const [cvUploaded, setCvUploaded] = useState<boolean | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [completed, setCompleted] = useState<Set<string>>(new Set());
@@ -66,9 +69,38 @@ export default function RoadmapPage() {
 
     setCvUploaded(Array.isArray(skills) && skills.length > 0);
     setReport(savedReport);
+    setReportLanguage(session.getReportLanguage());
     setFocus(session.getFocusSkills() ?? []);
     setLoaded(true);
   }, [restored]);
+
+  async function regenerate() {
+    const gaps = session.getGaps();
+
+    if (!gaps) {
+      setRegenerateError(t.roadmap.regenerateFailed);
+      return;
+    }
+
+    setRegenerating(true);
+    setRegenerateError(null);
+
+    try {
+      const fresh = await getRecommendations(gaps, language, t.roadmap.regenerateFailed);
+
+      session.setReport(fresh);
+      session.setReportLanguage(language);
+      setReport(fresh);
+      setReportLanguage(language);
+      persistSession().catch(() => {});
+    }
+    catch {
+      setRegenerateError(t.roadmap.regenerateFailed);
+    }
+    finally {
+      setRegenerating(false);
+    }
+  }
 
   const [exporting, setExporting] = useState(false);
 
@@ -244,6 +276,38 @@ export default function RoadmapPage() {
             <Icon icon="mdi:file-pdf-box" className="h-5 w-5" />
             {t.roadmap.exportPdf}
           </button>
+
+          {reportLanguage && reportLanguage !== language && (
+            <div className="glass-card mt-4 flex flex-col gap-3 rounded-[20px] border-2 border-(--accent-2) p-5">
+              <p className="flex items-center gap-2 font-semibold text-(--text-primary)">
+                <Icon icon="mdi:translate" className="h-5 w-5 shrink-0 text-(--accent-2)" />
+                {reportLanguage === "en" ? t.roadmap.writtenInEnglish : t.roadmap.writtenInTurkish}
+              </p>
+
+              <p className="text-sm text-(--text-secondary)">
+                {t.roadmap.regenerateNote}
+              </p>
+
+              <button
+                type="button"
+                onClick={regenerate}
+                disabled={regenerating}
+                className="btn-hover flex w-fit items-center gap-2 rounded-xl bg-(--accent-bg) px-5 py-2.5 font-bold text-(--accent-text) disabled:opacity-60"
+              >
+                <Icon
+                  icon={regenerating ? "cuida:loading-left-outline" : "mdi:refresh"}
+                  className={`h-5 w-5 ${regenerating ? "animate-spin-ccw" : ""}`}
+                />
+                {regenerating ? t.roadmap.regenerating : t.roadmap.regenerate}
+              </button>
+
+              {regenerateError && (
+                <p role="alert" className="text-sm font-semibold text-(--text-primary)">
+                  {regenerateError}
+                </p>
+              )}
+            </div>
+          )}
 
           {filtering && (
             <p className="mt-3 flex flex-wrap items-center gap-2 text-(--text-secondary)">

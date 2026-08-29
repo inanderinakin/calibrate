@@ -7,14 +7,13 @@ import { Icon } from "@/components/Icon";
 import { motion } from "framer-motion";
 import AppShell from "@/components/AppShell";
 import StepIndicator from "@/components/StepIndicator";
-import { authedFetch, errorMessage, isTimeout, saveAnalysis } from "@/lib/api";
+import { authedFetch, errorMessage, getRecommendations, isTimeout, saveAnalysis } from "@/lib/api";
 import { session } from "@/lib/session";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslations } from "@/lib/translations";
 import { duration } from "@/lib/motion";
 
 const GAPS_TIMEOUT_MS = 30_000;
-const REPORT_TIMEOUT_MS = 180_000;
 
 export default function AnalyseCvPage() {
   const router = useRouter();
@@ -90,24 +89,10 @@ export default function AnalyseCvPage() {
         session.setGaps(gaps);
         setStep(3);
 
-        const reportRes = await authedFetch(`/recommendations?language=${language}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(gaps),
-        }, REPORT_TIMEOUT_MS);
-
-        if (!reportRes.ok) {
-          throw new Error(
-            await errorMessage(
-              reportRes,
-              t.analyseCv.roadmapError
-            )
-          );
-        }
-
-        const report = (await reportRes.json()).recommendations;
+        const report = await getRecommendations(gaps, language, t.analyseCv.roadmapError);
 
         session.setReport(report);
+        session.setReportLanguage(language);
         setStep(4);
 
         // Keep the analysis on the account so it survives closing the tab.
@@ -116,6 +101,7 @@ export default function AnalyseCvPage() {
           target_roles: targetRoles ?? [],
           gaps,
           report,
+          report_language: language,
           cv_filename: session.getCvFilename(),
           cv_size: session.getCvSize(),
           cv_type: session.getCvType(),

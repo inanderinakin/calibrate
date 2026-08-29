@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, FormEvent } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/Icon";
 import { motion } from "framer-motion";
@@ -139,6 +140,7 @@ export default function SettingsPage() {
   }, [confirmingDelete, deleting]);
 
   const t = getTranslations(language).settings;
+  const legalText = getTranslations(language).legal;
 
   // The account is the source of truth. These two used to live only in
   // localStorage, so a new device showed them empty however often they were saved.
@@ -496,6 +498,34 @@ export default function SettingsPage() {
           </motion.button>
         </motion.form>
         )}
+
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="glass-card rounded-[30px] shadow-lg p-6 md:p-9 flex flex-col gap-4"
+        >
+          <div>
+            <h2 className="text-2xl font-medium text-(--accent-bg)">
+              {legalText.settingsHeading}
+            </h2>
+            <p className="mt-1 text-sm text-(--text-muted)">{legalText.settingsNote}</p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-5">
+            <Link href="/terms" className="font-medium text-(--accent-2) underline underline-offset-2">
+              {legalText.footer.terms}
+            </Link>
+
+            <Link href="/kvkk" className="font-medium text-(--accent-2) underline underline-offset-2">
+              {legalText.footer.kvkk}
+            </Link>
+
+            <Link href="/contact" className="font-medium text-(--accent-2) underline underline-offset-2">
+              {legalText.footer.contact}
+            </Link>
+          </div>
+        </motion.section>
 
         <div className="self-end flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <motion.button

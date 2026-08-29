@@ -1,6 +1,7 @@
 import { tokens } from "@/lib/tokens";
 import { refreshIdToken } from "@/lib/hostedUi";
 import { clearStoredUser } from "@/contexts/AuthContext";
+import type { Language } from "@/contexts/LanguageContext";
 import type { GapResult, NormalizedSkill, PostingsPayload, ProjectStep, Report } from "@/lib/types";
 import { session } from "@/lib/session";
 
@@ -37,6 +38,7 @@ const UPLOAD_TIMEOUT_MS = 120_000;
 const AUTH_TIMEOUT_MS = 30_000;
 // The brief agent calls a tool per skill before writing, so this is slower than the rest.
 const BRIEFS_TIMEOUT_MS = 200_000;
+const REPORT_TIMEOUT_MS = 180_000;
 
 export function fetchWithTimeout(path: string, init: RequestInit, ms: number) {
   return fetch(`${API_URL}${path}`, { ...init, signal: AbortSignal.timeout(ms) });
@@ -171,6 +173,19 @@ export async function updateProfile(
   return await res.json();
 }
 
+export async function recordConsent(version: string, locale: Language) {
+  const res = await authedFetch("/consent", {
+    method: "POST",
+    body: JSON.stringify({ version, locale }),
+  });
+
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not record your consent"));
+  }
+
+  return await res.json();
+}
+
 export async function getProfile(): Promise<{ country: string; study_field: string }> {
   const res = await authedFetch("/profile");
 
@@ -236,7 +251,9 @@ export async function post_signup(
   email: string,
   password: string,
   firstName: string,
-  lastName: string
+  lastName: string,
+  consentVersion: string,
+  consentLocale: Language
 ) {
   const res = await fetchWithTimeout("/sign_up", {
     method: "POST",
@@ -246,6 +263,8 @@ export async function post_signup(
       password,
       first_name: firstName,
       last_name: lastName,
+      consent_version: consentVersion,
+      consent_locale: consentLocale,
     }),
   }, AUTH_TIMEOUT_MS);
 
@@ -316,11 +335,29 @@ export async function post_reset_password(
   return await res.json();
 }
 
+export async function getRecommendations(
+  gaps: GapResult,
+  language: Language,
+  fallback = "Could not build your roadmap"
+): Promise<Report> {
+  const res = await authedFetch(`/recommendations?language=${language}`, {
+    method: "POST",
+    body: JSON.stringify(gaps),
+  }, REPORT_TIMEOUT_MS);
+
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, fallback));
+  }
+
+  return (await res.json()).recommendations;
+}
+
 export interface SavedAnalysis {
   cv_skills: NormalizedSkill[];
   target_roles: string[];
   gaps: GapResult | null;
   report: Report | null;
+  report_language: Language | null;
   cv_filename: string | null;
   cv_size: number | null;
   cv_type: string | null;
@@ -363,6 +400,7 @@ export async function persistSession() {
     target_roles: session.getTargetRoles() ?? [],
     gaps: session.getGaps(),
     report: session.getReport(),
+    report_language: session.getReportLanguage(),
     cv_filename: session.getCvFilename(),
     cv_size: session.getCvSize(),
     cv_type: session.getCvType(),
@@ -465,4 +503,18 @@ export async function setCompletedProjects(skills: string[]): Promise<string[]> 
   }
 
   return (await res.json()).completed_projects;
+}
+
+export async function sendContactMessage(name: string, email: string, message: string, website: string) {
+  const res = await fetchWithTimeout("/contact", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, email, message, website }),
+  }, AUTH_TIMEOUT_MS);
+
+  if (!res.ok) {
+    throw new ApiError(await errorMessage(res, "Could not send your message"), res.status);
+  }
+
+  return await res.json();
 }
