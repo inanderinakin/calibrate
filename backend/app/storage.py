@@ -107,3 +107,16 @@ def write_completed_projects(userId: str, skills: list[str]):
         ExpressionAttributeNames = {'#completed': completed_projects},
         ExpressionAttributeValues = {':skills': skills}
     )
+
+
+consent = "kvkkConsent"
+
+def write_consent(userId: str, payload: dict):
+    table.update_item(
+        Key = {
+            'userId': userId
+        },
+        UpdateExpression = "SET #consent = :payload",
+        ExpressionAttributeNames = {'#consent': consent},
+        ExpressionAttributeValues = {':payload': payload}
+    )

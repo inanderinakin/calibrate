@@ -9,6 +9,9 @@ Parameters:
     Type: String
     NoEcho: true
     Description: "OAuth client secret from Google Cloud Console"
+  ContactEmail:
+    Type: String
+    Description: "Inbox that messages from the contact page are delivered to"
 
 Globals:
   Function:
@@ -31,6 +34,7 @@ Resources:
           USER_TABLE: !Ref UserDataTable
           USER_POOL: !Ref UserPool
           APP_CLIENT: !Ref AppClient
+          CONTACT_EMAIL: !Ref ContactEmail
       Policies:
         - S3FullAccessPolicy:
             BucketName: calibrate-teamthrow
@@ -47,6 +51,13 @@ Resources:
                 - "cognito-idp:AdminDeleteUser"
               Resource:
                 - !GetAtt UserPool.Arn
+
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "ses:SendEmail"
+              Resource:
+                - !Sub "arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/usecalibrate.dev"
 
         - Statement:
             - Effect: Allow
