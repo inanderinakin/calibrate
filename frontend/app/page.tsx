@@ -214,7 +214,7 @@ function MainLandingPage({ t, language, onBack }: { t: Translations; language: L
         <div className="flex flex-1 flex-col justify-center gap-12 lg:gap-16">
 
         {/* HERO */}
-        <section className="grid grid-cols-1 items-center gap-8 pt-10 sm:pt-14 lg:grid-cols-[1fr_1.3fr] lg:gap-12 lg:pt-0">
+        <section className="grid grid-cols-1 items-center gap-8 pt-10 sm:pt-14 lg:grid-cols-[1fr_1.3fr] lg:gap-12 lg:pt-8">
 
           {/* LEFT SIDE */}
           <motion.div
