@@ -76,7 +76,11 @@ export default function RoadmapPage() {
 
   async function regenerate() {
     const gaps = session.getGaps();
-    if (!gaps) return;
+
+    if (!gaps) {
+      setRegenerateError(t.roadmap.regenerateFailed);
+      return;
+    }
 
     setRegenerating(true);
     setRegenerateError(null);
