@@ -521,6 +521,10 @@ export default function SettingsPage() {
               {legalText.footer.terms}
             </Link>
 
+            <Link href="/kvkk" className="font-medium text-(--accent-2) underline underline-offset-2">
+              {legalText.footer.kvkk}
+            </Link>
+
             <Link href="/contact" className="font-medium text-(--accent-2) underline underline-offset-2">
               {legalText.footer.contact}
             </Link>

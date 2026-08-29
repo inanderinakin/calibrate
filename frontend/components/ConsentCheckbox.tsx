@@ -31,7 +31,7 @@ export default function ConsentCheckbox({
 
         <span>
           {t.before}
-          <Link href="/privacy" target="_blank" rel="noopener noreferrer" className={link}>
+          <Link href="/kvkk" target="_blank" rel="noopener noreferrer" className={link}>
             {t.privacy}
           </Link>
           {t.between}

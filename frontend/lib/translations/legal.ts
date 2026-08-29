@@ -3,9 +3,12 @@ export const legal = {
     footer: {
       privacy: "Privacy",
       terms: "Terms",
+      kvkk: "KVKK",
       contact: "Contact",
       note: "Calibrate is a student project built for the Amazon mentorship programme.",
     },
+    kvkkTurkishOnly: "This notice is published in Turkish, which is the governing text under Turkish law (KVKK 6698).",
+    kvkkSeePrivacy: "For how your CV is stored and which models read it, see the",
     settingsHeading: "Legal",
     settingsNote: "What we collect, what we do with it, and how to reach us.",
     privacy: {
@@ -177,11 +180,11 @@ export const legal = {
       empty: "Please fill in your name, your email and a message.",
     },
     consent: {
-      before: "I have read and accept the ",
-      privacy: "Privacy Notice",
+      before: "I have read the ",
+      privacy: "KVKK notice",
       between: " and the ",
       terms: "Terms of Service",
-      after: ".",
+      after: ", and I consent to my personal data being transferred to service providers located abroad.",
       notice: "Your CV is processed to produce your analysis, stored in the European Union, and deleted from storage within about 48 hours. You can delete your account and everything on it at any time.",
       required: "Please accept the privacy notice and the terms to continue.",
     },
@@ -190,9 +193,12 @@ export const legal = {
     footer: {
       privacy: "Gizlilik",
       terms: "Koşullar",
+      kvkk: "KVKK",
       contact: "İletişim",
       note: "Calibrate, Amazon mentorluk programı için yapılmış bir öğrenci projesidir.",
     },
+    kvkkTurkishOnly: "Bu metin Türkçe yayımlanmıştır ve KVKK 6698 kapsamında geçerli metindir.",
+    kvkkSeePrivacy: "CV'nizin nasıl saklandığı ve hangi modellerin okuduğu için bakınız:",
     settingsHeading: "Yasal",
     settingsNote: "Neleri topluyoruz, onlarla ne yapıyoruz ve bize nasıl ulaşırsınız.",
     privacy: {
@@ -365,10 +371,10 @@ export const legal = {
     },
     consent: {
       before: "",
-      privacy: "Gizlilik Bildirimi",
+      privacy: "KVKK Aydınlatma Metni",
       between: "'ni ve ",
       terms: "Kullanım Koşulları",
-      after: "'nı okudum ve kabul ediyorum.",
+      after: "'nı okudum, kişisel verilerimin yurt dışında bulunan hizmet sağlayıcılara aktarılmasına açık rızam bulunmaktadır.",
       notice: "CV'niz analizinizi üretmek için işlenir, Avrupa Birliği içinde saklanır ve yaklaşık 48 saat içinde depolamadan silinir. Hesabınızı ve üzerindeki her şeyi dilediğiniz zaman silebilirsiniz.",
       required: "Devam etmek için lütfen gizlilik bildirimini ve koşulları kabul edin.",
     },

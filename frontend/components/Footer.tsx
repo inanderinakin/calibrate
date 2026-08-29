@@ -21,6 +21,10 @@ export default function Footer({ className = "" }: { className?: string }) {
           {t.terms}
         </Link>
 
+        <Link href="/kvkk" className="underline underline-offset-2 hover:text-(--text-primary)">
+          {t.kvkk}
+        </Link>
+
         <Link href="/contact" className="underline underline-offset-2 hover:text-(--text-primary)">
           {t.contact}
         </Link>
