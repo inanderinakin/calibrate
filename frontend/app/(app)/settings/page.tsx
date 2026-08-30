@@ -142,8 +142,12 @@ export default function SettingsPage() {
   const t = getTranslations(language).settings;
   const legalText = getTranslations(language).legal;
 
-  // The account is the source of truth. These two used to live only in
-  // localStorage, so a new device showed them empty however often they were saved.
+  // The account is the source of truth. These used to live only in localStorage, so a
+  // new device showed them empty however often they were saved. The name is here for
+  // the same reason: it is kept on the Cognito user, but the only copy this device had
+  // was the one baked into its own id token, so a rename made somewhere else did not
+  // show up until that token expired. updateUser pushes it into the stored profile so
+  // the sidebar agrees with the form.
   useEffect(() => {
     if (!tokens.getIdToken()) return;
 
@@ -152,14 +156,29 @@ export default function SettingsPage() {
         const savedCountry = saved.country ? countryLabel(saved.country, language) : "";
         if (saved.country) setCountry(savedCountry);
         if (saved.study_field) setStudyField(saved.study_field);
+        if (saved.first_name) setFirstName(saved.first_name);
+        if (saved.last_name) setLastName(saved.last_name);
 
         setOriginal((prev) => ({
           ...prev,
           country: saved.country ? savedCountry : prev.country,
           studyField: saved.study_field || prev.studyField,
+          firstName: saved.first_name || prev.firstName,
+          lastName: saved.last_name || prev.lastName,
         }));
+
+        if (saved.first_name || saved.last_name) {
+          updateUser({
+            ...(saved.first_name ? { firstName: saved.first_name } : {}),
+            ...(saved.last_name ? { lastName: saved.last_name } : {}),
+          });
+        }
       })
       .catch(() => {});
+    // updateUser is rebuilt on every render of the provider, so listing it would make
+    // this effect re-run constantly and overwrite whatever is half-typed in the form.
+    // The account only needs re-reading when the language changes the country label.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [language]);
 
   async function handleChangePassword(e: FormEvent) {
