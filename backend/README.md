@@ -18,7 +18,7 @@ Use 3.13 — Lambda runs 3.13 and Mangum breaks on 3.14.
 
 ## Environment
 
-Create `backend/.env`. Ask İnan for the values:
+Copy `.env.example` to `.env` and fill it in:
 
 ```
 AWS_ACCESS_KEY_ID=
@@ -32,8 +32,9 @@ APP_CLIENT=
 CONTACT_EMAIL=
 ```
 
-The bottom four name your own AWS resources, so they are per-deployment rather than
-shared here. After `sam deploy`, read them back out of the stack:
+The bottom four name resources in your own AWS account, so they are per-deployment
+rather than shared here. Deploy the stack first (see [Deploy](#deploy) below), then
+read them back:
 
 ```bash
 aws cloudformation describe-stacks --stack-name calibrate-sam \
@@ -43,6 +44,16 @@ aws cloudformation describe-stack-resources --stack-name calibrate-sam \
 ```
 
 `CONTACT_EMAIL` is whichever inbox you want contact-page messages delivered to.
+
+The AWS references behind these: [`sam deploy`][d1], [`describe-stacks`][d2],
+[`describe-stack-resources`][d3], [CloudFormation stack outputs][d4] and
+[Cognito user pools][d5].
+
+[d1]: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-cli-command-reference-sam-deploy.html
+[d2]: https://docs.aws.amazon.com/cli/latest/reference/cloudformation/describe-stacks.html
+[d3]: https://docs.aws.amazon.com/cli/latest/reference/cloudformation/describe-stack-resources.html
+[d4]: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/outputs-section-structure.html
+[d5]: https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html
 
 The API will not start without `USER_TABLE`: `storage.py` builds the DynamoDB table
 handle at import, so a missing value fails with
