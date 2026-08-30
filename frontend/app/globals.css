@@ -170,11 +170,26 @@ body {
   animation: spin-ccw 1s linear infinite;
 }
 
+/* The reduced-motion form of the sweep: no travel, same "still going" signal. */
+@keyframes indeterminate-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-indeterminate {
-    animation: none;
+    /* Not `animation: none`. This bar is the only sign that an upload or an analysis
+       is still running, and stopping it also snapped it to the full width, so it read
+       as finished, or as broken. Reduce motion asks us to stop moving things across
+       the screen, not to stop telling people the page is working, and an opacity
+       pulse is the accepted substitute. */
+    animation: indeterminate-pulse 1.6s ease-in-out infinite;
     width: 100%;
-    opacity: 0.6;
   }
 }
 
@@ -472,6 +487,21 @@ button:not(:disabled):where(:not([role="combobox"]):not([aria-haspopup="listbox"
   22%          { transform: translateY(-0.32em); }
 }
 
+/* Same swap for the dots: they fade in turn instead of hopping. The nth-child
+   delays are declared outside the query, so the stagger carries over unchanged. */
+@keyframes t-dot-fade {
+  0%,
+  45%,
+  100% {
+    opacity: 0.3;
+  }
+  22% {
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .t-dots span { animation: none !important; }
+  .t-dots span {
+    animation: t-dot-fade 1.6s var(--ease-in-out) infinite;
+  }
 }
