@@ -204,7 +204,7 @@ function MainLandingPage({ t, language, onBack }: { t: Translations; language: L
                   href="/signup"
                   className="btn-hover rounded-lg border border-[var(--landing-accent)] bg-transparent px-4 py-1.5 text-[13px] font-medium leading-none text-[var(--landing-accent)] sm:px-5 sm:py-2 lg:px-6 lg:py-2.5"
                 >
-                  {t.landing.signIn}
+                  {t.landing.signUp}
                 </Link>
               </>
             )}
