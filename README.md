@@ -57,46 +57,61 @@ city.
 
 ## Setting Up Locally
 
-**Prerequisites:** Python 3.13, [Bun](https://bun.sh), and AWS credentials with
-access to Textract, Bedrock, Cognito, DynamoDB and S3.
+Calibrate runs on your own AWS account. `sam deploy` builds almost all of it for
+you: the Cognito user pool, its hosted domain and app client, the Google identity
+provider, the DynamoDB table and the Lambda. You do not create any of those by
+hand in the console.
 
-**Backend:**
+**Prerequisites**
+
+- Python 3.13 and [Bun](https://bun.sh)
+- An AWS account, and credentials for an IAM user with access to CloudFormation,
+  Lambda, Cognito, DynamoDB, S3, Textract, Bedrock and SES
+- Docker running, for `sam build --use-container`
+- A Google OAuth client id and secret, if you want Google sign-in
+  ([Google Cloud Console](https://console.cloud.google.com/apis/credentials))
+- An [SES-verified identity][d6] to send verification mail from. `template.yaml`
+  currently hardcodes `usecalibrate.dev`, so change that ARN to your own domain
+  before deploying.
+
+**1. Install the dependencies**
 
 ```bash
 cd backend
 python3.13 -m venv .venv && source .venv/bin/activate
 pip install -r app/requirements.txt -r requirements-dev.txt
-cd app && fastapi dev main.py
 ```
 
-Runs on http://127.0.0.1:8000, with API docs at `/docs`.
+**2. Put your AWS credentials in `backend/.env`**
 
-**Frontend**, in a second terminal:
-
-```bash
-cd frontend
-bun install
-bun dev
-```
-
-Runs on http://localhost:3000, and needs the backend running.
-
-**Environment variables.** Create `backend/.env`:
+Copy `backend/.env.example` to `backend/.env` and fill in the top four only. Get
+the key and secret from IAM ([creating access keys][d7]):
 
 ```
 AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
 AWS_REGION=eu-central-1
 AWS_DEFAULT_REGION=eu-central-1
-
-USER_TABLE=
-USER_POOL=
-APP_CLIENT=
-CONTACT_EMAIL=
 ```
 
-The bottom four name your own AWS resources, so they are per-deployment rather than
-shared here. After `sam deploy`, read them back out of the stack:
+**3. Deploy your own stack**
+
+This is the step that creates the Cognito pool, the table and everything else.
+
+```bash
+cd backend
+sam build --use-container
+sam deploy --guided
+```
+
+`--guided` prompts for the three template parameters (`GoogleClientId`,
+`GoogleClientSecret`, `ContactEmail`) and saves them to `samconfig.toml`, so later
+deploys are just `sam deploy`. When it finishes it prints the stack outputs.
+
+**4. Fill in the rest of `backend/.env` from that output**
+
+`sam deploy` prints `UserPoolId`, `AppClientId` and `HostedUiDomain` when it
+finishes. To read them again later:
 
 ```bash
 aws cloudformation describe-stacks --stack-name calibrate-sam \
@@ -105,13 +120,22 @@ aws cloudformation describe-stack-resources --stack-name calibrate-sam \
   --query "StackResources[?ResourceType=='AWS::DynamoDB::Table'].PhysicalResourceId"
 ```
 
-`CONTACT_EMAIL` is whichever inbox you want contact-page messages delivered to.
+| `.env` key | where it comes from |
+|---|---|
+| `USER_POOL` | `UserPoolId` output |
+| `APP_CLIENT` | `AppClientId` output |
+| `USER_TABLE` | the DynamoDB table's physical id, second command |
+| `CONTACT_EMAIL` | whichever inbox you want contact-page mail delivered to |
 
-The API will not start without `USER_TABLE`: `storage.py` builds the DynamoDB table
+The API will not start without `USER_TABLE`: `storage.py` builds the DynamoDB
 handle at import, so a missing value fails with
 `ValueError: Required parameter name not set`.
 
-And `frontend/.env.local`:
+**5. Point the frontend at it**
+
+Copy `frontend/.env.example` to `frontend/.env.local`. `NEXT_PUBLIC_COGNITO_DOMAIN`
+is the `HostedUiDomain` output and `NEXT_PUBLIC_APP_CLIENT_ID` is `AppClientId`,
+the same value as step 4.
 
 ```
 NEXT_PUBLIC_API_URL="http://127.0.0.1:8000"
@@ -119,14 +143,28 @@ NEXT_PUBLIC_COGNITO_DOMAIN=""
 NEXT_PUBLIC_APP_CLIENT_ID=""
 ```
 
-These two are compiled into the browser bundle, so they are not secrets: a Cognito
-SPA client has no client secret. Point them at your own pool regardless, because
+These reach the browser, so they are not secrets, but point them at your own pool:
 signing up against someone else's creates real accounts in it.
 
-`backend/.env.example` and `frontend/.env.example` are checked in as templates.
+**6. Run both halves**
 
-Running the tests and deploying are covered in
-[backend/README.md](backend/README.md) and
+```bash
+cd backend/app && fastapi dev main.py     # http://127.0.0.1:8000, docs at /docs
+cd frontend && bun install && bun dev     # http://localhost:3000, second terminal
+```
+
+Reference: [`sam deploy`][d1], [`describe-stacks`][d2],
+[`describe-stack-resources`][d3], [stack outputs][d4], [Cognito user pools][d5].
+
+[d1]: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-cli-command-reference-sam-deploy.html
+[d2]: https://docs.aws.amazon.com/cli/latest/reference/cloudformation/describe-stacks.html
+[d3]: https://docs.aws.amazon.com/cli/latest/reference/cloudformation/describe-stack-resources.html
+[d4]: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/outputs-section-structure.html
+[d5]: https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html
+[d6]: https://docs.aws.amazon.com/ses/latest/dg/creating-identities.html
+[d7]: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html
+
+Tests and deployment detail are in [backend/README.md](backend/README.md) and
 [frontend/README.md](frontend/README.md).
 
 ## Project Structure
