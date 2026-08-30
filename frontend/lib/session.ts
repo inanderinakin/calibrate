@@ -1,7 +1,6 @@
 import type { Language } from "@/contexts/LanguageContext";
 import type { GapResult, NormalizedSkill, Report } from "./types";
-// Type only, so this is erased at compile time and does not create a runtime cycle
-// with lib/api, which imports this module.
+// Type only, so no runtime cycle with lib/api, which imports this module.
 import type { SavedAnalysis } from "@/lib/api";
 
 const KEYS = {
@@ -17,7 +16,7 @@ const KEYS = {
   focusSkills: "calibrate:focus_skills",
 } as const;
 
-/** The keys persistSession sends up, so the ones the account is the authority on. */
+/** The keys persistSession uploads, so the ones the account is authoritative for. */
 const ACCOUNT_OWNED = [
   KEYS.cvSkills,
   KEYS.cvFilename,
@@ -98,16 +97,9 @@ export const session = {
   },
 
   /**
-   * Replace everything the account owns with what the account actually holds.
-   *
-   * The point is the removals. This tab keeps its own copy in sessionStorage, which
-   * survives a refresh, so a CV deleted on another device used to sit here untouched
-   * until the tab was closed. Anything absent from the account's copy is cleared here,
-   * which is what makes a deletion somewhere else land.
-   *
-   * `focusSkills` is deliberately left alone: it is this tab's working state and
-   * persistSession has never sent it, so treating the account as authoritative over it
-   * would throw it away on every load.
+   * Replace what the account owns with what it holds, clearing what it no longer has,
+   * which is what makes a deletion on another device land. focusSkills is left alone:
+   * it is this tab's own state and persistSession never sends it.
    */
   applyAccountCopy: (saved: SavedAnalysis | null) => {
     if (typeof window === "undefined") return;

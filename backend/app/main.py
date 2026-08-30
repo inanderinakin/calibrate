@@ -116,12 +116,9 @@ async def update_profile(profile: ProfileInfo, user_id: Annotated[str, Depends(v
     country = profile.country.strip()
     study_field = profile.study_field.strip()
 
+    # Saved here as well as on the Cognito user, so another device can read the current
+    # name without waiting for its own id token to be reissued.
     try:
-        # The name is saved here as well as on the Cognito user. Cognito is where it
-        # belongs, but the only copy any other device could see was the one baked into
-        # its own id token, which is not reissued until that token expires, so a rename
-        # took up to an hour to appear anywhere else. Reading it back from here is what
-        # lets /profile hand the current name to a device that asks.
         await run_in_threadpool(
             write_profile,
             user_id,
@@ -154,8 +151,7 @@ async def get_profile(user_id: Annotated[str, Depends(verify_token_dependency)])
     return {
         "country": saved.get("country", ""),
         "study_field": saved.get("study_field", ""),
-        # Empty for an account that has never saved its profile here. The client keeps
-        # whatever its token claims say in that case, which is the old behaviour.
+        # Empty when the profile was never saved here; the client falls back to its token.
         "first_name": saved.get("first_name", ""),
         "last_name": saved.get("last_name", ""),
     }

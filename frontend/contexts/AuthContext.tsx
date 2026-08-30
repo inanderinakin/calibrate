@@ -80,10 +80,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setHydrated(true);
   }, []);
 
-  // The stored name belongs to whichever device last wrote it, so a rename made on
-  // another one never reached this sidebar until this device signed in again. One
-  // request per page load, alongside the analysis the app already fetches, and only a
-  // real answer is allowed to change anything.
+  // The stored name belongs to whichever device last wrote it. One request per page
+  // load, and only a real answer changes anything.
   useEffect(() => {
     if (!hydrated) return;
     if (!tokens.getIdToken()) return;

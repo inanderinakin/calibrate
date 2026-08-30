@@ -189,7 +189,7 @@ export async function recordConsent(version: string, locale: Language) {
 export async function getProfile(): Promise<{
   country: string;
   study_field: string;
-  /** Empty for an account that has never saved its profile; fall back to the token. */
+  /** Empty when never saved here; fall back to the token. */
   first_name: string;
   last_name: string;
 }> {
