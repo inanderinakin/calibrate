@@ -27,7 +27,6 @@ skill_facts = build_skill_facts(load_postings())
 
 LANGUAGE_NAMES = {"tr": "Turkish", "en": "English"}
 
-
 @tool
 def get_skill_demand(skill: str):
     """Returns what the live job board says about one skill: how many postings ask for
@@ -39,7 +38,6 @@ def get_skill_demand(skill: str):
         return f"The board has no postings asking for {skill}. Say so rather than guessing a number."
 
     return facts
-
 
 brief_prompt = (
     "You write the project steps of a learning roadmap. "
@@ -69,7 +67,6 @@ bullet_prompt = (
     "Name the skills and the concrete technique the project forced."
 )
 
-
 def group_skills(recommendations: list[Recommendation], size: int = 2) -> list[dict]:
     """Walks the ranked roadmap and cuts it into groups, so a project lands after every
     `size` skills rather than at the end where nobody reaches it."""
@@ -78,7 +75,6 @@ def group_skills(recommendations: list[Recommendation], size: int = 2) -> list[d
     for start in range(0, len(recommendations), size):
         chunk = recommendations[start:start + size]
 
-        # A trailing group of one still earns a project; a group of none does not.
         if not chunk:
             continue
 
@@ -88,7 +84,6 @@ def group_skills(recommendations: list[Recommendation], size: int = 2) -> list[d
         })
 
     return groups
-
 
 def get_project_steps(recommendations: list[Recommendation], language: str = "en") -> list[ProjectStep]:
     groups = group_skills(recommendations)
@@ -111,7 +106,6 @@ def get_project_steps(recommendations: list[Recommendation], language: str = "en
     )
     result = agent(f"Write one project step for each of these skill groups:\n{described}")
     return result.structured_output.steps
-
 
 def get_cv_bullet(request: BulletRequest) -> str:
     language_name = LANGUAGE_NAMES.get(request.language, LANGUAGE_NAMES["en"])

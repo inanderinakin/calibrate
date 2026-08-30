@@ -24,21 +24,12 @@ import boto3
 
 from relevance import is_cs_relevant, is_duplicate_posting, load_dedup_index, register_posting
 
-# Windows consoles default to a codepage (e.g. cp1254) that can't encode
-# the arrow/emoji characters used in our print statements — force UTF-8
-# so this doesn't crash on non-UTF-8 terminals or when output is redirected.
 sys.stdout.reconfigure(encoding="utf-8", line_buffering=True)
 sys.stderr.reconfigure(encoding="utf-8", line_buffering=True)
 
-# ── Search sources ────────────────────────────────────────────────────────────
-# Each entry is (label, base_url). main() walks &page=2, &page=3... for each
-# source (see build_page_url) until a page returns no new cards.
-# Category URLs cover the bulk; keyword URLs supplement for specific roles.
 SOURCES = [
-    # Category browsing — primary sources
     ("kategori:BT+Bilişim",   "https://www.kariyer.net/is-ilanlari?cs=001000000,010100000"),
 
-    # Keyword supplements — broad terms
     ("kw:yazılım",            "https://www.kariyer.net/is-ilanlari?kw=yaz%C4%B1l%C4%B1m"),
     ("kw:developer",          "https://www.kariyer.net/is-ilanlari?kw=developer"),
     ("kw:devops",             "https://www.kariyer.net/is-ilanlari?kw=devops"),
@@ -49,7 +40,6 @@ SOURCES = [
     ("kw:siber",              "https://www.kariyer.net/is-ilanlari?kw=siber"),
     ("kw:veri",               "https://www.kariyer.net/is-ilanlari?kw=veri"),
 
-    # Additional keywords for more coverage
     ("kw:yazılım geliştirici", "https://www.kariyer.net/is-ilanlari?kw=yaz%C4%B1l%C4%B1m%20geli%C5%9Ftirici"),
     ("kw:software",           "https://www.kariyer.net/is-ilanlari?kw=software"),
     ("kw:java",               "https://www.kariyer.net/is-ilanlari?kw=java"),
@@ -78,27 +68,16 @@ SOURCES = [
     ("kw:machine learning",   "https://www.kariyer.net/is-ilanlari?kw=machine%20learning"),
 ]
 
-# All three scrapers (kariyer, secretcv, yenibiris) now write into the SAME
-# postings.jsonl — a "source" field on each posting tells them apart, and
-# lets the (still-to-come) cross-source dedup pass match the same real-world
-# posting scraped from different sites.
 _HERE = os.path.dirname(os.path.abspath(__file__))
 SOURCE_NAME = "kariyer"
 OUTPUT_FILE = os.path.join(_HERE, "postings.jsonl")
 FAILED_LOG_FILE = os.path.join(_HERE, "failed_pages_kariyer.log")
 MAX_PAGES_PER_SOURCE = 50
-# A source drops out of rotation once it's gone this many consecutive pages
-# with cards but none of them new — a single stale page (e.g. the listing
-# isn't strictly newest-first, or a batch of old postings happens to sit at
-# the top) shouldn't permanently cut off pages further down that may still
-# have new content. A genuinely empty page (0 cards at all) still drops the
-# source immediately — that's a real end-of-results signal.
 STALE_PAGE_LIMIT = 3
 
 S3_BUCKET = "calibrate-teamthrow"
 S3_POSTINGS_KEY = "scraper-data/postings.jsonl"
 S3_FAILED_LOG_KEY = "scraper-data/failed_pages_kariyer.log"
-
 
 def sync_from_s3():
     """Pull down last run's curated postings before scraping, so seen_ids
@@ -110,7 +89,6 @@ def sync_from_s3():
         print(f"Downloaded existing postings from s3://{S3_BUCKET}/{S3_POSTINGS_KEY}")
     except Exception as e:
         print(f"No existing postings in S3 (or download failed): {e}")
-
 
 def sync_to_s3():
     """Upload postings and the failed-page log after a run, then delete the
@@ -132,14 +110,12 @@ def sync_to_s3():
         except Exception as e:
             print(f"Failed to upload failed_pages_kariyer.log to S3: {e}")
 
-
 def build_page_url(base_url: str, page_num: int) -> str:
     """Append &page=N (or ?page=N if base_url has no query yet) to a search URL."""
     if page_num <= 1:
         return base_url
     sep = "&" if "?" in base_url else "?"
     return f"{base_url}{sep}page={page_num}"
-
 
 def log_failed_page(url: str, reason: str):
     """Record a page we couldn't load so it can be manually retried later —
@@ -148,7 +124,6 @@ def log_failed_page(url: str, reason: str):
     log every empty page rather than risk silently dropping real postings."""
     with open(FAILED_LOG_FILE, "a", encoding="utf-8") as f:
         f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')}\t{reason}\t{url}\n")
-
 
 def wait_for_selector_with_challenge(page, selector: str, url: str, timeout: int = 20000) -> bool:
     """Wait for `selector`, handling the PerimeterX press-and-hold challenge if
@@ -171,8 +146,6 @@ def wait_for_selector_with_challenge(page, selector: str, url: str, timeout: int
     else:
         print("  No known challenge detected — might be a different captcha type.")
 
-    # Unattended run — no human to solve a second/unknown challenge. Give the
-    # page a bit longer in case it's still settling, then give up.
     print(f"  ⚠ '{selector}' still not found. Waiting 30s, then giving up on this page.")
     time.sleep(30)
     try:
@@ -182,7 +155,6 @@ def wait_for_selector_with_challenge(page, selector: str, url: str, timeout: int
         print("  Still not found, moving on.")
         log_failed_page(url, f"selector '{selector}' never appeared (captcha or blocked)")
         return False
-
 
 def _read_progress_bar_width(cdp) -> float | None:
     """Read the press-and-hold progress bar's fill width (0 -> 253px) via
@@ -235,9 +207,6 @@ def _read_progress_bar_width(cdp) -> float | None:
 
     return walk(doc.get("root", {}))
 
-
-# ── Listing scraper: collects posting URLs from search results ────────────────
-
 def _handle_press_and_hold(page, max_attempts: int = 3) -> bool:
     """Detect and solve the kariyer.net (PerimeterX) press-and-hold bot
     challenge. Returns True once a press-and-hold is verifiably accepted,
@@ -256,10 +225,10 @@ def _handle_press_and_hold(page, max_attempts: int = 3) -> bool:
         container = page.locator("div#px-captcha").first
         container.wait_for(timeout=3000)
     except Exception:
-        return False  # No challenge on this page
+        return False
 
     print("  Bot challenge detected — attempting press and hold...")
-    page.wait_for_timeout(2000)  # let the shadow-rendered button settle in
+    page.wait_for_timeout(2000)
 
     for attempt in range(1, max_attempts + 1):
         if attempt > 1:
@@ -267,11 +236,10 @@ def _handle_press_and_hold(page, max_attempts: int = 3) -> bool:
         if _attempt_press_and_hold_once(page, container):
             return True
         try:
-            container.wait_for(timeout=1000)  # still on the challenge?
+            container.wait_for(timeout=1000)
         except Exception:
-            return False  # challenge gone but we didn't detect it as solved — treat as done
+            return False
     return False
-
 
 def _attempt_press_and_hold_once(page, container) -> bool:
     """One press-and-hold attempt. Returns True only if the challenge box
@@ -281,16 +249,9 @@ def _attempt_press_and_hold_once(page, container) -> bool:
         box = container.bounding_box()
         if not box:
             return False
-        # The container is taller than the button itself (extra room below
-        # is reserved for a "Lütfen tekrar deneyin" retry message), and the
-        # button sits at the top, not centered — so target that, not the
-        # container's vertical center.
         cx = box["x"] + box["width"] / 2
         cy = box["y"] + 26
 
-        # Approach in a few steps rather than jumping straight to target.
-        # Jittering *while held down* risks drifting off the button and
-        # cancelling the press, so keep it still once pressed.
         start_x, start_y = cx - random.uniform(30, 60), cy - random.uniform(20, 40)
         page.mouse.move(start_x, start_y)
         steps = random.randint(4, 7)
@@ -301,11 +262,6 @@ def _attempt_press_and_hold_once(page, container) -> bool:
             )
             time.sleep(random.uniform(0.02, 0.06))
 
-        # Snapping exactly onto the pixel center and then pressing looks
-        # just as robotic as not moving at all — start the same small
-        # jitter (more horizontal than vertical, like a real hand) a
-        # moment *before* pressing, and keep it going uninterrupted through
-        # the down event and the hold, instead of a jitter-free press.
         def _jitter():
             page.mouse.move(cx + random.uniform(-1.2, 1.2), cy + random.uniform(-0.4, 0.4))
 
@@ -315,31 +271,22 @@ def _attempt_press_and_hold_once(page, container) -> bool:
             _jitter()
 
         page.mouse.down()
-        # The fill bar's width goes from 0 to a fixed 253px — poll the real
-        # value via CDP and release right when it's full, instead of
-        # guessing a duration or waiting for a redirect.
         cdp = page.context.new_cdp_session(page)
         cdp.send("DOM.enable")
         held = 0.0
-        max_hold = 20.0  # observed fill time varies (~5.7s-7.8s across runs)
+        max_hold = 20.0
         while held < max_hold:
             step = 0.15
             time.sleep(step)
             held += step
             _jitter()
             width = _read_progress_bar_width(cdp)
-            # Releasing before the bar is actually full reads as an
-            # incomplete/cancelled press and gets rejected — wait for it to
-            # be (essentially) done, not just close.
             if width is not None and width >= 252:
                 break
-        time.sleep(random.uniform(0.2, 0.4))  # the "three dots" beat before release
+        time.sleep(random.uniform(0.2, 0.4))
         page.mouse.up()
-        time.sleep(2)  # Wait for redirect
+        time.sleep(2)
 
-        # The press can be rejected ("Lütfen tekrar deneyin") without ever
-        # raising — verify the challenge box actually went away instead of
-        # assuming success just because we didn't hit an exception.
         try:
             page.locator("div#px-captcha").first.wait_for(state="hidden", timeout=3000)
             print("  Press and hold completed — challenge cleared.")
@@ -351,7 +298,6 @@ def _attempt_press_and_hold_once(page, container) -> bool:
         print(f"  Challenge attempt failed: {e}")
         return False
 
-
 def collect_cards(base_url: str, page) -> list[dict]:
     """Scrape all job cards from a single listing page.
     kariyer.net renders all results server-side in one page (no AJAX pagination).
@@ -359,9 +305,6 @@ def collect_cards(base_url: str, page) -> list[dict]:
     """
     print(f"  Loading: {base_url}")
 
-    # One dropped connection used to end the whole run, losing every source after
-    # it. Give the page a few tries, and if it still will not load, return nothing
-    # so this source drops out of the rotation like any other empty page.
     for attempt in range(1, 4):
         try:
             page.goto(base_url, timeout=60000)
@@ -375,7 +318,6 @@ def collect_cards(base_url: str, page) -> list[dict]:
     if not wait_for_selector_with_challenge(page, '[data-test="ad-card"]', base_url):
         return []
 
-    # Scroll down gradually to trigger any lazy-loaded content
     prev_count = 0
     for scroll_step in range(20):
         page.evaluate("window.scrollBy(0, 800)")
@@ -385,7 +327,6 @@ def collect_cards(base_url: str, page) -> list[dict]:
             prev_count = current_count
     print(f"  Page fully scrolled. Found {prev_count} card elements.")
 
-    # Extract all cards
     html = page.content()
     soup = BeautifulSoup(html, "html.parser")
     raw_cards = soup.find_all(attrs={"data-test": "ad-card"})
@@ -418,9 +359,6 @@ def collect_cards(base_url: str, page) -> list[dict]:
 
     print(f"  → {len(cards_data)} unique cards extracted")
     return cards_data
-
-
-# ── Single posting scraper ────────────────────────────────────────────────────
 
 def scrape_posting(url: str, page, referer: str | None = None) -> dict | None:
     """Returns the parsed posting, or None if the page never loaded (e.g. a
@@ -489,7 +427,6 @@ def scrape_posting(url: str, page, referer: str | None = None) -> dict | None:
 
     return posting
 
-
 def _parse_candidate_criteria(soup: BeautifulSoup) -> dict:
     criteria = {}
     container = soup.find("div", class_="alignment-list")
@@ -513,12 +450,8 @@ def _parse_candidate_criteria(soup: BeautifulSoup) -> dict:
 
     return criteria
 
-
-# ── Helpers ───────────────────────────────────────────────────────────────────
-
 def _text(tag) -> str | None:
     return tag.get_text(strip=True) if tag else None
-
 
 def load_seen_ids(output_file: str) -> set:
     """Load this scraper's already-scraped posting IDs, to avoid re-scraping
@@ -535,14 +468,10 @@ def load_seen_ids(output_file: str) -> set:
         pass
     return seen
 
-
 def save_posting(posting: dict):
     posting["source"] = SOURCE_NAME
     with open(OUTPUT_FILE, "a", encoding="utf-8") as f:
         f.write(json.dumps(posting, ensure_ascii=False) + "\n")
-
-
-# ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
     sync_from_s3()
@@ -567,10 +496,6 @@ def main():
 
         total_saved = 0
 
-        # Round-robin across sources: all sources' page 1 first, then all
-        # sources' page 2, etc. A source drops out of rotation immediately on
-        # a genuinely empty page (0 cards — real end of results), or after
-        # STALE_PAGE_LIMIT consecutive pages with cards but none new.
         active_sources = [(label, url, 0) for label, url in SOURCES]
 
         for page_num in range(1, MAX_PAGES_PER_SOURCE + 1):
@@ -606,21 +531,14 @@ def main():
                 stale_count = 0
 
                 for i, card in enumerate(new_cards, 1):
-                    if card["id"] in seen_ids:  # re-check inside loop to catch within-batch dupes
+                    if card["id"] in seen_ids:
                         continue
 
-                    # Coarse pre-filter on the listing card (title + sector
-                    # only — department isn't known until the detail page)
-                    # before ever opening the detail page: kariyer.net's
-                    # captcha makes every detail-page load expensive, so
-                    # skip the obvious junk (sales, tourism, HR...) our
-                    # broad search terms pull in.
                     if not is_cs_relevant({"title": card.get("position_name"), "sector": card.get("sector")}):
                         seen_ids.add(card["id"])
                         continue
 
                     try:
-                        # Scrape full posting and merge card-level metadata into it
                         posting = scrape_posting(card["url"], page, referer=page_url)
                         if posting is None:
                             print(f"  [{i}/{len(new_cards)}] SKIPPED (blocked/captcha): {card['url']}")
@@ -628,10 +546,6 @@ def main():
                         posting.update({k: v for k, v in card.items() if k not in posting})
                         seen_ids.add(card["id"])
 
-                        # Re-check relevance now that department + full
-                        # description are known, and only save if it still
-                        # holds — same filter-before-save pattern as the
-                        # secretcv/yenibiris scrapers, no unfiltered feed.
                         if is_cs_relevant(posting):
                             if is_duplicate_posting(posting, dedup_index):
                                 print(f"  [{i}/{len(new_cards)}] Skipped (duplicate of another source): {posting['title']}")
@@ -645,9 +559,6 @@ def main():
                     except Exception as e:
                         print(f"  [{i}/{len(new_cards)}] FAILED {card['url']}: {e}")
                     finally:
-                        # Always pace requests — even on captcha/dupe/error
-                        # skips — so a streak of blocked pages doesn't turn a
-                        # soft block into a hard one by hammering unpaced.
                         time.sleep(random.uniform(2.0, 4.0))
 
                 still_active.append((label, base_url, stale_count))
@@ -658,7 +569,6 @@ def main():
 
     sync_to_s3()
     print(f"\nDone. Total new postings saved: {total_saved}")
-
 
 if __name__ == "__main__":
     main()

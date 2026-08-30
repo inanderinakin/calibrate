@@ -33,8 +33,6 @@ def compute_gaps(cv_skills: list[NormalizedSkill], target_roles: list[str], dema
             else:
                 matched_skills[role].append(demanded)
 
-        # counted off the list rather than subtracted from the gaps, so the number and
-        # the list the dashboard shows cannot drift apart
         matched_demanded = len(matched_skills[role])
         matched_list[role] = MatchData(matched_demanded=matched_demanded, total_demanded=total_demanded, ratio= matched_demanded / total_demanded if total_demanded else 0.0, postings_count=postings_count)
     return GapResult(target_roles=checked_roles, gaps = gaps_list, matched_data = matched_list, matched_skills = matched_skills)

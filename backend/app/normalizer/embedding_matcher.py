@@ -18,11 +18,7 @@ MAX_ATTEMPTS = 5
 BACKOFF_SECONDS = 2
 PACE_SECONDS = 0.2
 
-# Swept against a gold set during development. 0.66 is free:
-# it drops seven false positives without losing a single real skill. Above it the
-# trade starts -- 0.70 buys perfect precision for 3 of the 14 real skills.
 MATCH_THRESHOLD = 0.66
-
 
 def build_catalog():
     collection_csv_path = (Path(__file__).parent.parent / "normalizer" / "esco_dataset" / "digitalSkillsCollection_en.csv")
@@ -149,7 +145,6 @@ def match_candidates(candidates: list[str], pairs, vectors, threshold=MATCH_THRE
         best_uri = pairs[max_score][1] if scores[max_score] >= threshold else None
         uris_and_scores.append((query_text, best_uri, scores[max_score]))
     return uris_and_scores
-
 
 if __name__ == "__main__":
     pairs, uri_to_label, uri_to_category = build_catalog()

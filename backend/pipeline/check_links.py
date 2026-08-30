@@ -39,18 +39,10 @@ link_status_path = Path(__file__).parent.parent / "app" / "link_status.json"
 
 undated_window_days = 45
 recheck_after_days = 7
-# Bumped when the rules in verdict() change, so answers decided by the old rules
-# are re-asked instead of sitting in the cache until they age out on their own.
 rule_version = 2
 default_budget = 600
 request_spacing_seconds = 2.0
-# (connect, read). A bare total timeout let a stalled read on a keep-alive
-# connection hang a worker indefinitely — one wedged thread sat for four hours
-# on nine seconds of CPU.
 request_timeout_seconds = (10, 20)
-# Backing off 5s, 16s then 49s on a throttle costs 70s to learn nothing. The
-# run is incremental, so a throttled posting is cheaper to leave for tomorrow
-# than to wait out today.
 throttle_retries = 1
 throttle_backoff_seconds = 8
 run_deadline_seconds = 45 * 60
@@ -59,8 +51,6 @@ headers = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36",
     "Accept-Language": "tr-TR,tr;q=0.9,en;q=0.8",
 }
-# LinkedIn serves Turkish to requests from Turkey and English elsewhere, so both
-# wordings have to be recognised.
 linkedin_closed = re.compile(
     r"Art[ıi]k ba[şs]vuru kabul etmiyor|No longer accepting applications",
     re.IGNORECASE,
@@ -68,7 +58,6 @@ linkedin_closed = re.compile(
 
 job_posting_schema = re.compile(r'"@type"\s*:\s*"JobPosting"')
 throttled_codes = {403, 429}
-
 
 def parse_date(value):
     if not value:
@@ -80,7 +69,6 @@ def parse_date(value):
             continue
     return None
 
-
 def is_active(posting, today):
     """Still open, or undated but recent enough that we have no evidence it closed."""
     closing = parse_date(posting.get("closing_date"))
@@ -90,20 +78,17 @@ def is_active(posting, today):
     posted = parse_date(posting.get("date_posted"))
     return bool(posted and (today - posted).days <= undated_window_days)
 
-
 def read_status():
     if not link_status_path.exists():
         return {}
     with open(link_status_path, encoding="utf-8") as status_file:
         return json.load(status_file).get("postings", {})
 
-
 def is_stale(entry, today):
     if entry.get("rule_version") != rule_version:
         return True
     checked = parse_date(entry.get("checked_at"))
     return not checked or (today - checked).days >= recheck_after_days
-
 
 def verdict(source, status_code, final_url, body):
     if status_code in throttled_codes:
@@ -121,7 +106,6 @@ def verdict(source, status_code, final_url, body):
     if not job_posting_schema.search(body):
         return False, "no JobPosting schema"
     return True, ""
-
 
 def check(session, posting):
     for attempt in range(throttle_retries + 1):
@@ -141,7 +125,6 @@ def check(session, posting):
 
     return None, "throttled", None
 
-
 def check_host(postings, results, lock, deadline):
     with requests.Session() as session:
         session.headers.update(headers)
@@ -153,8 +136,6 @@ def check_host(postings, results, lock, deadline):
 
             alive, reason, status_code = check(session, posting)
             if alive is None:
-                # Could not get an answer. Leave whatever we knew before in place
-                # rather than writing down a guess.
                 with lock:
                     results["skipped"] += 1
             else:
@@ -171,7 +152,6 @@ def check_host(postings, results, lock, deadline):
                         print(f"checked {done}", flush=True)
             time.sleep(request_spacing_seconds)
 
-
 def check_links(budget=default_budget):
     today = date.today()
 
@@ -180,7 +160,6 @@ def check_links(budget=default_budget):
 
     known = read_status()
     due = [posting for posting in active if is_stale(known.get(posting["id"], {}), today)]
-    # Never-checked postings first: they are the ones being held back from the page.
     due.sort(key=lambda posting: bool(known.get(posting["id"])))
     due = due[:budget]
 
@@ -220,7 +199,6 @@ def check_links(budget=default_budget):
 
     print(f"checked {len(results['checked'])}, skipped {results['skipped']}, {alive_count} alive of {len(known)} known", flush=True)
     return payload
-
 
 if __name__ == "__main__":
     check_links()

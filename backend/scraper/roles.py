@@ -43,51 +43,14 @@ ROLE_PATTERNS = {
         "ux/ui", "ux tasarım", "ui tasarım", "ui/ux",
         "web geliştir", "web tasarım", "web arayüz",
     ],
-    # IT Support Specialist and ERP Consultant are intentionally left empty
-    # here -- see TITLE_ONLY_PATTERNS below for why.
     "IT Support Specialist": [],
     "ERP Consultant": [],
 }
 
-# Job-title phrases that are too generic to trust in description text (e.g.
-# "Linux ve sanallaştırma bilgisi tercih sebebidir" is a routine nice-to-have
-# line in plenty of unrelated postings, but nobody titles a posting "Sistem
-# ve Ağ Uzmanı" unless the job actually is that). Scored against the title
-# only, never the description.
-#
-# Note: only the DevOps-engineering-flavored infra terms are here (cloud
-# ops, virtualization, infra engineering). Pure sysadmin/network-technician/
-# DBA titles ("network teknisyen", "veritabanı yönetici", "dba", "sistem
-# yönetim", "linux sistem"...) were deliberately left out -- that's IT
-# operations/support, not a software-engineering discipline this product
-# tracks, so those postings stay Unclassified rather than being folded into
-# DevOps or given their own role.
-#
-# IT Support Specialist and ERP Consultant are entirely title-only: words
-# like "destek" (support) or "erp" show up constantly as throwaway
-# description mentions on completely unrelated software-engineer postings
-# ("ERP sistemleriyle entegrasyon deneyimi" as one bullet among many), which
-# was flipping generic "Yazılım Uzmanı"/"Senior Java Developer" postings
-# into these roles when scored against description text. Nobody titles a
-# posting "ERP Uzmanı" or "Yazılım Destek Uzmanı" unless it actually is one.
-# IT Support Specialist and ERP Consultant are entirely title-only (see
-# above), and title-only phrases that mention IT/ERP but say nothing about
-# the actual job function on their own -- "Bilişim Teknolojileri Öğretmeni"
-# (IT teacher), "Satış Yöneticisi (Bilişim Teknolojileri...)" (sales manager
-# at an IT company), "Muhasebe Uzmanı (Logo ERP Deneyimli)" (accountant who
-# uses ERP software) -- get rejected by NON_TECH_CONFLICT_KW below regardless
-# of which of these terms matched. One rule for all of them, not a tier of
-# "safe" vs "needs a conflict check" terms -- a split like that only holds
-# until the next term that turns out to need it too (this list used to split
-# "erp"/"bilgi teknoloji" out as special-cased "weak" signals and still let
-# "Yazılım Satış Uzmanı" through, because "help desk" etc. were considered
-# unconditionally "strong").
 TITLE_ONLY_PATTERNS: dict[str, list[str]] = {
     "DevOps": [
         "cybersecurity", "cloud operations", "cloud ops", "bulut sistem",
         "sanallaştırma", "virtualization", "altyapı mühendis",
-        # ROLE_PATTERNS covers "systems engineer" and "ağ ve güvenlik" but not
-        # the singular / plain-English forms these arrive in.
         "security engineer", "güvenlik mühendis", "system engineer",
         "ağ yönetici", "sre",
     ],
@@ -109,16 +72,11 @@ TITLE_ONLY_PATTERNS: dict[str, list[str]] = {
         "erp", "abap", "netsis", "sap consultant", "sap danışman", "sap uzman",
         "sap developer", "sap modül", "sap abap", "sap fico", "sap mm",
         "sap sd", "sap pp", "sap bw", "kurumsal uygulamalar uzman",
-        # Module and platform titles the list did not name yet.
         "sap basis", "sap fi", "sap co", "sap yönetici", "sap ana veri",
         "sap s/4", "sap s4", "erp danışman",
     ],
 }
 
-# Job-function words that always win over a title-only match above -- same
-# principle as relevance.py's NON_CS_TITLE_KW, kept as a separate copy here
-# (not imported) because relevance.py already imports map_to_role from this
-# module, and importing back would create a circular import.
 NON_TECH_CONFLICT_KW = [
     "satış", "satis", "pazarlama", "sales", "marketing",
     "muhasebe", "mali müşavir", "bordro", "ön muhasebe",
@@ -156,21 +114,17 @@ _COMPILED_NON_TECH_CONFLICT = [
     re.compile(r"(?<!\w)" + re.escape(p), re.IGNORECASE) for p in NON_TECH_CONFLICT_KW
 ]
 
-
 def _normalize(text: str | None) -> str:
     return (text or "").replace("İ", "i").lower()
-
 
 def _fallback(title: str) -> str:
     if any(rx.search(title) for rx in _GENERIC):
         return GENERIC_ROLE
     return DEFAULT_ROLE
 
-
 def _score(text: str, role: str) -> int:
     """Number of distinct patterns for `role` present in `text`."""
     return sum(1 for rx in _COMPILED[role] if rx.search(text))
-
 
 def map_to_role(title: str, description: str | None = None) -> str:
     """Pick the best-supported role rather than the first one that matches.
@@ -205,7 +159,6 @@ def map_to_role(title: str, description: str | None = None) -> str:
         return _fallback(t)
 
     return best
-
 
 def resolve_role(title: str, description: str | None = None, stored: str | None = None) -> str:
     """Trust the role written at scrape time, except when it is Unclassified.

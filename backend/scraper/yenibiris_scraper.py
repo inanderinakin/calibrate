@@ -29,16 +29,11 @@ from bs4 import BeautifulSoup
 
 from relevance import is_cs_relevant, is_duplicate_posting, load_dedup_index, register_posting
 
-# Windows consoles default to a codepage (e.g. cp1254) that can't encode the
-# Turkish characters / arrows in our prints — force UTF-8 so it doesn't crash.
 sys.stdout.reconfigure(encoding="utf-8", line_buffering=True)
 sys.stderr.reconfigure(encoding="utf-8", line_buffering=True)
 
 BASE = "https://www.yenibiris.com"
 
-# ── Search sources ────────────────────────────────────────────────────────────
-# (label, keyword). main() walks &sayfa=2, &sayfa=3... for each until a page
-# returns no new cards. Keywords mirror the CS/IT coverage of the kariyer list.
 SOURCES = [
     ("kw:yazılım",             "yazılım"),
     ("kw:yazılım geliştirici", "yazılım geliştirici"),
@@ -74,17 +69,8 @@ SOURCES = [
     ("kw:erp uzmanı",          "erp uzmanı"),
     ("kw:sap danışmanı",       "sap danışmanı"),
     ("kw:bilgi teknolojileri", "bilgi teknolojileri"),
-    # NOTE: bare short keywords like "it", "sap", "erp", "veri", "qa" were
-    # removed — yenibiris does SUBSTRING matching, so "it" matches "eğitim",
-    # "sap" matches "hesap", "veri" matches "üniversite"/"çeviri", flooding the
-    # results with education/hospitality/sales roles. The is_cs_relevant() gate
-    # below is the real safety net, but specific keywords keep noise low.
 ]
 
-# All three scrapers (kariyer, secretcv, yenibiris) now write into the SAME
-# postings.jsonl — a "source" field on each posting tells them apart, and
-# lets the (still-to-come) cross-source dedup pass match the same real-world
-# posting scraped from different sites.
 _HERE = os.path.dirname(os.path.abspath(__file__))
 SOURCE_NAME = "yenibiris"
 OUTPUT_FILE = os.path.join(_HERE, "postings.jsonl")
@@ -95,7 +81,6 @@ S3_BUCKET = "calibrate-teamthrow"
 S3_POSTINGS_KEY = "scraper-data/postings.jsonl"
 S3_FAILED_LOG_KEY = "scraper-data/failed_pages_yenibiris.log"
 
-
 def sync_from_s3():
     """Pull down last run's postings before scraping, so seen_ids reflects
     everything collected so far instead of starting from zero."""
@@ -105,7 +90,6 @@ def sync_from_s3():
         print(f"Downloaded existing postings from s3://{S3_BUCKET}/{S3_POSTINGS_KEY}")
     except Exception as e:
         print(f"No existing postings in S3 (or download failed): {e}")
-
 
 def sync_to_s3():
     """Upload postings and the failed-page log after a run, then delete the
@@ -133,20 +117,15 @@ HEADERS = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
 }
 
-
 def build_page_url(keyword: str, page_num: int) -> str:
     url = f"{BASE}/is-ilanlari?q={quote(keyword)}"
     if page_num > 1:
         url += f"&sayfa={page_num}"
     return url
 
-
 def log_failed_page(url: str, reason: str):
     with open(FAILED_LOG_FILE, "a", encoding="utf-8") as f:
         f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')}\t{reason}\t{url}\n")
-
-
-# ── HTTP with light retry ─────────────────────────────────────────────────────
 
 def fetch(url: str, session: requests.Session, retries: int = 3) -> str | None:
     for attempt in range(1, retries + 1):
@@ -160,9 +139,6 @@ def fetch(url: str, session: requests.Session, retries: int = 3) -> str | None:
         time.sleep(random.uniform(1.5, 3.0) * attempt)
     log_failed_page(url, "fetch failed after retries")
     return None
-
-
-# ── Listing scraper: collect posting cards from a search results page ─────────
 
 def collect_cards(keyword: str, page_num: int, session: requests.Session) -> list[dict]:
     url = build_page_url(keyword, page_num)
@@ -204,7 +180,7 @@ def collect_cards(keyword: str, page_num: int, session: requests.Session) -> lis
             "city":          city,
             "country":       "Türkiye",
             "company_id":    None,
-            "sector":        None,       # filled from the detail page
+            "sector":        None,
             "work_type":     None,
             "work_model":    None,
             "job_status":    None,
@@ -215,10 +191,6 @@ def collect_cards(keyword: str, page_num: int, session: requests.Session) -> lis
     print(f"  → {len(cards_data)} cards on page {page_num}")
     return cards_data
 
-
-# ── Single posting scraper ────────────────────────────────────────────────────
-
-# Map yenibiris criteria labels → the fields kariyer produced.
 def _collect_criteria(soup: BeautifulSoup) -> dict:
     """Return {label: value} for every real criteria row, skipping the consent
     checkbox rows that share the same ul.list-unstyled markup."""
@@ -242,7 +214,6 @@ def _collect_criteria(soup: BeautifulSoup) -> dict:
         if value:
             pairs[key] = value
     return pairs
-
 
 def scrape_posting(url: str, session: requests.Session) -> dict | None:
     html = fetch(url, session)
@@ -282,21 +253,18 @@ def scrape_posting(url: str, session: requests.Session) -> dict | None:
     posting["position_level"]   = position_level
     posting["experience_level"] = crit.get("Tecrübe") or crit.get("Deneyim")
     posting["department"]       = department
-    posting["application_count"] = None      # not exposed by yenibiris
+    posting["application_count"] = None
     posting["work_model"]       = work_model
 
-    # yenibiris exposes an update date and a closing date, but no publish date.
     posting["date_posted"]  = crit.get("Yayınlanma Tarihi") or crit.get("Güncelleme Tarihi")
     posting["closing_date"] = crit.get("Son Başvuru Tarihi")
     posting["is_active"]    = True
 
-    # features: mirror kariyer's short tag list (work model, work type, level, dept)
     features = [v for v in (work_model, work_type, position_level, department) if v]
     posting["features"] = features
 
     desc = soup.select_one("#adTemplateDiv")
     if desc:
-        # drop the lazy-loaded template image so description_text is clean text
         for img in desc.find_all("img"):
             img.decompose()
         posting["description_text"] = desc.get_text(separator="\n", strip=True)
@@ -310,7 +278,6 @@ def scrape_posting(url: str, session: requests.Session) -> dict | None:
     if education:
         posting["candidate_criteria"]["education"] = education
 
-    # card-level metadata fields (mirror kariyer schema)
     posting["city"]       = (posting["location"].split(" - ")[0].strip()
                              if posting["location"] else None)
     posting["country"]    = "Türkiye"
@@ -324,9 +291,6 @@ def scrape_posting(url: str, session: requests.Session) -> dict | None:
     posting["job_status"] = None
 
     return posting
-
-
-# ── Helpers ───────────────────────────────────────────────────────────────────
 
 def load_seen_ids(output_file: str) -> set:
     """Load this scraper's already-scraped posting IDs. The file is shared
@@ -346,14 +310,10 @@ def load_seen_ids(output_file: str) -> set:
         pass
     return seen
 
-
 def save_posting(posting: dict):
     posting["source"] = SOURCE_NAME
     with open(OUTPUT_FILE, "a", encoding="utf-8") as f:
         f.write(json.dumps(posting, ensure_ascii=False) + "\n")
-
-
-# ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
     sync_from_s3()
@@ -378,7 +338,6 @@ def main():
             print(f"  New (not yet scraped): {len(new_cards)}")
 
             if not new_cards:
-                # Whole page already known — likely deep into old results.
                 print("  Page fully seen — moving to next source.")
                 break
 
@@ -390,13 +349,11 @@ def main():
                     if posting is None:
                         print(f"  [{i}/{len(new_cards)}] SKIPPED (fetch/parse): {card['url']}")
                         continue
-                    # Merge any card-level fields the detail page didn't set.
                     for k, v in card.items():
                         if k.startswith("_"):
                             continue
                         if posting.get(k) in (None, "") and v not in (None, ""):
                             posting[k] = v
-                    # Relevance gate: skip non-CS/IT postings entirely.
                     if not is_cs_relevant(posting):
                         seen_ids.add(card["id"])
                         total_skipped += 1
@@ -420,7 +377,6 @@ def main():
 
     sync_to_s3()
     print(f"\nDone. Saved {total_saved} CS/IT postings, skipped {total_skipped} irrelevant.")
-
 
 if __name__ == "__main__":
     main()
