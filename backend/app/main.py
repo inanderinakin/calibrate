@@ -88,18 +88,31 @@ async def root():
     return {"message": "Hello World"}
 
 @app.get("/me")
-async def read_current_user(user_id: Annotated[str, Depends(verify_token_dependency)]):
+async def read_current_user(claims: Annotated[dict, Depends(verify_claims_dependency)]):
     # A valid signature is not the same thing as a live account. Cognito cannot recall an
     # id token it has already handed out, so after admin_delete_user the deleted user's
     # token stays verifiable until it expires, up to an hour on the default validity. That
-    # left a signed-out-everywhere account still signed in on any other device it was open
-    # on. This is the endpoint the client checks on load, so it is the one that has to ask
-    # Cognito whether the user is still there.
+    # left an account deleted on one machine still signed in on every other one. This is
+    # the endpoint the client checks on load, so it is the one that asks Cognito whether
+    # the account is still there.
+    user_id = claims.get("sub")
+
+    # The admin APIs want the pool username. That is only the same string as `sub` for an
+    # account created here; a Google user's username is `google_<id>`, and looking that
+    # one up by sub answers UserNotFound, which would sign every federated user straight
+    # back out in a loop. The verified token already carries the right value.
+    username = claims.get("cognito:username")
+
+    if not username:
+        # Nothing dependable to look up. Leave the session alone: failing open costs us
+        # the deletion window, failing closed would lock out people who did nothing wrong.
+        return {"user_id": user_id}
+
     try:
         user = await run_in_threadpool(
             cognito_client.admin_get_user,
             UserPoolId = os.getenv('USER_POOL'),
-            Username = user_id,
+            Username = username,
         )
     except cognito_client.exceptions.UserNotFoundException:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Your session is no longer valid. Please sign in again")
