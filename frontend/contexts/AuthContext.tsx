@@ -9,6 +9,7 @@ import {
 } from "react";
 import { tokens } from "@/lib/tokens";
 import { fetchAccountName } from "@/lib/accountName";
+import { checkSession, isPublicPath } from "@/lib/verifySession";
 
 export interface AuthUser {
   firstName: string;
@@ -66,8 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
-  // Rehydrate on load. Replace this block with a real session/token check
-  // once the backend exists (e.g. call /api/me and setUser from the response).
+  // Rehydrate from storage first so the app paints without waiting on the network.
   useEffect(() => {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (raw) {
@@ -79,6 +79,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setHydrated(true);
   }, []);
+
+  // Storage only says somebody signed in here once, and it survives the account being
+  // deleted from another device. Only a definite answer signs anyone out.
+  useEffect(() => {
+    if (!hydrated) return;
+    if (!window.localStorage.getItem(STORAGE_KEY) && !tokens.getIdToken()) return;
+
+    let cancelled = false;
+
+    checkSession().then((state) => {
+      if (cancelled || state !== "dead") return;
+
+      tokens.clear();
+      window.localStorage.removeItem(STORAGE_KEY);
+      setUser(null);
+
+      if (!isPublicPath(window.location.pathname)) {
+        window.location.assign("/login");
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hydrated]);
 
   // The stored name belongs to whichever device last wrote it. One request per page
   // load, and only a real answer changes anything.

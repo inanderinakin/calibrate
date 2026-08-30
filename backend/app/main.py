@@ -88,7 +88,30 @@ async def root():
     return {"message": "Hello World"}
 
 @app.get("/me")
-def read_current_user(user_id: Annotated[str, Depends(verify_token_dependency)]):
+async def read_current_user(claims: Annotated[dict, Depends(verify_claims_dependency)]):
+    user_id = claims.get("sub")
+
+    # admin APIs want the pool username, which is not the sub for a federated user.
+    username = claims.get("cognito:username")
+
+    if not username:
+        return {"user_id": user_id}
+
+    try:
+        user = await run_in_threadpool(
+            cognito_client.admin_get_user,
+            UserPoolId = os.getenv('USER_POOL'),
+            Username = username,
+        )
+    except cognito_client.exceptions.UserNotFoundException:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Your session is no longer valid. Please sign in again")
+    except ClientError as err:
+        print(f"Could not confirm the account still exists: {err}")
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="We could not confirm your session right now")
+
+    if not user.get("Enabled", True):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Your session is no longer valid. Please sign in again")
+
     return {"user_id": user_id}
 
 @app.post("/profile")
