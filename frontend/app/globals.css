@@ -121,11 +121,8 @@
   BACKGROUND ASSETS. See /public/bg/README.md.
   light-picture / dark-picture are not in the repo yet.
 
-  The page and sidebar backgrounds used to be three 3360x5716 PNGs. Every pixel in
-  all three was a single flat colour, so they are plain colours here now: white-bg
-  was #bdd8e9, blue-bg and burgundy-bg were both #001d39. Identical output, minus
-  two 19-megapixel decodes (~77MB of RGBA each) sitting behind every backdrop-filter
-  on the page, which is what made these screens crawl on Windows.
+  The page and sidebar were three 3360x5716 PNGs of a single flat colour each. See
+  the README before turning them back into images.
 */
 .page-texture {
   background-color: var(--bg-texture);
@@ -183,11 +180,7 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .animate-indeterminate {
-    /* Not `animation: none`. This bar is the only sign that an upload or an analysis
-       is still running, and stopping it also snapped it to the full width, so it read
-       as finished, or as broken. Reduce motion asks us to stop moving things across
-       the screen, not to stop telling people the page is working, and an opacity
-       pulse is the accepted substitute. */
+    /* Not `animation: none`: a frozen full-width bar reads as finished, or broken. */
     animation: indeterminate-pulse 1.6s ease-in-out infinite;
     width: 100%;
   }
@@ -245,25 +238,10 @@ body {
 }
 
 /*
-  THE APP SHELL PAYS NO BACKDROP-FILTER COST.
-
-  Everything under `.page-texture` sits on a single flat colour (--bg-texture), and
-  blurring a uniform colour returns that same colour, so the blur on these surfaces
-  was invisible work: a backdrop snapshot, a render surface and a two-pass blur per
-  card, re-run whenever anything above them moved. That is what held the dashboard,
-  roadmap and settings screens at ~10fps on Windows, where backdrop-filter is done by
-  Chrome's own compositor rather than handed to the OS the way macOS does it.
-
-  These are the exact colours the old stack resolved to, sampled out of a Chrome
-  screenshot of the real stack rather than worked out on paper. Inputs are measured
-  nested inside a card, which is where every input in the app shell sits, and that
-  nesting is why the value is not the one the arithmetic predicts: a backdrop-filter
-  parent is a backdrop root, so the input was sampling the card's own layer rather
-  than the page through it. Same pixels, none of the work.
-
-  Deliberately scoped: outside the app shell the landing and auth pages are meant to
-  sit on a photo (--landing-texture), and there the blur genuinely shows, so those
-  keep the real thing.
+  The app shell sits on a flat colour, so the blur was invisible work and cost the
+  Windows framerate. These are the colours it resolved to, measured off a Chrome
+  screenshot; the input value is measured nested in a card, where they all sit.
+  Left in place outside the shell, where a photo can sit behind the glass.
 */
 .page-texture .glass,
 .page-texture .glass-card,
@@ -344,12 +322,8 @@ input.glass-input:-webkit-autofill:active {
   transforms; plain buttons get this. `.btn-hover` applies the same treatment to
   links styled as buttons.
 
-  Transform only, deliberately. This used to also animate `filter: brightness(1.06)`
-  and skew by -4deg, and both were costly on every button sitting on a `.glass-card`:
-  a filter on a child invalidates the backdrop-filter underneath it, so one hover
-  re-ran the whole blur pass, and a skew is a non-axis-aligned transform, which drops
-  Windows text off ClearType and re-rasterises every glyph in the button. The lift and
-  the press carry the affordance on their own.
+  Transform only: the old brightness filter re-ran the blur underneath it, and the
+  skew re-rasterised the button text on Windows.
 */
 button:not(:disabled) {
   transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -361,10 +335,8 @@ button:not(:disabled) {
   select tilting away under the cursor reads as a glitch rather than a
   response, which is why this never showed while they were native <select>s.
 
-  The exclusion sits inside :where() so it costs no specificity. Spelled out
-  directly it put these rules at (0,4,1), which outranks the reduced-motion
-  override further down at (0,2,1), and the lift then kept running for anyone
-  who had asked for no motion.
+  :where() keeps the exclusion at zero specificity, so the reduced-motion override
+  below still wins.
 */
 button:not(:disabled):where(:not([role="combobox"]):not([aria-haspopup="listbox"])):hover {
   transform: translateY(-2px);
@@ -487,8 +459,7 @@ button:not(:disabled):where(:not([role="combobox"]):not([aria-haspopup="listbox"
   22%          { transform: translateY(-0.32em); }
 }
 
-/* Same swap for the dots: they fade in turn instead of hopping. The nth-child
-   delays are declared outside the query, so the stagger carries over unchanged. */
+/* Dots fade in turn instead of hopping; the nth-child delays still apply. */
 @keyframes t-dot-fade {
   0%,
   45%,
