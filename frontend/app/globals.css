@@ -272,39 +272,40 @@ input.glass-input:-webkit-autofill:active {
 }
 
 /*
-  HOVER ANIMATION FOR ALL BUTTONS: lifts + brightens on hover and
-  presses on active, in both light and dark mode. framer-motion buttons
-  keep their own inline whileHover transforms; plain buttons get this.
-  `.btn-hover` applies the same treatment to links styled as buttons.
+  HOVER ANIMATION FOR ALL BUTTONS: lifts on hover and presses on active, in both
+  light and dark mode. framer-motion buttons keep their own inline whileHover
+  transforms; plain buttons get this. `.btn-hover` applies the same treatment to
+  links styled as buttons.
+
+  Transform only, deliberately. This used to also animate `filter: brightness(1.06)`
+  and skew by -4deg, and both were costly on every button sitting on a `.glass-card`:
+  a filter on a child invalidates the backdrop-filter underneath it, so one hover
+  re-ran the whole blur pass, and a skew is a non-axis-aligned transform, which drops
+  Windows text off ClearType and re-rasterises every glyph in the button. The lift and
+  the press carry the affordance on their own.
 */
 button:not(:disabled) {
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
-    filter 0.2s ease,
-    box-shadow 0.2s ease;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 button:not(:disabled):hover {
-  transform: translateY(-2px) skewX(-4deg);
-  filter: brightness(1.06);
+  transform: translateY(-2px);
 }
 
 button:not(:disabled):active {
-  transform: translateY(0) scale(0.96) skewX(0deg);
+  transform: translateY(0) scale(0.96);
 }
 
 .btn-hover {
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
-    filter 0.2s ease,
-    box-shadow 0.2s ease;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .btn-hover:hover {
-  transform: translateY(-2px) skewX(-4deg);
-  filter: brightness(1.06);
+  transform: translateY(-2px);
 }
 
 .btn-hover:active {
-  transform: translateY(0) scale(0.96) skewX(0deg);
+  transform: translateY(0) scale(0.96);
 }
 
 /*
