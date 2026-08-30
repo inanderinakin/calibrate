@@ -65,6 +65,7 @@ hand in the console.
 **Prerequisites**
 
 - Python 3.13 and [Bun](https://bun.sh)
+- The [AWS CLI][d8] and the [AWS SAM CLI][d9], used in steps 3 and 4
 - An AWS account, and credentials for an IAM user with access to CloudFormation,
   Lambda, Cognito, DynamoDB, S3, Textract, Bedrock and SES
 - Docker running, for `sam build --use-container`
@@ -104,9 +105,6 @@ sam build --use-container
 sam deploy --guided
 ```
 
-`--guided` prompts for the three template parameters (`GoogleClientId`,
-`GoogleClientSecret`, `ContactEmail`) and saves them to `samconfig.toml`, so later
-deploys are just `sam deploy`. When it finishes it prints the stack outputs.
 
 **4. Fill in the rest of `backend/.env` from that output**
 
@@ -127,9 +125,6 @@ aws cloudformation describe-stack-resources --stack-name calibrate-sam \
 | `USER_TABLE` | the DynamoDB table's physical id, second command |
 | `CONTACT_EMAIL` | whichever inbox you want contact-page mail delivered to |
 
-The API will not start without `USER_TABLE`: `storage.py` builds the DynamoDB
-handle at import, so a missing value fails with
-`ValueError: Required parameter name not set`.
 
 **5. Point the frontend at it**
 
@@ -143,8 +138,6 @@ NEXT_PUBLIC_COGNITO_DOMAIN=""
 NEXT_PUBLIC_APP_CLIENT_ID=""
 ```
 
-These reach the browser, so they are not secrets, but point them at your own pool:
-signing up against someone else's creates real accounts in it.
 
 **6. Run both halves**
 
@@ -163,6 +156,8 @@ Reference: [`sam deploy`][d1], [`describe-stacks`][d2],
 [d5]: https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html
 [d6]: https://docs.aws.amazon.com/ses/latest/dg/creating-identities.html
 [d7]: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html
+[d8]: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
+[d9]: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html
 
 Tests and deployment detail are in [backend/README.md](backend/README.md) and
 [frontend/README.md](frontend/README.md).
