@@ -239,10 +239,12 @@ body {
   roadmap and settings screens at ~10fps on Windows, where backdrop-filter is done by
   Chrome's own compositor rather than handed to the OS the way macOS does it.
 
-  These are the exact colours the old stack resolved to: --bg-texture, saturated by
-  the amount that surface asked for, with its translucent white composited on top.
-  Same pixels, none of the work. Inputs use the value computed over the card colour,
-  since every input in the app shell sits inside a `.glass-card`.
+  These are the exact colours the old stack resolved to, sampled out of a Chrome
+  screenshot of the real stack rather than worked out on paper. Inputs are measured
+  nested inside a card, which is where every input in the app shell sits, and that
+  nesting is why the value is not the one the arithmetic predicts: a backdrop-filter
+  parent is a backdrop root, so the input was sampling the card's own layer rather
+  than the page through it. Same pixels, none of the work.
 
   Deliberately scoped: outside the app shell the landing and auth pages are meant to
   sit on a photo (--landing-texture), and there the blur genuinely shows, so those
@@ -256,15 +258,15 @@ body {
 }
 
 .page-texture .glass {
-  background: #bfdff4;
+  background: #bfe0f4;
 }
 
 .page-texture .glass-card {
-  background: #d8edf9;
+  background: #d9edfa;
 }
 
 .page-texture .glass-input {
-  background: #f8fcff;
+  background: #fcfeff;
 }
 
 .dark .page-texture .glass {
@@ -272,7 +274,7 @@ body {
 }
 
 .dark .page-texture .glass-card {
-  background: #1a355b;
+  background: #1a365c;
 }
 
 .dark .page-texture .glass-input {
