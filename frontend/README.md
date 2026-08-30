@@ -23,8 +23,8 @@ Create `frontend/.env.local`:
 
 ```
 NEXT_PUBLIC_API_URL="http://127.0.0.1:8000"
-NEXT_PUBLIC_COGNITO_DOMAIN="https://calibrate-auth.auth.eu-central-1.amazoncognito.com"
-NEXT_PUBLIC_APP_CLIENT_ID="ar9ujl2ru4lvcoe4g5gblq507"
+NEXT_PUBLIC_COGNITO_DOMAIN=""
+NEXT_PUBLIC_APP_CLIENT_ID=""
 ```
 
 In production the same three are set in the Amplify console, with the API URL

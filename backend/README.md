@@ -25,7 +25,28 @@ AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
 AWS_REGION=eu-central-1
 AWS_DEFAULT_REGION=eu-central-1
+
+USER_TABLE=
+USER_POOL=
+APP_CLIENT=
+CONTACT_EMAIL=
 ```
+
+The bottom four name your own AWS resources, so they are per-deployment rather than
+shared here. After `sam deploy`, read them back out of the stack:
+
+```bash
+aws cloudformation describe-stacks --stack-name calibrate-sam \
+  --query "Stacks[0].Outputs[?OutputKey=='UserPoolId'||OutputKey=='AppClientId'||OutputKey=='HostedUiDomain']"
+aws cloudformation describe-stack-resources --stack-name calibrate-sam \
+  --query "StackResources[?ResourceType=='AWS::DynamoDB::Table'].PhysicalResourceId"
+```
+
+`CONTACT_EMAIL` is whichever inbox you want contact-page messages delivered to.
+
+The API will not start without `USER_TABLE`: `storage.py` builds the DynamoDB table
+handle at import, so a missing value fails with
+`ValueError: Required parameter name not set`.
 
 ## Run the API
 

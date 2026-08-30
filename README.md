@@ -88,15 +88,42 @@ AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
 AWS_REGION=eu-central-1
 AWS_DEFAULT_REGION=eu-central-1
+
+USER_TABLE=
+USER_POOL=
+APP_CLIENT=
+CONTACT_EMAIL=
 ```
+
+The bottom four name your own AWS resources, so they are per-deployment rather than
+shared here. After `sam deploy`, read them back out of the stack:
+
+```bash
+aws cloudformation describe-stacks --stack-name calibrate-sam \
+  --query "Stacks[0].Outputs[?OutputKey=='UserPoolId'||OutputKey=='AppClientId'||OutputKey=='HostedUiDomain']"
+aws cloudformation describe-stack-resources --stack-name calibrate-sam \
+  --query "StackResources[?ResourceType=='AWS::DynamoDB::Table'].PhysicalResourceId"
+```
+
+`CONTACT_EMAIL` is whichever inbox you want contact-page messages delivered to.
+
+The API will not start without `USER_TABLE`: `storage.py` builds the DynamoDB table
+handle at import, so a missing value fails with
+`ValueError: Required parameter name not set`.
 
 And `frontend/.env.local`:
 
 ```
 NEXT_PUBLIC_API_URL="http://127.0.0.1:8000"
-NEXT_PUBLIC_COGNITO_DOMAIN="https://calibrate-auth.auth.eu-central-1.amazoncognito.com"
-NEXT_PUBLIC_APP_CLIENT_ID="ar9ujl2ru4lvcoe4g5gblq507"
+NEXT_PUBLIC_COGNITO_DOMAIN=""
+NEXT_PUBLIC_APP_CLIENT_ID=""
 ```
+
+These two are compiled into the browser bundle, so they are not secrets: a Cognito
+SPA client has no client secret. Point them at your own pool regardless, because
+signing up against someone else's creates real accounts in it.
+
+`backend/.env.example` and `frontend/.env.example` are checked in as templates.
 
 Running the tests and deploying are covered in
 [backend/README.md](backend/README.md) and
