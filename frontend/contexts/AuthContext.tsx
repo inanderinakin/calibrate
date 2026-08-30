@@ -8,6 +8,7 @@ import {
   ReactNode,
 } from "react";
 import { tokens } from "@/lib/tokens";
+import { checkSession, isPublicPath } from "@/lib/verifySession";
 
 export interface AuthUser {
   firstName: string;
@@ -65,8 +66,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
-  // Rehydrate on load. Replace this block with a real session/token check
-  // once the backend exists (e.g. call /api/me and setUser from the response).
+  // Rehydrate from storage first so the app paints straight away, then confirm the
+  // session with the backend. Waiting for the network before the first render would
+  // hold every page on a blank screen for the length of a round trip.
   useEffect(() => {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (raw) {
@@ -78,6 +80,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setHydrated(true);
   }, []);
+
+  // What localStorage says is only ever a claim. It survives anything that happens to
+  // the account somewhere else, so deleting an account on one machine used to leave it
+  // signed in on every other one until its token aged out, up to an hour later. This
+  // asks the backend once per load, and only a definite answer signs anybody out.
+  useEffect(() => {
+    if (!hydrated) return;
+    if (!window.localStorage.getItem(STORAGE_KEY) && !tokens.getIdToken()) return;
+
+    let cancelled = false;
+
+    checkSession().then((state) => {
+      if (cancelled || state !== "dead") return;
+
+      tokens.clear();
+      window.localStorage.removeItem(STORAGE_KEY);
+      setUser(null);
+
+      // Public pages just drop to their signed-out state. Anywhere else the page is
+      // showing something this session is no longer entitled to, so leave it.
+      if (!isPublicPath(window.location.pathname)) {
+        window.location.assign("/login");
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hydrated]);
 
   const persist = (next: AuthUser | null) => {
     setUser(next);
