@@ -16,6 +16,10 @@ pip install -r app/requirements.txt -r requirements-dev.txt
 
 Use 3.13 — Lambda runs 3.13 and Mangum breaks on 3.14.
 
+You also need the [AWS CLI][d8] and the [AWS SAM CLI][d9] for the environment
+lookups below and for [Deploy](#deploy), plus Docker running for
+`sam build --use-container`.
+
 ## Environment
 
 Copy `.env.example` to `.env` and fill it in:
@@ -54,10 +58,9 @@ The AWS references behind these: [`sam deploy`][d1], [`describe-stacks`][d2],
 [d3]: https://docs.aws.amazon.com/cli/latest/reference/cloudformation/describe-stack-resources.html
 [d4]: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/outputs-section-structure.html
 [d5]: https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html
+[d8]: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
+[d9]: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html
 
-The API will not start without `USER_TABLE`: `storage.py` builds the DynamoDB table
-handle at import, so a missing value fails with
-`ValueError: Required parameter name not set`.
 
 ## Run the API
 

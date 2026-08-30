@@ -19,13 +19,17 @@ The app needs the backend running. See `backend/README.md`, then point
 
 ## Environment
 
-Create `frontend/.env.local`:
+Copy `.env.example` to `frontend/.env.local` and fill it in:
 
 ```
 NEXT_PUBLIC_API_URL="http://127.0.0.1:8000"
 NEXT_PUBLIC_COGNITO_DOMAIN=""
 NEXT_PUBLIC_APP_CLIENT_ID=""
 ```
+
+`NEXT_PUBLIC_COGNITO_DOMAIN` is the `HostedUiDomain` stack output and
+`NEXT_PUBLIC_APP_CLIENT_ID` is `AppClientId`; `backend/README.md` has the command
+that prints them.
 
 In production the same three are set in the Amplify console, with the API URL
 pointing at the deployed Lambda.
