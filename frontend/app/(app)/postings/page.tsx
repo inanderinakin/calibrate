@@ -6,6 +6,7 @@ import { Icon } from "@/components/Icon";
 import { motion } from "framer-motion";
 import AppShell from "@/components/AppShell";
 import SearchableSelect from "@/components/SearchableSelect";
+import PlainSelect from "@/components/PlainSelect";
 import { Skeleton } from "@/components/Skeleton";
 import { getPostings } from "@/lib/api";
 import { session } from "@/lib/session";
@@ -205,19 +206,27 @@ export default function PostingsPage() {
           onSelect={(value) => addFilter(setSelectedRoles, value)}
         />
 
-        <Select value={city} onChange={setCity} label={t.allCities}>
-          {(data?.cities ?? []).map((option) => (
-            <option key={option} value={option}>
-              {option === "Türkiye" ? t.nationwide : option}
-            </option>
-          ))}
-        </Select>
+        <PlainSelect
+          id="city-filter"
+          value={city}
+          onChange={setCity}
+          placeholder={t.allCities}
+          options={(data?.cities ?? []).map((option) => ({
+            value: option,
+            label: option === "Türkiye" ? t.nationwide : option,
+          }))}
+        />
 
-        <Select value={workModel} onChange={setWorkModel} label={t.allModels}>
-          {MODELS.map((option) => (
-            <option key={option} value={option}>{t.models[option]}</option>
-          ))}
-        </Select>
+        <PlainSelect
+          id="model-filter"
+          value={workModel}
+          onChange={setWorkModel}
+          placeholder={t.allModels}
+          options={MODELS.map((option) => ({
+            value: option,
+            label: t.models[option],
+          }))}
+        />
 
         <SearchableSelect
           id="skill-filter"
@@ -228,10 +237,15 @@ export default function PostingsPage() {
         />
 
         <div className="ml-auto">
-          <Select value={sort} onChange={(value) => setSort(value as Sort)}>
-            <option value="newest">{t.sortNewest}</option>
-            <option value="closing">{t.sortClosing}</option>
-          </Select>
+          <PlainSelect
+            id="sort-filter"
+            value={sort}
+            onChange={(value) => setSort(value as Sort)}
+            options={[
+              { value: "newest", label: t.sortNewest },
+              { value: "closing", label: t.sortClosing },
+            ]}
+          />
         </div>
       </div>
 
@@ -414,40 +428,6 @@ export default function PostingsPage() {
   );
 }
 
-function Select({
-  value,
-  onChange,
-  label,
-  children,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  label?: string;
-  children: React.ReactNode;
-}) {
-  // appearance-none drops the arrow the OS draws, which is a double chevron on
-  // macOS and a single triangle elsewhere, and neither matches the one the
-  // searchable filters use. Drawing our own keeps the row consistent.
-  return (
-    <div className="relative inline-flex shrink-0">
-      <select
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        aria-label={label}
-        className="max-w-[170px] appearance-none truncate rounded-xl border border-[var(--accent)]/20 bg-transparent py-2.5 pl-3 pr-7 text-sm font-medium text-[var(--text-primary)] outline-none"
-      >
-        {label && <option value="">{label}</option>}
-        {children}
-      </select>
-
-      <Icon
-        icon="mdi:chevron-down"
-        aria-hidden
-        className="pointer-events-none absolute inset-y-0 right-2 my-auto h-4 w-4 text-[var(--text-muted)]"
-      />
-    </div>
-  );
-}
 
 function PageButton({
   onClick,

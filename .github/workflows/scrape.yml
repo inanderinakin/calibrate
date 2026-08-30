@@ -24,7 +24,7 @@ on:
         type: boolean
         default: true
   schedule:
-    - cron: "0 3 * * *"
+    - cron: "37 3 * * *"
 
 jobs:
   scrape:

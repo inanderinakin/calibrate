@@ -340,11 +340,22 @@ button:not(:disabled) {
   transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-button:not(:disabled):hover {
+/*
+  Dropdown triggers are excluded: they are a field you open, not an action
+  you press, and they sit in a row beside text inputs that do not move. A
+  select tilting away under the cursor reads as a glitch rather than a
+  response, which is why this never showed while they were native <select>s.
+
+  The exclusion sits inside :where() so it costs no specificity. Spelled out
+  directly it put these rules at (0,4,1), which outranks the reduced-motion
+  override further down at (0,2,1), and the lift then kept running for anyone
+  who had asked for no motion.
+*/
+button:not(:disabled):where(:not([role="combobox"]):not([aria-haspopup="listbox"])):hover {
   transform: translateY(-2px);
 }
 
-button:not(:disabled):active {
+button:not(:disabled):where(:not([role="combobox"]):not([aria-haspopup="listbox"])):active {
   transform: translateY(0) scale(0.96);
 }
 
