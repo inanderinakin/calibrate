@@ -229,6 +229,56 @@ body {
   background: var(--light-blue);
 }
 
+/*
+  THE APP SHELL PAYS NO BACKDROP-FILTER COST.
+
+  Everything under `.page-texture` sits on a single flat colour (--bg-texture), and
+  blurring a uniform colour returns that same colour, so the blur on these surfaces
+  was invisible work: a backdrop snapshot, a render surface and a two-pass blur per
+  card, re-run whenever anything above them moved. That is what held the dashboard,
+  roadmap and settings screens at ~10fps on Windows, where backdrop-filter is done by
+  Chrome's own compositor rather than handed to the OS the way macOS does it.
+
+  These are the exact colours the old stack resolved to: --bg-texture, saturated by
+  the amount that surface asked for, with its translucent white composited on top.
+  Same pixels, none of the work. Inputs use the value computed over the card colour,
+  since every input in the app shell sits inside a `.glass-card`.
+
+  Deliberately scoped: outside the app shell the landing and auth pages are meant to
+  sit on a photo (--landing-texture), and there the blur genuinely shows, so those
+  keep the real thing.
+*/
+.page-texture .glass,
+.page-texture .glass-card,
+.page-texture .glass-input {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.page-texture .glass {
+  background: #bfdff4;
+}
+
+.page-texture .glass-card {
+  background: #d8edf9;
+}
+
+.page-texture .glass-input {
+  background: #f8fcff;
+}
+
+.dark .page-texture .glass {
+  background: #1f3a5c;
+}
+
+.dark .page-texture .glass-card {
+  background: #1a355b;
+}
+
+.dark .page-texture .glass-input {
+  background: var(--light-blue);
+}
+
 /* keep the fields white in light mode (not blue) when the browser autofills */
 input.glass-input:-webkit-autofill,
 input.glass-input:-webkit-autofill:hover,
