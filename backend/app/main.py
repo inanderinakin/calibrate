@@ -89,23 +89,12 @@ async def root():
 
 @app.get("/me")
 async def read_current_user(claims: Annotated[dict, Depends(verify_claims_dependency)]):
-    # A valid signature is not the same thing as a live account. Cognito cannot recall an
-    # id token it has already handed out, so after admin_delete_user the deleted user's
-    # token stays verifiable until it expires, up to an hour on the default validity. That
-    # left an account deleted on one machine still signed in on every other one. This is
-    # the endpoint the client checks on load, so it is the one that asks Cognito whether
-    # the account is still there.
     user_id = claims.get("sub")
 
-    # The admin APIs want the pool username. That is only the same string as `sub` for an
-    # account created here; a Google user's username is `google_<id>`, and looking that
-    # one up by sub answers UserNotFound, which would sign every federated user straight
-    # back out in a loop. The verified token already carries the right value.
+    # admin APIs want the pool username, which is not the sub for a federated user.
     username = claims.get("cognito:username")
 
     if not username:
-        # Nothing dependable to look up. Leave the session alone: failing open costs us
-        # the deletion window, failing closed would lock out people who did nothing wrong.
         return {"user_id": user_id}
 
     try:
@@ -117,8 +106,6 @@ async def read_current_user(claims: Annotated[dict, Depends(verify_claims_depend
     except cognito_client.exceptions.UserNotFoundException:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Your session is no longer valid. Please sign in again")
     except ClientError as err:
-        # Anything else is our problem, not theirs. Signing people out because Cognito
-        # was briefly unreachable would be worse than letting the session stand.
         print(f"Could not confirm the account still exists: {err}")
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="We could not confirm your session right now")
 
