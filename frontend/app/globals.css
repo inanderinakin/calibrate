@@ -56,7 +56,7 @@
   --icon-color: var(--burgundy);
 
   --bg-texture: #bdd8e9;
-  --landing-texture: url("/bg/light-picture.png");
+  --landing-texture: #ffffff;
 
   --nav-active: var(--burgundy);
   --nav-active-bg: var(--creamy);
@@ -97,7 +97,7 @@
   --icon-color: var(--creamy);
 
   --bg-texture: #001d39;
-  --landing-texture: url("/bg/dark-picture.png");
+  --landing-texture: #0d1620;
 
   /* Selected nav item is a creamy pill in both modes. Light-blue text on the
      blue sidebar only came to 2.33:1, dimmer than the items you hadn't picked */
@@ -119,7 +119,9 @@
 
 /*
   BACKGROUND ASSETS. See /public/bg/README.md.
-  light-picture / dark-picture are not in the repo yet.
+  The landing pages are a flat colour: the picture they used to name was never added
+  to the repo, so every load fetched a 404. Swap the variable back to a url() to
+  restore a photograph.
 
   The page and sidebar were three 3360x5716 PNGs of a single flat colour each. See
   the README before turning them back into images.
@@ -131,10 +133,7 @@
   background-color: var(--sidebar-bg);
 }
 .landing-texture {
-  background-image: var(--landing-texture);
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  background-color: var(--landing-texture);
 }
 
 html,
