@@ -55,8 +55,7 @@
   --accent-text: var(--creamy);
   --icon-color: var(--burgundy);
 
-  --bg-texture: url("/bg/white-bg.png");
-  --sidebar-texture: url("/bg/burgundy-bg.png");
+  --bg-texture: #bdd8e9;
   --landing-texture: url("/bg/light-picture.png");
 
   --nav-active: var(--burgundy);
@@ -97,8 +96,7 @@
   --accent-text: var(--dark-blue);
   --icon-color: var(--creamy);
 
-  --bg-texture: url("/bg/blue-bg.png");
-  --sidebar-texture: none; /* dark sidebar is a flat #3C5E82 fill in the design, no texture */
+  --bg-texture: #001d39;
   --landing-texture: url("/bg/dark-picture.png");
 
   /* Selected nav item is a creamy pill in both modes. Light-blue text on the
@@ -121,21 +119,19 @@
 
 /*
   BACKGROUND ASSETS. See /public/bg/README.md.
-  The 3 files (white-bg.png, blue-bg.png, burgundy-bg.png) are saved there.
   light-picture / dark-picture are not in the repo yet.
+
+  The page and sidebar backgrounds used to be three 3360x5716 PNGs. Every pixel in
+  all three was a single flat colour, so they are plain colours here now: white-bg
+  was #bdd8e9, blue-bg and burgundy-bg were both #001d39. Identical output, minus
+  two 19-megapixel decodes (~77MB of RGBA each) sitting behind every backdrop-filter
+  on the page, which is what made these screens crawl on Windows.
 */
 .page-texture {
-  background-image: var(--bg-texture);
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  background-color: var(--bg-texture);
 }
 .sidebar-texture {
-  background-image: var(--sidebar-texture);
   background-color: var(--sidebar-bg);
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
 }
 .landing-texture {
   background-image: var(--landing-texture);
@@ -233,6 +229,58 @@ body {
   background: var(--light-blue);
 }
 
+/*
+  THE APP SHELL PAYS NO BACKDROP-FILTER COST.
+
+  Everything under `.page-texture` sits on a single flat colour (--bg-texture), and
+  blurring a uniform colour returns that same colour, so the blur on these surfaces
+  was invisible work: a backdrop snapshot, a render surface and a two-pass blur per
+  card, re-run whenever anything above them moved. That is what held the dashboard,
+  roadmap and settings screens at ~10fps on Windows, where backdrop-filter is done by
+  Chrome's own compositor rather than handed to the OS the way macOS does it.
+
+  These are the exact colours the old stack resolved to, sampled out of a Chrome
+  screenshot of the real stack rather than worked out on paper. Inputs are measured
+  nested inside a card, which is where every input in the app shell sits, and that
+  nesting is why the value is not the one the arithmetic predicts: a backdrop-filter
+  parent is a backdrop root, so the input was sampling the card's own layer rather
+  than the page through it. Same pixels, none of the work.
+
+  Deliberately scoped: outside the app shell the landing and auth pages are meant to
+  sit on a photo (--landing-texture), and there the blur genuinely shows, so those
+  keep the real thing.
+*/
+.page-texture .glass,
+.page-texture .glass-card,
+.page-texture .glass-input {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.page-texture .glass {
+  background: #bfe0f4;
+}
+
+.page-texture .glass-card {
+  background: #d9edfa;
+}
+
+.page-texture .glass-input {
+  background: #fcfeff;
+}
+
+.dark .page-texture .glass {
+  background: #1f3a5c;
+}
+
+.dark .page-texture .glass-card {
+  background: #1a365c;
+}
+
+.dark .page-texture .glass-input {
+  background: var(--light-blue);
+}
+
 /* keep the fields white in light mode (not blue) when the browser autofills */
 input.glass-input:-webkit-autofill,
 input.glass-input:-webkit-autofill:hover,
@@ -276,15 +324,20 @@ input.glass-input:-webkit-autofill:active {
 }
 
 /*
-  HOVER ANIMATION FOR ALL BUTTONS: lifts + brightens on hover and
-  presses on active, in both light and dark mode. framer-motion buttons
-  keep their own inline whileHover transforms; plain buttons get this.
-  `.btn-hover` applies the same treatment to links styled as buttons.
+  HOVER ANIMATION FOR ALL BUTTONS: lifts on hover and presses on active, in both
+  light and dark mode. framer-motion buttons keep their own inline whileHover
+  transforms; plain buttons get this. `.btn-hover` applies the same treatment to
+  links styled as buttons.
+
+  Transform only, deliberately. This used to also animate `filter: brightness(1.06)`
+  and skew by -4deg, and both were costly on every button sitting on a `.glass-card`:
+  a filter on a child invalidates the backdrop-filter underneath it, so one hover
+  re-ran the whole blur pass, and a skew is a non-axis-aligned transform, which drops
+  Windows text off ClearType and re-rasterises every glyph in the button. The lift and
+  the press carry the affordance on their own.
 */
 button:not(:disabled) {
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
-    filter 0.2s ease,
-    box-shadow 0.2s ease;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /*
@@ -292,29 +345,30 @@ button:not(:disabled) {
   you press, and they sit in a row beside text inputs that do not move. A
   select tilting away under the cursor reads as a glitch rather than a
   response, which is why this never showed while they were native <select>s.
+
+  The exclusion sits inside :where() so it costs no specificity. Spelled out
+  directly it put these rules at (0,4,1), which outranks the reduced-motion
+  override further down at (0,2,1), and the lift then kept running for anyone
+  who had asked for no motion.
 */
-button:not(:disabled):not([role="combobox"]):not([aria-haspopup="listbox"]):hover {
-  transform: translateY(-2px) skewX(-4deg);
-  filter: brightness(1.06);
+button:not(:disabled):where(:not([role="combobox"]):not([aria-haspopup="listbox"])):hover {
+  transform: translateY(-2px);
 }
 
-button:not(:disabled):not([role="combobox"]):not([aria-haspopup="listbox"]):active {
-  transform: translateY(0) scale(0.96) skewX(0deg);
+button:not(:disabled):where(:not([role="combobox"]):not([aria-haspopup="listbox"])):active {
+  transform: translateY(0) scale(0.96);
 }
 
 .btn-hover {
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
-    filter 0.2s ease,
-    box-shadow 0.2s ease;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .btn-hover:hover {
-  transform: translateY(-2px) skewX(-4deg);
-  filter: brightness(1.06);
+  transform: translateY(-2px);
 }
 
 .btn-hover:active {
-  transform: translateY(0) scale(0.96) skewX(0deg);
+  transform: translateY(0) scale(0.96);
 }
 
 /*

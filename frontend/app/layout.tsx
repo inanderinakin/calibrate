@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import MotionPreferences from "@/components/MotionPreferences";
 
 // Hasköy, SIL OFL 1.1, licence in app/fonts/OFL.txt. One variable file covers the whole
 // 100-800 range and it carries the full Turkish set, which the interface needs on every
@@ -64,7 +65,9 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: applyPreferences }} />
         <ThemeProvider>
           <LanguageProvider>
-            <AuthProvider>{children}</AuthProvider>
+            <AuthProvider>
+              <MotionPreferences>{children}</MotionPreferences>
+            </AuthProvider>
           </LanguageProvider>
         </ThemeProvider>
       </body>
