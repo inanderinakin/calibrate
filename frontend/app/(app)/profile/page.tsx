@@ -89,7 +89,7 @@ export default function ProfilePage() {
                 <Icon icon="solar:calendar-outline" className="w-9 h-9 text-(--accent-bg) shrink-0" />
                 <div>
                   <p className="font-bold text-(--accent-bg)">{t.profile.joined}</p>
-                  {/* TODO: replace with real signup date once the backend exists */}
+                  {/* First sign-in on this device; Cognito's create date is not in the token. */}
                   <p className="text-(--accent-bg)">
                     {joinedDate ?? "-"}
                   </p>
