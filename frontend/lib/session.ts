@@ -1,5 +1,8 @@
 import type { Language } from "@/contexts/LanguageContext";
 import type { GapResult, NormalizedSkill, Report } from "./types";
+// Type only, so this is erased at compile time and does not create a runtime cycle
+// with lib/api, which imports this module.
+import type { SavedAnalysis } from "@/lib/api";
 
 const KEYS = {
   cvSkills: "calibrate:cv_skills",
@@ -13,6 +16,19 @@ const KEYS = {
   reportLanguage: "calibrate:report_language",
   focusSkills: "calibrate:focus_skills",
 } as const;
+
+/** The keys persistSession sends up, so the ones the account is the authority on. */
+const ACCOUNT_OWNED = [
+  KEYS.cvSkills,
+  KEYS.cvFilename,
+  KEYS.cvSize,
+  KEYS.cvType,
+  KEYS.cvUploadedAt,
+  KEYS.targetRoles,
+  KEYS.gaps,
+  KEYS.report,
+  KEYS.reportLanguage,
+] as const;
 
 function read<T>(key: string): T | null {
   if (typeof window === "undefined") return null;
@@ -79,5 +95,35 @@ export const session = {
   clear: () => {
     if (typeof window === "undefined") return;
     for (const key of Object.values(KEYS)) window.sessionStorage.removeItem(key);
+  },
+
+  /**
+   * Replace everything the account owns with what the account actually holds.
+   *
+   * The point is the removals. This tab keeps its own copy in sessionStorage, which
+   * survives a refresh, so a CV deleted on another device used to sit here untouched
+   * until the tab was closed. Anything absent from the account's copy is cleared here,
+   * which is what makes a deletion somewhere else land.
+   *
+   * `focusSkills` is deliberately left alone: it is this tab's working state and
+   * persistSession has never sent it, so treating the account as authoritative over it
+   * would throw it away on every load.
+   */
+  applyAccountCopy: (saved: SavedAnalysis | null) => {
+    if (typeof window === "undefined") return;
+
+    for (const key of ACCOUNT_OWNED) window.sessionStorage.removeItem(key);
+
+    if (!saved) return;
+
+    if (saved.cv_skills?.length) write(KEYS.cvSkills, saved.cv_skills);
+    if (saved.cv_filename) write(KEYS.cvFilename, saved.cv_filename);
+    if (saved.cv_size) write(KEYS.cvSize, saved.cv_size);
+    if (saved.cv_type) write(KEYS.cvType, saved.cv_type);
+    if (saved.cv_uploaded_at) write(KEYS.cvUploadedAt, saved.cv_uploaded_at);
+    if (saved.target_roles?.length) write(KEYS.targetRoles, saved.target_roles);
+    if (saved.gaps) write(KEYS.gaps, saved.gaps);
+    if (saved.report) write(KEYS.report, saved.report);
+    if (saved.report_language) write(KEYS.reportLanguage, saved.report_language);
   },
 };

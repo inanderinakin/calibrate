@@ -56,55 +56,77 @@ export function expectsAnalysis() {
 }
 
 /**
- * sessionStorage dies with the tab. When it is empty but the user is signed in,
- * pull their last analysis back out of their account before the page decides
- * there is nothing to show.
+ * Reconcile this tab's copy of the analysis with the account's.
+ *
+ * sessionStorage survives a refresh, so this used to return early whenever the tab
+ * already held something and never asked the account at all. That is what left a CV
+ * removed on one device still sitting on another: the account was updated, this tab
+ * simply never looked. Now it always asks, and the account wins.
+ *
+ * The return value is a revision, not a flag. Zero means there is nothing worth
+ * painting yet, so `if (!restored) return` still reads correctly, and it changes again
+ * once the account has answered, which re-runs the callers' effects against the
+ * corrected data. Painting from the local copy first keeps the fast first paint;
+ * blocking every load on a round trip would put a skeleton on all of these pages.
  */
+let reconciledThisLoad = false;
+
 export function useRestoreAnalysis() {
-  const [restored, setRestored] = useState(false);
+  const [revision, setRevision] = useState(0);
 
   useEffect(() => {
+    // Once per page load is enough. Moving between the app's pages is client-side, so
+    // this module stays alive and every tab switch would otherwise re-ask for the same
+    // answer. A refresh, which is what someone does when they expect to see a change
+    // made on another device, gets a fresh module and asks again.
+    if (reconciledThisLoad) {
+      setRevision((r) => r || 1);
+      return;
+    }
+
+    // Show what this tab already has straight away, before asking anyone.
     if (session.hasAnalysis()) {
       writeMarker(true);
-      setRestored(true);
-      return;
+      setRevision(1);
     }
 
     if (!tokens.getIdToken()) {
-      setRestored(true);
+      setRevision((r) => r || 1);
       return;
     }
 
-    async function restore() {
+    let cancelled = false;
+
+    async function reconcile() {
+      let saved;
+
       try {
-        const saved = await getAnalysis();
-
-        if (saved) {
-          if (saved.cv_skills?.length) session.setCvSkills(saved.cv_skills);
-          if (saved.cv_filename) session.setCvFilename(saved.cv_filename);
-          if (saved.cv_size) session.setCvSize(saved.cv_size);
-          if (saved.cv_type) session.setCvType(saved.cv_type);
-          if (saved.cv_uploaded_at) session.setCvUploadedAt(saved.cv_uploaded_at);
-          if (saved.target_roles?.length) session.setTargetRoles(saved.target_roles);
-          if (saved.gaps) session.setGaps(saved.gaps);
-          if (saved.report) session.setReport(saved.report);
-          if (saved.report_language) session.setReportLanguage(saved.report_language);
-        }
-
-        // The request answered, so we now know what this account holds.
-        writeMarker(session.hasAnalysis());
+        saved = await getAnalysis();
       }
       catch {
-        // The account is unreachable, so fall through to the page's own empty state.
-        // The marker is left alone on purpose: a failed request is not evidence that
-        // the account has nothing.
+        // The account is unreachable. Keep whatever this tab already had and leave the
+        // marker alone: a failed request is not evidence that the account is empty.
+        if (!cancelled) setRevision((r) => r || 1);
+        return;
       }
 
-      setRestored(true);
+      if (cancelled) return;
+
+      // Only now, so a failed request is retried on the next navigation rather than
+      // leaving the tab stale for as long as it stays open.
+      reconciledThisLoad = true;
+
+      session.applyAccountCopy(saved);
+      writeMarker(session.hasAnalysis());
+      setRevision((r) => r + 1);
     }
 
-    restore();
+    reconcile();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  return restored;
+  return revision;
 }
