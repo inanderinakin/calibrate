@@ -88,7 +88,30 @@ async def root():
     return {"message": "Hello World"}
 
 @app.get("/me")
-def read_current_user(user_id: Annotated[str, Depends(verify_token_dependency)]):
+async def read_current_user(user_id: Annotated[str, Depends(verify_token_dependency)]):
+    # A valid signature is not the same thing as a live account. Cognito cannot recall an
+    # id token it has already handed out, so after admin_delete_user the deleted user's
+    # token stays verifiable until it expires, up to an hour on the default validity. That
+    # left a signed-out-everywhere account still signed in on any other device it was open
+    # on. This is the endpoint the client checks on load, so it is the one that has to ask
+    # Cognito whether the user is still there.
+    try:
+        user = await run_in_threadpool(
+            cognito_client.admin_get_user,
+            UserPoolId = os.getenv('USER_POOL'),
+            Username = user_id,
+        )
+    except cognito_client.exceptions.UserNotFoundException:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Your session is no longer valid. Please sign in again")
+    except ClientError as err:
+        # Anything else is our problem, not theirs. Signing people out because Cognito
+        # was briefly unreachable would be worse than letting the session stand.
+        print(f"Could not confirm the account still exists: {err}")
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="We could not confirm your session right now")
+
+    if not user.get("Enabled", True):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Your session is no longer valid. Please sign in again")
+
     return {"user_id": user_id}
 
 @app.post("/profile")

@@ -49,6 +49,9 @@ Resources:
               Action:
                 - "cognito-idp:AdminUpdateUserAttributes"
                 - "cognito-idp:AdminDeleteUser"
+                # /me calls AdminGetUser to confirm the account behind a still-valid
+                # token has not been deleted or disabled since the token was issued.
+                - "cognito-idp:AdminGetUser"
               Resource:
                 - !GetAtt UserPool.Arn
 
