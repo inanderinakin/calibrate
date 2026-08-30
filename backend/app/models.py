@@ -23,9 +23,6 @@ class ResendCodeInfo(BaseModel):
 class ProfileInfo(BaseModel):
     first_name: str
     last_name: str
-    # Cognito holds the names. These two live in the user table instead: adding
-    # them as custom attributes means changing the pool schema, and that can
-    # replace the pool and take every account with it.
     country: str = ""
     study_field: str = ""
 
@@ -49,9 +46,6 @@ class Analysis(BaseModel):
     target_roles: list[str] = []
     gaps: "GapResult | None" = None
     report: "Report | None" = None
-    # The uploaded file itself is never kept, only what it was, so the upload page
-    # can show which CV is on file after sessionStorage is gone. All optional: the
-    # accounts that uploaded before these existed only have the name.
     cv_filename: str | None = None
     cv_size: int | None = None
     cv_type: str | None = None
@@ -67,7 +61,6 @@ class MatchData(BaseModel):
 class Gap(BaseModel): 
     skill: str
     esco_category: str
-    # the none = none makes this field optional (both buing null or not given at all)
     closest_cv_skill: str | None = None
     demand_percentage: float
     trend: Literal["Emerging", "Stable", "Fading"]
@@ -76,9 +69,6 @@ class GapResult(BaseModel):
     target_roles: list[str]
     gaps: dict[str, list[Gap]]
     matched_data: dict[str, MatchData]
-    # the demanded skills the CV already covers. None rather than {} so an analysis
-    # saved before this field existed stays distinguishable from one where a role
-    # genuinely matched nothing
     matched_skills: "dict[str, list[DemandedSkill]] | None" = None
 
 class NormalizedSkill(BaseModel):
@@ -135,28 +125,18 @@ class Posting(BaseModel):
 class SkillVerdict(BaseModel):
     skill: str
     supported: bool
-    # The words from the CV that back the skill up. Empty when nothing does.
     evidence: str = ""
 
 class SkillVerdicts(BaseModel):
     verdicts: list[SkillVerdict]
 
 class ProjectStep(BaseModel):
-    # The skills this step makes you put together. A project that consolidates two
-    # skills is worth more than two that each rehearse one.
     skills: list[str]
-    # It slots into the roadmap after the recommendation with this rank.
     after_rank: int
     title: str
-    # What to build, in a couple of sentences.
     brief: str
-    # The line the student has to be able to say is true before they call it done.
-    # It doubles as the "as measured by" clause of the CV bullet later.
     completion_goal: str
-    # Why this particular build cannot be finished without the skill. A project that
-    # merely mentions a skill proves nothing.
     forces: str
-    # Grounding: what the live board says about the skill.
     demand_note: str
 
 class ProjectSteps(BaseModel):
@@ -167,7 +147,6 @@ class CvBullet(BaseModel):
 
 class BulletRequest(BaseModel):
     step: ProjectStep
-    # Anything the student wants reflected: numbers they hit, what they actually used.
     notes: str = ""
     language: Literal["tr", "en"] = "en"
 

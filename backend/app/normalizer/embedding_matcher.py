@@ -18,7 +18,7 @@ MAX_ATTEMPTS = 5
 BACKOFF_SECONDS = 2
 PACE_SECONDS = 0.2
 
-# Swept against the gold set in experiments/eval/sweep_threshold.py. 0.66 is free:
+# Swept against a gold set during development. 0.66 is free:
 # it drops seven false positives without losing a single real skill. Above it the
 # trade starts -- 0.70 buys perfect precision for 3 of the 14 real skills.
 MATCH_THRESHOLD = 0.66
