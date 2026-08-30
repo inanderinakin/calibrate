@@ -64,7 +64,6 @@ def consent_record(version: str, locale: str):
         "locale": locale,
     }
 
-
 async def verify_token_dependency(credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)]):
     try:
         user_id = verify_token(credentials.credentials)
@@ -72,7 +71,6 @@ async def verify_token_dependency(credentials: Annotated[HTTPAuthorizationCreden
         print(f"Token rejected: {type(error).__name__}: {error}")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Your session is no longer valid. Please sign in again")
     return user_id
-
 
 async def verify_claims_dependency(credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)]):
     try:
@@ -82,7 +80,6 @@ async def verify_claims_dependency(credentials: Annotated[HTTPAuthorizationCrede
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Your session is no longer valid. Please sign in again")
     return claims
 
-
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
@@ -91,7 +88,6 @@ async def root():
 async def read_current_user(claims: Annotated[dict, Depends(verify_claims_dependency)]):
     user_id = claims.get("sub")
 
-    # admin APIs want the pool username, which is not the sub for a federated user.
     username = claims.get("cognito:username")
 
     if not username:
@@ -139,8 +135,6 @@ async def update_profile(profile: ProfileInfo, user_id: Annotated[str, Depends(v
     country = profile.country.strip()
     study_field = profile.study_field.strip()
 
-    # Saved here as well as on the Cognito user, so another device can read the current
-    # name without waiting for its own id token to be reissued.
     try:
         await run_in_threadpool(
             write_profile,
@@ -174,7 +168,6 @@ async def get_profile(user_id: Annotated[str, Depends(verify_token_dependency)])
     return {
         "country": saved.get("country", ""),
         "study_field": saved.get("study_field", ""),
-        # Empty when the profile was never saved here; the client falls back to its token.
         "first_name": saved.get("first_name", ""),
         "last_name": saved.get("last_name", ""),
     }
@@ -192,9 +185,6 @@ async def change_password(
     if len(change.new_password) < 8:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Your new password must be at least 8 characters")
 
-    # Signing in again is the verification: a wrong current password fails here,
-    # and a right one hands back the access token change_password needs. Google
-    # accounts have no password to sign in with, so they land in the same branch.
     try:
         signed_in = await run_in_threadpool(
             lambda: cognito_client.initiate_auth(
@@ -240,8 +230,6 @@ async def change_password(
 
 @app.delete("/account")
 async def delete_account(user_id: Annotated[str, Depends(verify_token_dependency)]):
-    # the saved data goes first: if the Cognito user went first and this failed,
-    # the row would be left behind with no way left to sign in and reach it.
     try:
         await run_in_threadpool(delete_user_data, user_id)
     except ClientError as err:
@@ -315,13 +303,7 @@ async def sign_up(signup_info: SignUpInfo):
     except ClientError as err:
         code = err.response["Error"]["Code"]
 
-        # Cognito creates the user on sign_up, before the code is confirmed. Someone who
-        # closed the tab on the verification screen owns an unconfirmed account they can
-        # neither confirm nor sign up again with, so send them a fresh code instead.
         if code == "UsernameExistsException":
-            # Resending only works on an unconfirmed account. A confirmed one throws
-            # here, which is exactly the case where the email really is taken, so the
-            # call doubles as the status check and needs no admin permission.
             try:
                 resent = cognito_client.resend_confirmation_code(
                     ClientId = os.getenv('APP_CLIENT'),
@@ -396,7 +378,6 @@ async def verify_email(verify_info: VerifyEmailInfo):
 
     return {"confirmed": True}
 
-
 @app.post("/forgot_password")
 async def forgot_password(info: ForgotPasswordInfo):
     try:
@@ -407,17 +388,12 @@ async def forgot_password(info: ForgotPasswordInfo):
     except ClientError as err:
         code = err.response["Error"]["Code"]
 
-        # Answering "no such account" would turn this form into a way of asking which
-        # addresses are registered, so an email we do not know gets the same reply as
-        # one we do and simply never receives a code.
         if code == "UserNotFoundException":
             return {"detail": None}
 
         if code == "NotAuthorizedException":
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="There is no password to reset on this account. If you signed up with Google, use the Google button to sign in")
 
-        # Cognito has nowhere to send the code until the address is verified, which for
-        # an account that never finished sign up means confirming it first.
         if code == "InvalidParameterException":
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="This account has not been confirmed yet. Please confirm it before resetting the password")
 
@@ -453,8 +429,6 @@ async def reset_password(reset: PasswordReset):
         if code in ("LimitExceededException", "TooManyFailedAttemptsException"):
             raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Too many attempts. Please try again later")
 
-        # An address with no account behind it fails here as well, and it gets the same
-        # answer as a wrong code for the same reason /forgot_password stays quiet about it.
         if code in ("CodeMismatchException", "UserNotFoundException", "NotAuthorizedException"):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="That code is not correct")
 
@@ -516,8 +490,6 @@ async def upload_cv(user_id: Annotated[str, Depends(verify_token_dependency)], f
     cv_dest = path / safe_name
 
     original_name = file.filename
-    # Taken from the same check that let the file through, not from content_type,
-    # which browsers sometimes report as application/octet-stream for a real PDF.
     cv_type = "PDF" if is_pdf else "DOCX"
 
     bucket = "calibrate-teamthrow"
@@ -557,11 +529,6 @@ async def upload_cv(user_id: Annotated[str, Depends(verify_token_dependency)], f
     normalized = normalize(candidates = candidates)
     joined_lines = "\n".join(lines)
 
-    # The keyword terms are the vocabulary the demand profile is written in, and
-    # compute_gaps compares names exactly, so when a skill arrives from both places
-    # the keyword name is the one to keep: a CV holding "Java (computer programming)"
-    # never matches a role demanding "Java", and the skill reads as a gap the person
-    # already filled. Deduping the other way round would have hidden that.
     skills = [
         NormalizedSkill(skill = term, esco_category = SKILL_CATEGORIES[term])
         for term, pattern in PATTERNS.items() if pattern.search(joined_lines)
@@ -575,11 +542,6 @@ async def upload_cv(user_id: Annotated[str, Depends(verify_token_dependency)], f
         skills.append(skill)
         covered.add(base_skill_name(skill.skill))
 
-    # Similarity is not the same thing as truth: a Turkish word fragment can score
-    # higher against an ESCO label than a real skill does. The verifier reads the CV
-    # and drops anything it cannot quote for. It only ever removes, so if it is
-    # unavailable the honest fallback is the unverified list -- a noisier CV beats a
-    # failed upload.
     try:
         skills, _ = await asyncio.wait_for(
             run_in_threadpool(verify_skills, skills, lines),
@@ -675,16 +637,11 @@ async def get_postings(
     if source:
         matches = [posting for posting in matches if posting["source"] == source]
     if skill:
-        # All of the picked skills, not any: a second skill is read as a further
-        # requirement, so the board narrows rather than widening.
         matches = [
             posting for posting in matches
             if all(name in posting["skills"] for name in skill)
         ]
 
-    # "Jobs I could apply to now": keep postings where the CV already covers
-    # enough of what they ask for, and tell the page how much of it is covered
-    # so a row can show "you have 4 of 5" instead of an unexplained badge.
     if my_skills:
         owned = {name.strip() for name in my_skills.split(",") if name.strip()}
         covered = []
@@ -698,12 +655,9 @@ async def get_postings(
                 covered.append({
                     **posting,
                     "matched_skills": len(have),
-                    # What stands between the CV and this posting. Empty means every
-                    # skill it asks for is already on the CV.
                     "missing_skills": [name for name in wanted if name not in owned],
                 })
 
-        # Ready to apply first, then the ones a skill or two away, nearest first.
         matches = sorted(covered, key=lambda posting: len(posting["missing_skills"]))
 
     if search:
@@ -714,7 +668,6 @@ async def get_postings(
         ]
 
     if sort == "closing":
-        # Postings with no closing date go last, since there is nothing to count down to.
         matches = sorted(matches, key=lambda posting: (posting["days_open"] is None, posting["days_open"]))
 
     start = (page - 1) * page_size
@@ -770,8 +723,6 @@ async def recommend_with_agent(report: GapResult, user_id: Annotated[str, Depend
     except asyncio.TimeoutError:
         raise HTTPException(status_code=status.HTTP_504_GATEWAY_TIMEOUT, detail="The roadmap took too long to build. Please try again.")
 
-    # The project steps are part of the roadmap, not a separate errand: they slot in
-    # after the skills they make you combine. If they fail, the roadmap still stands.
     try:
         result.projects = await asyncio.wait_for(
             run_in_threadpool(get_project_steps, result.recommendations, language),

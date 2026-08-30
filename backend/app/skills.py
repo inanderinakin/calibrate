@@ -1,11 +1,5 @@
 import re
 
-# Skills grouped by category, so each category name is written once instead
-# of being repeated as a literal string on every skill that shares it.
-# (Previously TERMS and SKILL_CATEGORIES were two separate flat dicts keyed
-# by the same skill names, which had to be kept in sync by hand and could
-# silently drift, e.g. a new TERMS entry with no matching SKILL_CATEGORIES
-# entry would KeyError at request time in main.py.)
 CATEGORIES = {
     "computer programming": {
         "Python": ["python"],
@@ -29,8 +23,6 @@ CATEGORIES = {
         "Vue": ["vue", "vuejs", "vue.js"],
         "Next.js": ["next.js", "nextjs"],
         "GraphQL": ["graphql", "graph ql"],
-        # Bare "rest" is a word in both languages ("rest of the team", "restoran"),
-        # so only the compound forms are matched.
         "REST API": ["rest api", "rest apis", "restful", "rest servis", "rest servisleri"],
         "Microservices": ["microservice", "microservices", "mikroservis", "mikroservisler", "mikro servis"],
         ".NET": [".net", "dotnet"],
@@ -43,9 +35,6 @@ CATEGORIES = {
         "Android": ["android"],
         "iOS": ["ios"],
         "Flutter": ["flutter"],
-        # Bare "unity" also catches "a culture that values unity", about 3 of 80
-        # mentions. Dropping it would cost the far more common "Experience with
-        # Unity is a plus", so the false positives are the cheaper side.
         "Unity": ["unity", "unity3d", "unity 3d"],
     },
     "query languages": {
@@ -151,7 +140,6 @@ CATEGORIES = {
     },
 }
 
-
 def build_pattern(aliases):
     parts = []
     for alias in aliases:
@@ -160,7 +148,6 @@ def build_pattern(aliases):
         parts.append(prefix + re.escape(alias) + suffix)
     return re.compile("|".join(parts), re.IGNORECASE)
 
-
 PATTERNS = {}
 SKILL_CATEGORIES = {}
 for category, skills in CATEGORIES.items():
@@ -168,22 +155,11 @@ for category, skills in CATEGORIES.items():
         PATTERNS[term] = build_pattern(aliases)
         SKILL_CATEGORIES[term] = category
 
-# "excel" is also the English verb ("you excel at...", "excel in this role"),
-# which shows up constantly in LinkedIn postings' generic culture-fit
-# boilerplate -- 25 of the first 65 LinkedIn matches were that verb, not the
-# spreadsheet. Re-anchored to exclude "excel at/in/wherever" specifically,
-# since those are the forms that actually occurred; a plain word-boundary
-# match can't tell noun from verb.
 PATTERNS["Excel"] = re.compile(
     r"(?<![A-Za-z0-9_])excel(?!\s+(?:at|in|wherever)\b)(?![A-Za-z0-9_])",
     re.IGNORECASE,
 )
 
-# Same problem, different word: "network" is also corporate-boilerplate
-# English ("BCG's global network", "ING Hubs network", "trust Proxify and
-# its network") -- 8.8% of matches corpus-wide were that business-network
-# sense, not computer networking. Excludes the qualifiers that pattern
-# actually showed up with.
 PATTERNS["Networking"] = re.compile(
     r"(?<![A-Za-z0-9_])"
     r"(?<!global )(?<!international )(?<!hubs )(?<!partner )"
@@ -194,10 +170,6 @@ PATTERNS["Networking"] = re.compile(
     re.IGNORECASE,
 )
 
-# "Swift" (the Apple language) also collides with SWIFT the international
-# bank transfer network -- banking postings list it alongside EFT/FAST
-# ("EFT / FAST / SWIFT entegrasyon süreçleri"). Excludes that enumeration
-# specifically, since that's the exact form it showed up in.
 PATTERNS["Swift"] = re.compile(
     r"(?<![A-Za-z0-9_])"
     r"(?<! / FAST / )(?<!FT, FAST, )"
@@ -210,10 +182,6 @@ def base_skill_name(label: str) -> str:
     list's "Java" are the same skill written two ways."""
     return label.split(" (")[0].strip().casefold()
 
-
-# ESCO labels broad enough to match almost any technical CV, so they say nothing
-# about the person and crowd out the skills that do. Only labels we have actually
-# watched come back as noise belong here.
 SKILL_STOPLIST = {
     "computer technology",
 }

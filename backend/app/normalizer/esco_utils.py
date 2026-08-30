@@ -7,7 +7,6 @@ class EscoNormalizer:
         self.uri_lookup = {}
         self.label_to_uri_map = {}
         
-        # Load the data and map them
         self._load_esco_data()
 
     def _clean_text(self, text: str) -> str:
@@ -20,16 +19,13 @@ class EscoNormalizer:
         if not isinstance(text, str):
             return ""
         
-        # Convert to lowercase
         text = text.lower()
         
-        # Turkish-diacritic-folding
         translation_table = str.maketrans({
             'ç': 'c', 'ğ': 'g', 'ı': 'i', 'i': 'i', 'ö': 'o', 'ş': 's', 'ü': 'u'
         })
         text = text.translate(translation_table)
         
-        # Remove all spaces (whitespace-tolerant) so 'veri tabani' matches 'veritabani'
         text = re.sub(r'\s+', '', text).strip()
         
         return text
@@ -88,9 +84,7 @@ class EscoNormalizer:
                 
             cleaned_input = self._clean_text(text)
             
-            # Fast O(1) lookup
             return self.label_to_uri_map.get(cleaned_input, None)
             
         except Exception:
-            # Fallback to ensure "never raises" rule is strictly met
             return None

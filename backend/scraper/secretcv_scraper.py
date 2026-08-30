@@ -35,19 +35,11 @@ from bs4 import BeautifulSoup
 
 from relevance import is_cs_relevant, is_duplicate_posting, load_dedup_index, register_posting
 
-# Windows consoles default to a codepage (e.g. cp1254) that can't encode the
-# Turkish characters / arrows in our prints — force UTF-8 so it doesn't crash.
 sys.stdout.reconfigure(encoding="utf-8", line_buffering=True)
 sys.stderr.reconfigure(encoding="utf-8", line_buffering=True)
 
 BASE = "https://www.secretcv.com"
 
-# ── Search sources ────────────────────────────────────────────────────────────
-# secretcv exposes SEO listing pages at /is-ilanlari/{slug}-is-ilanlari/.
-# The "bilgisayar-bt-internet" SECTOR page aggregates all CS/IT jobs and is the
-# anchor; the rest are broad CS keyword slugs confirmed to return real results.
-# Narrow slugs that 404-to-empty are simply skipped (a page with no cards ends
-# that source). Deduplication by posting id handles the overlap between them.
 SOURCES = [
     ("sector:bilgisayar-bt-internet", "bilgisayar-bt-internet"),
     ("kw:yazilim",             "yazilim"),
@@ -67,10 +59,6 @@ SOURCES = [
     ("kw:oyun-gelistirme",     "oyun-gelistirme"),
 ]
 
-# All three scrapers (kariyer, secretcv, yenibiris) now write into the SAME
-# postings.jsonl — a "source" field on each posting tells them apart, and
-# lets the (still-to-come) cross-source dedup pass match the same real-world
-# posting scraped from different sites.
 _HERE = os.path.dirname(os.path.abspath(__file__))
 SOURCE_NAME = "secretcv"
 OUTPUT_FILE = os.path.join(_HERE, "postings.jsonl")
@@ -81,7 +69,6 @@ S3_BUCKET = "calibrate-teamthrow"
 S3_POSTINGS_KEY = "scraper-data/postings.jsonl"
 S3_FAILED_LOG_KEY = "scraper-data/failed_pages_secretcv.log"
 
-
 def sync_from_s3():
     """Pull down last run's postings before scraping, so seen_ids reflects
     everything collected so far instead of starting from zero."""
@@ -91,7 +78,6 @@ def sync_from_s3():
         print(f"Downloaded existing postings from s3://{S3_BUCKET}/{S3_POSTINGS_KEY}")
     except Exception as e:
         print(f"No existing postings in S3 (or download failed): {e}")
-
 
 def sync_to_s3():
     """Upload postings and the failed-page log after a run, then delete the
@@ -121,18 +107,15 @@ HEADERS = {
 
 ID_RE = re.compile(r"-is-ilanlari-(\d+)")
 
-
 def build_page_url(slug: str, page_num: int) -> str:
     url = f"{BASE}/is-ilanlari/{slug}-is-ilanlari/"
     if page_num > 1:
         url += f"?sf={page_num}"
     return url
 
-
 def log_failed_page(url: str, reason: str):
     with open(FAILED_LOG_FILE, "a", encoding="utf-8") as f:
         f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')}\t{reason}\t{url}\n")
-
 
 def _iso_to_ddmmyyyy(value: str | None) -> str | None:
     """Normalize an ISO date (2026-09-10 or 2026-07-01T14:34:19+03:00) to the
@@ -145,15 +128,10 @@ def _iso_to_ddmmyyyy(value: str | None) -> str | None:
         return f"{d}.{mo}.{y}"
     return value
 
-
-# ── HTTP with light retry (accepts 410 pages that still carry cards) ──────────
-
 def fetch(url: str, session: requests.Session, retries: int = 3) -> str | None:
     for attempt in range(1, retries + 1):
         try:
             r = session.get(url, headers={**HEADERS, "Referer": BASE + "/"}, timeout=30)
-            # secretcv returns 410 for deep listing pages but still serves valid
-            # cards, so accept any 2xx/410 body that has content.
             if r.text and (r.status_code == 200 or r.status_code == 410):
                 return r.text
             print(f"  HTTP {r.status_code} for {url} (attempt {attempt})")
@@ -162,9 +140,6 @@ def fetch(url: str, session: requests.Session, retries: int = 3) -> str | None:
         time.sleep(random.uniform(1.5, 3.0) * attempt)
     log_failed_page(url, "fetch failed after retries")
     return None
-
-
-# ── Listing scraper: collect posting cards from a search results page ─────────
 
 def collect_cards(slug: str, page_num: int, session: requests.Session) -> list[dict]:
     url = build_page_url(slug, page_num)
@@ -199,7 +174,6 @@ def collect_cards(slug: str, page_num: int, session: requests.Session) -> list[d
         city_el     = card.select_one("span.city")
         city = None
         if city_el:
-            # first line only (before the "İlan Tarihi:" small text)
             city = city_el.get_text(" ", strip=True).split("İlan Tarihi")[0].strip() or None
 
         cards_data.append({
@@ -209,7 +183,7 @@ def collect_cards(slug: str, page_num: int, session: requests.Session) -> list[d
             "city":          city,
             "country":       "Türkiye",
             "company_id":    None,
-            "sector":        None,       # filled from the detail page
+            "sector":        None,
             "work_type":     None,
             "work_model":    None,
             "job_status":    None,
@@ -218,9 +192,6 @@ def collect_cards(slug: str, page_num: int, session: requests.Session) -> list[d
 
     print(f"  → {len(cards_data)} cards on page {page_num}")
     return cards_data
-
-
-# ── Single posting scraper ────────────────────────────────────────────────────
 
 def _parse_jsonld(soup: BeautifulSoup) -> dict:
     """Return the schema.org JobPosting object, or {} if absent."""
@@ -238,17 +209,12 @@ def _parse_jsonld(soup: BeautifulSoup) -> dict:
                 return d
     return {}
 
-
-# Only these labels are real per-posting criteria; anything else (and the
-# site's giant Sektör/Pozisyon *filter* dropdowns, which reuse div.item markup)
-# is ignored.
 _KNOWN_CRITERIA = {
     "ilan tarihi", "istihdam türü", "çalışma şekli", "çalışma türü",
     "pozisyon seviyesi", "sektör", "eğitim seviyesi", "eğitim", "departman",
     "tecrübe", "deneyim", "son başvuru tarihi", "şehirler", "şehir",
     "firma adı", "askerlik durumu",
 }
-
 
 def _collect_dom_criteria(soup: BeautifulSoup) -> dict:
     """Read the labeled criteria rows (div.item → span.title / span.desc).
@@ -268,10 +234,9 @@ def _collect_dom_criteria(soup: BeautifulSoup) -> dict:
             continue
         value = re.sub(r"\s+", " ", val.get_text(" ", strip=True)).strip()
         if not value or len(value) > 250 or value.count(",") > 10:
-            continue  # filter-dropdown dump, not a real field
+            continue
         pairs[key] = value
     return pairs
-
 
 def _description_block(soup: BeautifulSoup):
     """The job-description container: the .content-job with the most text that
@@ -285,7 +250,6 @@ def _description_block(soup: BeautifulSoup):
         if len(t) > best_len:
             best_len, best = len(t), el
     return best
-
 
 def scrape_posting(url: str, session: requests.Session) -> dict | None:
     html = fetch(url, session)
@@ -308,7 +272,6 @@ def scrape_posting(url: str, session: requests.Session) -> dict | None:
     posting["url"] = url
     posting["title"] = title
 
-    # company
     company = None
     company_id = None
     org = ld.get("hiringOrganization")
@@ -321,7 +284,6 @@ def scrape_posting(url: str, session: requests.Session) -> dict | None:
         company = re.sub(r"\s*İş İlanları$", "", crit.get("Firma Adı", "")).strip() or None
     posting["company"] = company
 
-    # location
     location = None
     loc = ld.get("jobLocation")
     if isinstance(loc, list):
@@ -346,7 +308,7 @@ def scrape_posting(url: str, session: requests.Session) -> dict | None:
     posting["position_level"]    = position_level
     posting["experience_level"]  = experience if isinstance(experience, str) else None
     posting["department"]        = department
-    posting["application_count"] = None      # not exposed by secretcv
+    posting["application_count"] = None
     posting["work_model"]        = work_model
 
     posting["date_posted"]  = _iso_to_ddmmyyyy(ld.get("datePosted")) or crit.get("İlan Tarihi")
@@ -356,10 +318,6 @@ def scrape_posting(url: str, session: requests.Session) -> dict | None:
     features = [v for v in (work_model, work_type, position_level, sector, department) if v]
     posting["features"] = features
 
-    # description: prefer the JSON-LD description (clean and reliable). The DOM
-    # has several .content-job blocks — incl. a "Benzer İlan Aramaları" (similar
-    # searches) block that can be longer than the real one — so only use the DOM
-    # as a fallback when JSON-LD carries no description.
     ld_desc = ld.get("description")
     if ld_desc:
         posting["description_text"] = BeautifulSoup(ld_desc, "html.parser").get_text("\n", strip=True)
@@ -376,7 +334,6 @@ def scrape_posting(url: str, session: requests.Session) -> dict | None:
     if education and isinstance(education, str):
         posting["candidate_criteria"]["education"] = education
 
-    # card-level metadata (mirror kariyer schema)
     posting["city"]       = location.split(",")[0].strip() if location else None
     posting["country"]    = "Türkiye"
     posting["company_id"] = company_id
@@ -384,9 +341,6 @@ def scrape_posting(url: str, session: requests.Session) -> dict | None:
     posting["job_status"] = None
 
     return posting
-
-
-# ── Helpers ───────────────────────────────────────────────────────────────────
 
 def load_seen_ids(output_file: str) -> set:
     """Load this scraper's already-scraped posting IDs. The file is shared
@@ -406,14 +360,10 @@ def load_seen_ids(output_file: str) -> set:
         pass
     return seen
 
-
 def save_posting(posting: dict):
     posting["source"] = SOURCE_NAME
     with open(OUTPUT_FILE, "a", encoding="utf-8") as f:
         f.write(json.dumps(posting, ensure_ascii=False) + "\n")
-
-
-# ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
     sync_from_s3()
@@ -449,7 +399,6 @@ def main():
                     if posting is None:
                         print(f"  [{i}/{len(new_cards)}] SKIPPED (fetch/parse): {card['url']}")
                         continue
-                    # Merge any card-level fields the detail page didn't set.
                     for k, v in card.items():
                         if k.startswith("_"):
                             continue
@@ -457,7 +406,6 @@ def main():
                             posting[k] = v
                     if not posting.get("company") and card.get("_card_company"):
                         posting["company"] = card["_card_company"]
-                    # Relevance gate: skip non-CS/IT postings entirely.
                     if not is_cs_relevant(posting):
                         seen_ids.add(card["id"])
                         total_skipped += 1
@@ -481,7 +429,6 @@ def main():
 
     sync_to_s3()
     print(f"\nDone. Saved {total_saved} CS/IT postings, skipped {total_skipped} irrelevant.")
-
 
 if __name__ == "__main__":
     main()

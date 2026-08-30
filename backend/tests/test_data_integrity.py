@@ -2,7 +2,6 @@ import json
 import sys
 from pathlib import Path
 
-# Add backend/app to Python path to import skills
 app_dir = Path(__file__).parent.parent / "app"
 sys.path.insert(0, str(app_dir))
 
@@ -50,13 +49,10 @@ def test_trends_are_not_100_percent_stable():
     """Check that not every trend in trends.json is marked as 'Stable'."""
     trends = load_json_artifact("trends.json")
     
-    # Extract the 'trend' value for every skill in the array
     all_trends = [skill_data.get("trend", "Stable") for skill_data in trends.get("skills", [])]
     
-    # If the list is empty, that's also a problem (no trend data)
     assert len(all_trends) > 0, "No skills found in trends.json"
     
-    # Check if ANY trend is not 'Stable'
     has_unstable_trend = any(trend != "Stable" for trend in all_trends)
     
     assert has_unstable_trend, "All trends are marked as 100% Stable, which indicates a pipeline regression."
@@ -90,7 +86,6 @@ def test_no_shown_posting_is_past_its_closing_date():
 
     assert not expired, f"{len(expired)} closed postings survived the filter: {expired[:5]}"
 
-    # and the rule itself, so a stale artifact cannot make this vacuous
     rows = [
         {"id": "no-date", "closing_date": None},
         {"id": "future", "closing_date": "2099-01-01"},

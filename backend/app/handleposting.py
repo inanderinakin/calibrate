@@ -23,7 +23,6 @@ def load_artifact(key, fallback_path):
     with open(fallback_path) as json_file:
         return json.load(json_file)
 
-
 def load_demand_profile():
     json_data = load_artifact("pipeline-data/demand_profile.json", demand_profile_path)
 
@@ -32,7 +31,7 @@ def load_demand_profile():
     for role, role_data in json_data.items():
         if isinstance(role_data, list):
             skills = role_data
-            postings_count = 200 # fallback
+            postings_count = 200
         else:
             skills = role_data.get("skills", [])
             postings_count = role_data.get("postings_count", 0)
@@ -44,17 +43,14 @@ def load_demand_profile():
 
     return profile
 
-
 def load_trends():
     return load_artifact("pipeline-data/trends.json", trends_path)
-
 
 def load_postings():
     return load_artifact("pipeline-data/active_postings.json", postings_path)
 
 if __name__ == "__main__":
     load_trends()
-
 
 def build_skill_facts(postings: dict) -> dict:
     """What the live board says about each skill, so a project brief can be anchored

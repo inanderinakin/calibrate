@@ -35,7 +35,6 @@ system_prompt = (
     + PLAIN_STYLE
 )
 
-
 def verify_skills(skills: list[NormalizedSkill], lines: list[str]) -> tuple[list[NormalizedSkill], list[SkillVerdicts]]:
     """Returns the skills the CV backs up, plus the verdicts behind the decision."""
     if not skills:
@@ -57,10 +56,6 @@ def verify_skills(skills: list[NormalizedSkill], lines: list[str]) -> tuple[list
     )
     verdicts = result.structured_output.verdicts
 
-    # An evidence quote that is not actually in the CV is a hallucinated one, so the
-    # skill it was meant to support does not survive on it. Textract breaks the CV
-    # into lines mid-sentence, so a real quote often spans one -- both sides get
-    # their whitespace collapsed before the check.
     haystack = " ".join(cv_text.split()).casefold()
     supported = {
         verdict.skill

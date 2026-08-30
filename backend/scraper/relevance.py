@@ -35,11 +35,6 @@ CS_SECTORS = (
     "telekomünikasyon", "internet", "bilgisayar",
 )
 
-# Department-only signals (never checked against the company-wide sector
-# field, which is a different, less reliable field — see is_cs_relevant).
-# Short/English forms like "it" only appear here, not in CS_SECTORS, because
-# department is a controlled categorical value (safe to substring-match)
-# while sector free text could contain "it" inside an unrelated word.
 CS_DEPARTMENTS_ONLY = ("it", "information technology")
 
 CS_TITLE_KW = re.compile(
@@ -138,13 +133,6 @@ NON_CS_TITLE_KW = re.compile(
     re.IGNORECASE,
 )
 
-# "Mimar" (architect) is ambiguous on its own -- a construction/building
-# architect is not a CS role, but "Yazılım Mimarı"/"Sistem Mimarı"/"Çözüm
-# Mimarı" (software/systems/solution architect) definitely are, and Turkish
-# word order puts the domain word before "mimar" ("Yazılım Mimarı"), which a
-# forward-only regex lookahead can't see (it only looks past the match, not
-# before it). Handled separately: "mimar" only counts as a non-CS signal
-# when none of these domain words appear anywhere else in the title.
 MIMAR_KW = re.compile(r"mimar", re.IGNORECASE)
 TECH_ARCHITECT_DOMAIN_KW = re.compile(
     r"yazılım|sistem|çözüm|solution|uygulama|veri|data|network|güvenlik|"
@@ -152,13 +140,6 @@ TECH_ARCHITECT_DOMAIN_KW = re.compile(
     re.IGNORECASE,
 )
 
-# "Mimar" (architect) is ambiguous on its own -- a construction/building
-# architect is not a CS role, but "Yazılım Mimarı"/"Sistem Mimarı"/"Çözüm
-# Mimarı" (software/systems/solution architect) definitely are, and Turkish
-# word order puts the domain word before "mimar" ("Yazılım Mimarı"), which a
-# forward-only regex lookahead can't see (it only looks past the match, not
-# before it). Handled separately: "mimar" only counts as a non-CS signal
-# when none of these domain words appear anywhere else in the title.
 MIMAR_KW = re.compile(r"mimar", re.IGNORECASE)
 TECH_ARCHITECT_DOMAIN_KW = re.compile(
     r"yazılım|sistem|çözüm|solution|uygulama|veri|data|network|güvenlik|"
@@ -166,13 +147,7 @@ TECH_ARCHITECT_DOMAIN_KW = re.compile(
     re.IGNORECASE,
 )
 
-
-# Older/formal Turkish spelling uses circumflex vowels (â/î/û — e.g. "Zekâ",
-# "Kâğıt") that are distinct Unicode characters from plain a/i/u, so patterns
-# written with plain vowels silently miss them (same class of bug as the
-# İ-casing issue below) unless normalized away first.
 _CIRCUMFLEX_MAP = str.maketrans("âîûÂÎÛ", "aiuAIU")
-
 
 def _normalize_tr(text: str) -> str:
     return text.translate(_CIRCUMFLEX_MAP).replace("İ", "i").lower()
@@ -192,39 +167,12 @@ def is_cs_relevant(posting: dict) -> bool:
     elif MIMAR_KW.search(title):
         has_cs = True
 
-    # A non-CS job-function word always wins, regardless of any CS-sounding
-    # word also present -- "Yazılım Satış Uzmanı" is a sales job, "Muhasebe
-    # Uzmanı (Logo ERP Deneyimli)" is an accounting job. The domain word
-    # ("yazılım", "erp") describes what the company/product is, not what
-    # this person does.
     if has_non_cs:
         return False
     if has_cs:
         return True
-    # CS department → accept (department is job-level and reliable) — unless
-    # the department name itself reads as a non-tech function (e.g. company
-    # sector is "Bilişim" but department is "Satınalma"/"Teknik Servis").
-    #
-    # NOTE: sector (company-wide, e.g. "Bilişim") is deliberately NOT used as
-    # an accept signal on its own — a company's overall sector tag says
-    # nothing about a specific posting's function (its purchasing/service/HR
-    # postings get the same sector tag as its engineering ones), and one
-    # sector-only accept path is where the whole class of false positives
-    # (satın alma, teknik servis, fotoğrafçı, ...) came from.
     cs_signal_in_dept = any(s in dept for s in CS_SECTORS) or any(s in dept for s in CS_DEPARTMENTS_ONLY)
     return cs_signal_in_dept and not has_non_cs_dept
-
-
-# ── Cross-source duplicate detection ───────────────────────────────────────
-# The same real-world posting often gets scraped from more than one site
-# (kariyer, secretcv, yenibiris), each with its own id/URL — so id-based dedup
-# alone doesn't catch it. Match on normalized (title, company, location) —
-# but a company CAN legitimately post the identical title more than once for
-# genuinely different roles (different teams, same job title), so a
-# title+company+location match alone isn't enough to call it a duplicate.
-# We additionally require the description text to actually be similar —
-# real cross-site duplicates carry essentially the same description, while
-# two distinct postings with a shared title do not.
 
 _PUNCT_RE = re.compile(r"[^\w\s]", re.UNICODE)
 _WS_RE = re.compile(r"\s+")
@@ -236,7 +184,6 @@ def _normalize_for_dedup(text: str) -> str:
     t = _WS_RE.sub(" ", t).strip()
     return t
 
-
 def posting_dedup_key(posting: dict) -> str:
     """Normalized "title|company|location" key for narrowing down candidate
     matches of the same real-world posting across different sites."""
@@ -245,10 +192,8 @@ def posting_dedup_key(posting: dict) -> str:
     location = _normalize_for_dedup(posting.get("location") or posting.get("city") or "")
     return f"{title}|{company}|{location}"
 
-
 def _description_similarity(a: str, b: str) -> float:
     return difflib.SequenceMatcher(None, a, b).ratio()
-
 
 def load_dedup_index(output_file: str) -> dict:
     """Read every row already saved to the shared postings file (any source)
@@ -273,7 +218,6 @@ def load_dedup_index(output_file: str) -> dict:
         pass
     return index
 
-
 def is_duplicate_posting(posting: dict, index: dict) -> bool:
     """True if `posting` matches an already-saved posting on title+company+
     location AND their descriptions are similar enough to be the same real
@@ -283,11 +227,8 @@ def is_duplicate_posting(posting: dict, index: dict) -> bool:
         return False
     desc = _normalize_for_dedup(posting.get("description_text") or "")
     if not desc:
-        # No description to compare against — fall back to the key match
-        # alone, since there's nothing to rule the candidates out with.
         return True
     return any(_description_similarity(desc, c) >= DESCRIPTION_SIMILARITY_THRESHOLD for c in candidates)
-
 
 def register_posting(posting: dict, index: dict):
     """Record a posting in the in-memory dedup index and stamp it with

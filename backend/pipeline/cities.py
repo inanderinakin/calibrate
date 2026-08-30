@@ -65,7 +65,6 @@ districts = {
 nationwide = "Türkiye"
 nationwide_forms = {"turkiye", "tum turkiye", "** tum turkiye", "turkey", "remote"}
 
-# Words the boards leave in that carry no location: 'Çorlu Bucağı', 'Aydın Merkez'.
 filler = {"bucagi", "merkez", "district", "greater", "yakasi", "anadolu", "avrupa", "avr", "asya"}
 
 _province_by_key = {province.translate(turkish_folds).lower(): province for province in provinces}
@@ -75,16 +74,13 @@ _province_by_district = {
     for district in names
 }
 
-
 def fold(value):
     return value.translate(turkish_folds).lower().strip()
-
 
 def normalize_city(value):
     if not value:
         return None
 
-    # 'Adana,Muğla,İstanbul Avrupa Yakası,Ankara,Sivas' — take the first one named.
     first = str(value).split(",")[0]
     text = fold(first).replace("(", " ").replace(")", " ").replace(".", " ")
     text = " ".join(text.split())

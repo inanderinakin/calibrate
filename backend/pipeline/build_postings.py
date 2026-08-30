@@ -86,7 +86,6 @@ position_levels = {
     "internship": "intern",
 }
 
-
 def parse_date(value):
     if not value:
         return None
@@ -97,7 +96,6 @@ def parse_date(value):
             continue
     return None
 
-
 def is_active(posting, today):
     closing = parse_date(posting.get("closing_date"))
     if closing:
@@ -106,7 +104,6 @@ def is_active(posting, today):
     posted = parse_date(posting.get("date_posted"))
     return bool(posted and (today - posted).days <= undated_window_days)
 
-
 def canonical(value, table):
     """Boards write the same thing in two languages and several spellings."""
     if not value:
@@ -114,13 +111,11 @@ def canonical(value, table):
     text = str(value).strip().lower()
     if text in table:
         return table[text]
-    # 'Tam Zamanlı, Hibrit' and friends pack two facts into one field.
     for part in text.replace(";", ",").split(","):
         part = part.strip()
         if part in table:
             return table[part]
     return None
-
 
 def load_role_demand():
     """skill -> demand share, per role, from the profile built alongside this file."""
@@ -136,20 +131,15 @@ def load_role_demand():
         table[role] = {item["skill"]: float(item["demand_percentage"]) for item in skills}
     return table
 
-
 role_demand = load_role_demand()
-
 
 def extract_skills(posting, role):
     text = f"{posting.get('title', '')} {posting.get('description_text') or ''}"
     found = [skill for skill, pattern in PATTERNS.items() if pattern.search(text)]
 
-    # Rank by what this role actually asks for. Anything the profile does not
-    # mention scores 0 and keeps its relative order behind those that do.
     demand = role_demand.get(role, {})
     found.sort(key=lambda skill: demand.get(skill, 0.0), reverse=True)
     return found[:max_skills]
-
 
 def slim(posting, today):
     posted = parse_date(posting.get("date_posted"))
@@ -174,7 +164,6 @@ def slim(posting, today):
         "skills": extract_skills(posting, role),
     }
 
-
 def build_postings():
     today = date.today()
 
@@ -189,12 +178,6 @@ def build_postings():
 
     postings = [slim(posting, today) for posting in reachable]
 
-    # An unclassified role is a gap in the role patterns, not proof the job is
-    # off-topic: "Data Architect", "Lead Golang Engineer" and "Bilgi
-    # Teknolojileri Uzmanı" all land here. Dropping them hid 207 real LinkedIn
-    # jobs. Keep the ones we could read tech skills out of, and let the rest go
-    # — a posting with no role and no recognisable skill is a school looking
-    # for an English teacher.
     postings = [
         posting for posting in postings
         if posting["role"] != DEFAULT_ROLE or posting["skills"]
@@ -210,22 +193,15 @@ def build_postings():
             "shown": len(postings),
             "unverified": len([p for p in active if p["id"] not in link_status]),
         },
-        # "Unclassified" sorts last so the filter reads as real roles first,
-        # then a catch-all the frontend labels "Other".
         "roles": sorted(
             {posting["role"] for posting in postings},
             key=lambda role: (role == DEFAULT_ROLE, role),
         ),
-        # Ordered by how many postings ask for them, so the filter opens on the
-        # skills that actually move the list rather than alphabetical trivia.
         "skills": [
             skill for skill, _ in Counter(
                 skill for posting in postings for skill in posting["skills"]
             ).most_common()
         ],
-        # Only real places get a filter entry. A handful of postings carry
-        # scraper noise in the city field ('Eğitim', 'Destek'); it still shows
-        # on their own row, but it is not somewhere you can filter by.
         "cities": sorted({
             posting["city"] for posting in postings
             if posting["city"] in set(provinces) | {nationwide}
@@ -239,7 +215,6 @@ def build_postings():
 
     print(f"stored {len(raw)} -> active {len(active)} -> reachable {len(reachable)} -> shown {len(postings)}")
     return payload
-
 
 if __name__ == "__main__":
     build_postings()

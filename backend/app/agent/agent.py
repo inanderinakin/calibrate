@@ -46,7 +46,6 @@ LANGUAGE_NAMES = {"tr": "Turkish", "en": "English"}
 def get_recommendations(gaps: GapResult, language: str = "en"):
     language_name = LANGUAGE_NAMES.get(language, LANGUAGE_NAMES["en"])
 
-    # callback handler none is to block the agent code to print the message to console.
     agent = Agent(model="global.anthropic.claude-sonnet-4-6", tools=[get_role_demand, get_learning_resources], callback_handler = None, structured_output_model = Report,
                 system_prompt = ("Only use data returned by the tools. Never invent demand figures or resources. "
                                 "Call get_role_demand once for every role in target_roles, passing that role name and never a skill name, and read each gap's market frequency and trend out of the list it returns. "
