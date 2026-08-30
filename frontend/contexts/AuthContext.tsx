@@ -8,6 +8,7 @@ import {
   ReactNode,
 } from "react";
 import { tokens } from "@/lib/tokens";
+import { fetchAccountName } from "@/lib/accountName";
 
 export interface AuthUser {
   firstName: string;
@@ -78,6 +79,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setHydrated(true);
   }, []);
+
+  // The stored name belongs to whichever device last wrote it, so a rename made on
+  // another one never reached this sidebar until this device signed in again. One
+  // request per page load, alongside the analysis the app already fetches, and only a
+  // real answer is allowed to change anything.
+  useEffect(() => {
+    if (!hydrated) return;
+    if (!tokens.getIdToken()) return;
+
+    let cancelled = false;
+
+    fetchAccountName().then((current) => {
+      if (cancelled || !current) return;
+
+      setUser((prev) => {
+        if (!prev) return prev;
+        if (prev.firstName === current.firstName && prev.lastName === current.lastName) {
+          return prev;
+        }
+
+        const next = { ...prev, ...current };
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        window.localStorage.setItem(PROFILE_KEY, JSON.stringify(next));
+        return next;
+      });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hydrated]);
 
   const persist = (next: AuthUser | null) => {
     setUser(next);
