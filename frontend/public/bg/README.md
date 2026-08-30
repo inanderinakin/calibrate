@@ -12,19 +12,21 @@ Just drop your two generated images in here with those exact names — the CSS
 already points at `/bg/light-picture.png` and `/bg/dark-picture.png` via the
 `--landing-texture` variable.
 
-## 2. Dashboard / analyse_cv / settings / profile — pulled from Figma
-My sandbox can't reach `figma.com` (network is locked to package registries),
-so these still need to be saved manually. Links are valid ~7 days from
-July 24, 2026:
+## 2. Page and sidebar backgrounds — removed, they are CSS colours now
 
-| File | Source |
-|---|---|
-| `white-bg.png`    | https://www.figma.com/api/mcp/asset/482168f7-d35a-47bd-af05-323ac5cf4495 |
-| `blue-bg.png`      | https://www.figma.com/api/mcp/asset/9ec4c55a-ef6a-4c63-9324-15f334046864 |
-| `burgundy-bg.png`  | https://www.figma.com/api/mcp/asset/21a37e9d-cc1f-487f-9d63-6393c7480ff6 |
+`white-bg.png`, `blue-bg.png` and `burgundy-bg.png` used to live here. Each was
+3360x5716, and every pixel in all three was a single flat colour:
 
-If a link has expired, re-pull the dashboard frame (light `92:1222` / dark
-`92:3487`) and I'll hand you fresh ones.
+| File | Colour | Now |
+|---|---|---|
+| `white-bg.png` | `#bdd8e9` | `--bg-texture`, light mode |
+| `blue-bg.png` | `#001d39` | `--bg-texture`, dark mode |
+| `burgundy-bg.png` | `#001d39` | dropped, `--sidebar-bg` was already the same colour |
+
+`blue-bg.png` and `burgundy-bg.png` were byte-identical, so the light sidebar was
+painting an image of exactly the colour underneath it. Do not re-add them: two
+19-megapixel decodes behind every `backdrop-filter` on the page is what pinned the
+dashboard, roadmap and settings screens at ~10fps on Windows.
 
 ## 3. Landing hero — career workflow diagram
 

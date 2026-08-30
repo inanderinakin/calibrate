@@ -55,8 +55,7 @@
   --accent-text: var(--creamy);
   --icon-color: var(--burgundy);
 
-  --bg-texture: url("/bg/white-bg.png");
-  --sidebar-texture: url("/bg/burgundy-bg.png");
+  --bg-texture: #bdd8e9;
   --landing-texture: url("/bg/light-picture.png");
 
   --nav-active: var(--burgundy);
@@ -97,8 +96,7 @@
   --accent-text: var(--dark-blue);
   --icon-color: var(--creamy);
 
-  --bg-texture: url("/bg/blue-bg.png");
-  --sidebar-texture: none; /* dark sidebar is a flat #3C5E82 fill in the design, no texture */
+  --bg-texture: #001d39;
   --landing-texture: url("/bg/dark-picture.png");
 
   /* Selected nav item is a creamy pill in both modes. Light-blue text on the
@@ -121,21 +119,19 @@
 
 /*
   BACKGROUND ASSETS. See /public/bg/README.md.
-  The 3 files (white-bg.png, blue-bg.png, burgundy-bg.png) are saved there.
   light-picture / dark-picture are not in the repo yet.
+
+  The page and sidebar backgrounds used to be three 3360x5716 PNGs. Every pixel in
+  all three was a single flat colour, so they are plain colours here now: white-bg
+  was #bdd8e9, blue-bg and burgundy-bg were both #001d39. Identical output, minus
+  two 19-megapixel decodes (~77MB of RGBA each) sitting behind every backdrop-filter
+  on the page, which is what made these screens crawl on Windows.
 */
 .page-texture {
-  background-image: var(--bg-texture);
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  background-color: var(--bg-texture);
 }
 .sidebar-texture {
-  background-image: var(--sidebar-texture);
   background-color: var(--sidebar-bg);
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
 }
 .landing-texture {
   background-image: var(--landing-texture);
