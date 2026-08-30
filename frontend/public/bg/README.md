@@ -24,9 +24,12 @@ already points at `/bg/light-picture.png` and `/bg/dark-picture.png` via the
 | `burgundy-bg.png` | `#001d39` | dropped, `--sidebar-bg` was already the same colour |
 
 `blue-bg.png` and `burgundy-bg.png` were byte-identical, so the light sidebar was
-painting an image of exactly the colour underneath it. Do not re-add them: two
-19-megapixel decodes behind every `backdrop-filter` on the page is what pinned the
-dashboard, roadmap and settings screens at ~10fps on Windows.
+painting an image of exactly the colour underneath it.
+
+Do not re-add them as images: two 19-megapixel decodes cost ~154MB of RGBA and a
+chunk of load time to paint two flat colours. They were not what pinned those screens
+at ~10fps, though. Measured in Chromium, the background costs nothing per frame once
+decoded; the blur on top of it carried that on its own.
 
 ## 3. Landing hero — career workflow diagram
 

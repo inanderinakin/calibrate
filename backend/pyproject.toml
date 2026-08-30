@@ -1,8 +1,7 @@
 [tool.ruff]
 target-version = "py313"
 line-length = 120
-# experiments are throwaway analysis scripts, not shipped
-exclude = [".venv", ".aws-sam", "experiments", "normalizer/esco_dataset"]
+exclude = [".venv", ".aws-sam", "normalizer/esco_dataset"]
 
 [tool.ruff.lint]
 # Rules that find bugs, not rules that find opinions. A linter nobody can get to
