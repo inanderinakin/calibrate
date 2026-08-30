@@ -139,9 +139,18 @@ async def update_profile(profile: ProfileInfo, user_id: Annotated[str, Depends(v
     country = profile.country.strip()
     study_field = profile.study_field.strip()
 
+    # Saved here as well as on the Cognito user, so another device can read the current
+    # name without waiting for its own id token to be reissued.
     try:
         await run_in_threadpool(
-            write_profile, user_id, {"country": country, "study_field": study_field}
+            write_profile,
+            user_id,
+            {
+                "country": country,
+                "study_field": study_field,
+                "first_name": first_name,
+                "last_name": last_name,
+            },
         )
     except ClientError as err:
         print(f"Could not save the profile details: {err}")
@@ -165,6 +174,9 @@ async def get_profile(user_id: Annotated[str, Depends(verify_token_dependency)])
     return {
         "country": saved.get("country", ""),
         "study_field": saved.get("study_field", ""),
+        # Empty when the profile was never saved here; the client falls back to its token.
+        "first_name": saved.get("first_name", ""),
+        "last_name": saved.get("last_name", ""),
     }
 
 @app.post("/change_password")

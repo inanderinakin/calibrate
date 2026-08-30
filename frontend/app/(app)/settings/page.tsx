@@ -142,8 +142,8 @@ export default function SettingsPage() {
   const t = getTranslations(language).settings;
   const legalText = getTranslations(language).legal;
 
-  // The account is the source of truth. These two used to live only in
-  // localStorage, so a new device showed them empty however often they were saved.
+  // The account is the source of truth; localStorage-only copies showed empty or stale
+  // on a second device. updateUser pushes the name out so the sidebar matches the form.
   useEffect(() => {
     if (!tokens.getIdToken()) return;
 
@@ -152,14 +152,28 @@ export default function SettingsPage() {
         const savedCountry = saved.country ? countryLabel(saved.country, language) : "";
         if (saved.country) setCountry(savedCountry);
         if (saved.study_field) setStudyField(saved.study_field);
+        if (saved.first_name) setFirstName(saved.first_name);
+        if (saved.last_name) setLastName(saved.last_name);
 
         setOriginal((prev) => ({
           ...prev,
           country: saved.country ? savedCountry : prev.country,
           studyField: saved.study_field || prev.studyField,
+          firstName: saved.first_name || prev.firstName,
+          lastName: saved.last_name || prev.lastName,
         }));
+
+        if (saved.first_name || saved.last_name) {
+          updateUser({
+            ...(saved.first_name ? { firstName: saved.first_name } : {}),
+            ...(saved.last_name ? { lastName: saved.last_name } : {}),
+          });
+        }
       })
       .catch(() => {});
+    // updateUser is rebuilt every provider render; listing it would re-run this and
+    // overwrite whatever is half-typed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [language]);
 
   async function handleChangePassword(e: FormEvent) {

@@ -186,7 +186,13 @@ export async function recordConsent(version: string, locale: Language) {
   return await res.json();
 }
 
-export async function getProfile(): Promise<{ country: string; study_field: string }> {
+export async function getProfile(): Promise<{
+  country: string;
+  study_field: string;
+  /** Empty when never saved here; fall back to the token. */
+  first_name: string;
+  last_name: string;
+}> {
   const res = await authedFetch("/profile");
 
   if (!res.ok) {

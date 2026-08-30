@@ -8,6 +8,7 @@ import {
   ReactNode,
 } from "react";
 import { tokens } from "@/lib/tokens";
+import { fetchAccountName } from "@/lib/accountName";
 import { checkSession, isPublicPath } from "@/lib/verifySession";
 
 export interface AuthUser {
@@ -97,6 +98,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!isPublicPath(window.location.pathname)) {
         window.location.assign("/login");
       }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hydrated]);
+
+  // The stored name belongs to whichever device last wrote it. One request per page
+  // load, and only a real answer changes anything.
+  useEffect(() => {
+    if (!hydrated) return;
+    if (!tokens.getIdToken()) return;
+
+    let cancelled = false;
+
+    fetchAccountName().then((current) => {
+      if (cancelled || !current) return;
+
+      setUser((prev) => {
+        if (!prev) return prev;
+        if (prev.firstName === current.firstName && prev.lastName === current.lastName) {
+          return prev;
+        }
+
+        const next = { ...prev, ...current };
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        window.localStorage.setItem(PROFILE_KEY, JSON.stringify(next));
+        return next;
+      });
     });
 
     return () => {

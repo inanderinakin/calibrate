@@ -55,56 +55,64 @@ export function expectsAnalysis() {
   return readMarker() ?? true;
 }
 
+let reconciledThisLoad = false;
+
 /**
- * sessionStorage dies with the tab. When it is empty but the user is signed in,
- * pull their last analysis back out of their account before the page decides
- * there is nothing to show.
+ * Reconcile this tab's copy of the analysis with the account's, which wins.
+ *
+ * Returns a revision, not a flag: 0 means nothing to paint yet, and it changes again
+ * once the account has answered so callers re-run against the corrected data.
  */
 export function useRestoreAnalysis() {
-  const [restored, setRestored] = useState(false);
+  const [revision, setRevision] = useState(0);
 
   useEffect(() => {
+    // Once per page load; client-side navigation keeps this module alive.
+    if (reconciledThisLoad) {
+      setRevision((r) => r || 1);
+      return;
+    }
+
+    // Paint what this tab already has before asking anyone.
     if (session.hasAnalysis()) {
       writeMarker(true);
-      setRestored(true);
-      return;
+      setRevision(1);
     }
 
     if (!tokens.getIdToken()) {
-      setRestored(true);
+      setRevision((r) => r || 1);
       return;
     }
 
-    async function restore() {
+    let cancelled = false;
+
+    async function reconcile() {
+      let saved;
+
       try {
-        const saved = await getAnalysis();
-
-        if (saved) {
-          if (saved.cv_skills?.length) session.setCvSkills(saved.cv_skills);
-          if (saved.cv_filename) session.setCvFilename(saved.cv_filename);
-          if (saved.cv_size) session.setCvSize(saved.cv_size);
-          if (saved.cv_type) session.setCvType(saved.cv_type);
-          if (saved.cv_uploaded_at) session.setCvUploadedAt(saved.cv_uploaded_at);
-          if (saved.target_roles?.length) session.setTargetRoles(saved.target_roles);
-          if (saved.gaps) session.setGaps(saved.gaps);
-          if (saved.report) session.setReport(saved.report);
-          if (saved.report_language) session.setReportLanguage(saved.report_language);
-        }
-
-        // The request answered, so we now know what this account holds.
-        writeMarker(session.hasAnalysis());
+        saved = await getAnalysis();
       }
       catch {
-        // The account is unreachable, so fall through to the page's own empty state.
-        // The marker is left alone on purpose: a failed request is not evidence that
-        // the account has nothing.
+        // A failed request is not evidence the account is empty, so keep what we had.
+        if (!cancelled) setRevision((r) => r || 1);
+        return;
       }
 
-      setRestored(true);
+      if (cancelled) return;
+
+      reconciledThisLoad = true;
+
+      session.applyAccountCopy(saved);
+      writeMarker(session.hasAnalysis());
+      setRevision((r) => r + 1);
     }
 
-    restore();
+    reconcile();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  return restored;
+  return revision;
 }
